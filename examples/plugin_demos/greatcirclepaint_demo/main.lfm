@@ -1,0 +1,542 @@
+object MainForm: TMainForm
+  Left = 324
+  Height = 493
+  Top = 119
+  Width = 872
+  Caption = 'Great Circle Plugin Demo'
+  ClientHeight = 493
+  ClientWidth = 872
+  OnActivate = FormActivate
+  OnCreate = FormCreate
+  LCLVersion = '3.6.0.0'
+  object ParamsPanel: TPanel
+    Left = 8
+    Height = 454
+    Top = 8
+    Width = 200
+    Align = alLeft
+    BorderSpacing.Around = 8
+    BevelOuter = bvNone
+    ClientHeight = 454
+    ClientWidth = 200
+    TabOrder = 0
+    object cbCyclicMap: TCheckBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = ParamsPanel
+      Left = 0
+      Height = 19
+      Top = 0
+      Width = 77
+      Caption = 'Cyclic Map'
+      Checked = True
+      State = cbChecked
+      TabOrder = 0
+      OnChange = cbCyclicMapChange
+    end
+    object cbZOrder: TComboBox
+      AnchorSideLeft.Control = tbSegmentLength
+      AnchorSideTop.Control = cbCyclicMap
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 92
+      Height = 23
+      Top = 27
+      Width = 108
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Top = 8
+      ItemHeight = 15
+      ItemIndex = 0
+      Items.Strings = (
+        'Canvas'
+        'In front of markers'
+        'Behind markers'
+      )
+      Style = csDropDownList
+      TabOrder = 1
+      Text = 'Canvas'
+      OnChange = cbZOrderChange
+    end
+    object lblZOrder: TLabel
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = cbZOrder
+      AnchorSideTop.Side = asrCenter
+      AnchorSideRight.Control = Label2
+      AnchorSideRight.Side = asrBottom
+      Left = 42
+      Height = 15
+      Top = 31
+      Width = 42
+      Anchors = [akTop, akRight]
+      BorderSpacing.Top = 4
+      Caption = 'Z-Order'
+    end
+    object tbSegmentLength: TTrackBar
+      AnchorSideLeft.Control = Label2
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = cbZOrder
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 92
+      Height = 25
+      Top = 58
+      Width = 108
+      OnChange = tbSegmentLengthChange
+      Position = 0
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Left = 8
+      BorderSpacing.Top = 8
+      TabOrder = 2
+    end
+    object Label2: TLabel
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = tbSegmentLength
+      Left = 0
+      Height = 15
+      Top = 58
+      Width = 84
+      Caption = 'Segment length'
+    end
+    object gbPresets: TGroupBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = GroupBox3
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 161
+      Top = 294
+      Width = 200
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = True
+      BorderSpacing.Top = 8
+      Caption = 'Presets'
+      ChildSizing.LeftRightSpacing = 16
+      ChildSizing.TopBottomSpacing = 8
+      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+      ChildSizing.Layout = cclLeftToRightThenTopToBottom
+      ChildSizing.ControlsPerLine = 1
+      ClientHeight = 141
+      ClientWidth = 196
+      TabOrder = 6
+      object btnPresetPolar: TButton
+        Left = 16
+        Height = 25
+        Top = 8
+        Width = 164
+        Caption = 'Polar'
+        TabOrder = 0
+        OnClick = btnPresetPolarClick
+      end
+      object btnPreseEquator: TButton
+        Left = 16
+        Height = 25
+        Top = 33
+        Width = 164
+        Caption = 'Equator'
+        TabOrder = 1
+        OnClick = btnPreseEquatorClick
+      end
+      object btnPresetPorto: TButton
+        Left = 16
+        Height = 25
+        Top = 58
+        Width = 164
+        Caption = 'Porto-Port of Spain'
+        TabOrder = 2
+        OnClick = btnPresetPortoClick
+      end
+      object btnPresetLongestSeaWay: TButton
+        Left = 16
+        Height = 25
+        Top = 83
+        Width = 164
+        Caption = 'Longest sea way'
+        TabOrder = 3
+        OnClick = btnPresetLongestSeaWayClick
+      end
+      object btnLongestEarthWay: TButton
+        Left = 16
+        Height = 25
+        Top = 108
+        Width = 164
+        Caption = 'Longest earth way'
+        TabOrder = 4
+        OnClick = btnLongestEarthWayClick
+      end
+    end
+    object cgOptions: TCheckGroup
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = tbSegmentLength
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 89
+      Top = 83
+      Width = 200
+      Anchors = [akTop, akLeft, akRight]
+      AutoFill = True
+      AutoSize = True
+      Caption = 'Options'
+      ChildSizing.LeftRightSpacing = 6
+      ChildSizing.TopBottomSpacing = 6
+      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+      ChildSizing.EnlargeVertical = crsHomogenousChildResize
+      ChildSizing.ShrinkHorizontal = crsScaleChilds
+      ChildSizing.ShrinkVertical = crsScaleChilds
+      ChildSizing.Layout = cclLeftToRightThenTopToBottom
+      ChildSizing.ControlsPerLine = 1
+      ClientHeight = 69
+      ClientWidth = 196
+      Items.Strings = (
+        'Mark Start'
+        'Mark Center'
+        'Mark Destination'
+      )
+      OnItemClick = cgOptionsItemClick
+      TabOrder = 3
+      Data = {
+        03000000020202
+      }
+    end
+    object gbOrthodromePen: TGroupBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = cgOptions
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 49
+      Top = 180
+      Width = 200
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = True
+      BorderSpacing.Top = 8
+      Caption = 'Orthodrome Pen'
+      ClientHeight = 29
+      ClientWidth = 196
+      TabOrder = 4
+      object lblOrthodromePenWidth: TLabel
+        AnchorSideLeft.Control = gbOrthodromePen
+        AnchorSideTop.Control = seOrthodromePenWidth
+        AnchorSideTop.Side = asrCenter
+        Left = 16
+        Height = 15
+        Top = 4
+        Width = 32
+        BorderSpacing.Left = 16
+        Caption = 'Width'
+      end
+      object seOrthodromePenWidth: TSpinEdit
+        AnchorSideLeft.Control = lblOrthodromePenWidth
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = clbOrthodromePenColor
+        AnchorSideTop.Side = asrCenter
+        Left = 56
+        Height = 23
+        Top = 0
+        Width = 64
+        Alignment = taRightJustify
+        BorderSpacing.Left = 8
+        BorderSpacing.Right = 8
+        BorderSpacing.Bottom = 6
+        MaxValue = 10
+        MinValue = 1
+        OnChange = seOrthodromePenWidthChange
+        TabOrder = 0
+        Value = 3
+      end
+      object clbOrthodromePenColor: TColorButton
+        AnchorSideLeft.Control = seOrthodromePenWidth
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = seOrthodromePenWidth
+        AnchorSideRight.Control = gbOrthodromePen
+        AnchorSideRight.Side = asrBottom
+        Left = 128
+        Height = 25
+        Top = -1
+        Width = 60
+        Anchors = [akLeft, akRight]
+        BorderSpacing.Right = 8
+        BorderSpacing.Bottom = 8
+        BorderWidth = 2
+        ButtonColorSize = 16
+        ButtonColor = clPurple
+        OnColorChanged = clbOrthodromePenColorColorChanged
+      end
+    end
+    object GroupBox3: TGroupBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = gbOrthodromePen
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 49
+      Top = 237
+      Width = 200
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = True
+      BorderSpacing.Top = 8
+      Caption = 'Great Circle Pen'
+      ClientHeight = 29
+      ClientWidth = 196
+      TabOrder = 5
+      object lblGreatCirclePenWidth: TLabel
+        AnchorSideLeft.Control = GroupBox3
+        AnchorSideTop.Control = seGreatCirclePenWidth
+        AnchorSideTop.Side = asrCenter
+        Left = 16
+        Height = 15
+        Top = 4
+        Width = 32
+        BorderSpacing.Left = 16
+        Caption = 'Width'
+      end
+      object seGreatCirclePenWidth: TSpinEdit
+        AnchorSideLeft.Control = lblGreatCirclePenWidth
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = GroupBox3
+        Left = 56
+        Height = 23
+        Top = 0
+        Width = 64
+        Alignment = taRightJustify
+        BorderSpacing.Left = 8
+        BorderSpacing.Right = 8
+        BorderSpacing.Bottom = 6
+        MaxValue = 10
+        MinValue = 1
+        OnChange = seGreatCirclePenWidthChange
+        TabOrder = 0
+        Value = 1
+      end
+      object clbGreatCirclePenColor: TColorButton
+        AnchorSideLeft.Control = seGreatCirclePenWidth
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideRight.Control = GroupBox3
+        AnchorSideRight.Side = asrBottom
+        Left = 128
+        Height = 25
+        Top = 0
+        Width = 60
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Right = 8
+        BorderWidth = 2
+        ButtonColorSize = 16
+        ButtonColor = clBlack
+        OnColorChanged = clbGreatCirclePenColorColorChanged
+      end
+    end
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 470
+    Width = 872
+    Panels = <    
+      item
+        Bevel = pbRaised
+        Text = 'Orthodrome (km)'
+        Width = 100
+      end    
+      item
+        Width = 60
+      end    
+      item
+        Text = 'Rest (km)'
+        Width = 60
+      end    
+      item
+        Width = 60
+      end    
+      item
+        Bevel = pbRaised
+        Text = 'Start'
+        Width = 40
+      end    
+      item
+        Width = 120
+      end    
+      item
+        Bevel = pbRaised
+        Text = 'Destination'
+        Width = 70
+      end    
+      item
+        Width = 120
+      end    
+      item
+        Text = 'Bearing'
+        Width = 50
+      end    
+      item
+        Width = 50
+      end    
+      item
+        Bevel = pbRaised
+        Text = 'Pt. Cnt'
+        Width = 50
+      end    
+      item
+        Width = 50
+      end    
+      item
+        Width = 50
+      end>
+    SimplePanel = False
+  end
+  object MapPanel: TPanel
+    Left = 216
+    Height = 470
+    Top = 0
+    Width = 656
+    Align = alClient
+    BevelOuter = bvNone
+    Caption = 'MapPanel'
+    ClientHeight = 470
+    ClientWidth = 656
+    TabOrder = 2
+    object MapView: TMapView
+      Left = 0
+      Height = 443
+      Top = 27
+      Width = 656
+      Align = alClient
+      Cyclic = True
+      DownloadEngine = MapView.BuiltInDLE
+      DrawingEngine = MapView.BuiltInDE
+      Layers = <>
+      Font.Color = clBlack
+      MapProvider = 'OpenStreetMap Standard'
+      PluginManager = MvPluginManager
+      POIImages = ImageList
+    end
+    object lblInfo: TLabel
+      Left = 6
+      Height = 15
+      Top = 6
+      Width = 644
+      Align = alTop
+      Alignment = taCenter
+      BorderSpacing.Around = 6
+      Caption = 'Drag start or destination points with left mouse button'
+    end
+  end
+  object MvPluginManager: TMvPluginManager
+    Left = 320
+    Top = 40
+    object MvPluginManagerDraggableMarkerPlugin1: TDraggableMarkerPlugin
+      DraggableMarkerMovedEvent = MvPluginManagerDraggableMarkerPlugin1DraggableMarkerMovedEvent
+    end
+  end
+  object PolarPopupMenu: TPopupMenu
+    Left = 248
+    Top = 328
+    object MenuItem7: TMenuItem
+      Tag = 1
+      Caption = 'Antipodes E / NZ'
+      OnClick = PoleMenuItemClick
+    end
+    object MenuItem1: TMenuItem
+      Tag = 2
+      Caption = 'Start North, Dest South'
+      OnClick = PoleMenuItemClick
+    end
+    object MenuItem2: TMenuItem
+      Tag = 3
+      Caption = 'Dest North, Start South'
+      OnClick = PoleMenuItemClick
+    end
+    object MenuItem3: TMenuItem
+      Tag = 4
+      Caption = 'Start North, Dest free'
+      OnClick = PoleMenuItemClick
+    end
+    object MenuItem4: TMenuItem
+      Tag = 5
+      Caption = 'Start South, Dest free'
+      OnClick = PoleMenuItemClick
+    end
+    object MenuItem5: TMenuItem
+      Tag = 6
+      Caption = 'Dest North, Start free'
+      OnClick = PoleMenuItemClick
+    end
+    object MenuItem6: TMenuItem
+      Tag = 7
+      Caption = 'Dest South, Start Free'
+      OnClick = PoleMenuItemClick
+    end
+  end
+  object ImageList: TImageList
+    Height = 24
+    Scaled = True
+    Width = 24
+    Left = 432
+    Top = 40
+    Bitmap = {
+      4C7A0200000018000000180000003B0700000000000078DACD566D6C54551A3E
+      2DADA4C114C1C50F3E5AB4884BA5441713547691163F881451A844851A2BD568
+      94862EFC80988E49811A7E18D94D2C89BF201A49955ADDD276415A2A0B65DB5A
+      ECCED0292DED0CC5763A9D99FB7D673A1F9D79F63DF78EAED9CD2D1430D9499E
+      E4E4DEF33EE7BDCFFBCE7B1E000C93606262229D904DF803E18F49F075762291
+      48C735E2AD40B1D3A2D1E83255536D82229CB60BF6E1165F4B98C31EB00F8BAA
+      D8120C052B684F1EDF3B55FE6030582C6BB2BDDE571F29BC5C88BC9E3CE4D873
+      90F3630EF22EE4A1D05E88E323C723B22ADB69EF9629E49DA1EBFA9F3B840E6C
+      746F44BA331DAC87813908FF22FC4068279C6348FF3E1D9B7EDC848EB10EF018
+      1E7B2D4D42E3A1975DB26B74B56B3552FA52C0FA89AB8FD04BB848E84E9E719E
+      708621B52515F9EDF9700BEED15028B47932AD78CD4893536557CB1206F70071
+      B892B89C3CC34EE84A7EC359C2698694EF52B0C3BE23A1A8CA49E2C8B2E2D783
+      7A69DD581DE65D9A67E6CC79AF323C36F618BED0BF801017204C08F85CFC1C2B
+      9C2B0C8D582BE13B8679CDF350375497A05A6CB3E2A73EA9DD3DB41B698E34B0
+      4B1437C8B06078011C3107FEFB670FD931FF87F960DFD3BE530C694D69D8EDD8
+      0D5111BFB2E277492E77517F9159472733B47F5F781F56BF3D57F698F9133F6B
+      6478A9FD25B804D7A0157F8FD8132EE82900BB90D499FAA6516FB4E46F141B0D
+      FDB93E9C7FCDD935E8F1F784ADF87BC55EE5D98BCF827532F30CFA8ECFA4CF2C
+      F98F788F80B5D0BE93840686B5E7D6E252E0926CC53F228D74BFDEFB7AC2E8BD
+      0EB30F370C6EB0E45FEF586F6AF377423D4349674962441CB960C5AF69DABE6A
+      773532CF659ABDC1CFF927C307C31F6028328448226260283C049BDB06D64CEF
+      4F98B9673664A2BAAF1AC45169C51F8944FEE40C383D2B3B579A7DF10FB3C733
+      DA3250E028C0CEC19DD839B01305DD05C868CD30756934735FD9BA124E9FD3C3
+      39ACF8E3F17826CDB343C7AE1E8BA536A79ADA9E4EF6786B72DD9CACE789FF70
+      A77E9B8A5A776D8CC7728EC966442C165B48DF78A2B2B712B79FBADDE439F92B
+      70AD9B4C4DD8DF1866D4CF40A5BD92EB728262B3AF67C6D1BEE557C42B3F955E
+      28C5F4A6E926D7CF386EF2B26F19A67F331D25ED257CF68CF098A9CC6741144A
+      2EFA2E4AF967F20D2E03DF24F135A1966155F32A38C61CB2244BA5539DFFA4E3
+      6DA467D94060405ADCB418EC1833F19589450D8BD0EFEF97694F39DF7B237718
+      C5CDA2B9FE979A811A64D567817DC90CF0F5D181A3D074EDAF342F67DFE81D99
+      3C638E5FF6B71D701CC0CCBA99C8FC3A1355F62AD0B30E7AF7BB9BE1FED5BDF0
+      7B9A8BE76DDDB6784577459CEEDE767A967B2BB893F75A2ACDF5755EC9EBE2E0
+      6BFEEC56F127CFB88D788B38F8FA56F1FEE6FE47D56C92A49E1E18D086BBBAB4
+      7067A716EEEF578725496B09064337E57F1445B3B7B7EB91FDFB83D8BE3D8837
+      DED0B1658B86E262153B76C868695122B2ACDD90FFE9EBD370F060082525116C
+      DD1AC12BAF8C63D3A6109E7B4E47418186C71F57B07CB984B23209DDDDCAF5FB
+      9FD0F8CB1E8F365A55358E37DF8CE2EDB7A378EBADA871CEABAF86F1E28B21AC
+      5DAB63D52A95F8652C5D2AD2D9228686D4EBF23FA4C9A9C3874389D2D228DE7B
+      2F86F2F23869318177DE8919676CDE3C8EC2C220D6ACD1B0628582BC3C098B16
+      09B0D9C404C54EEE7FF460695B9B8E77DF0D1B3973DE3D7B12A8AE06BABA1208
+      06417318686D9D205D4278E209050F3F2C61F16281BE258086067952FF238A6A
+      ED9123BC86E3D8B62D4A358D61FFFE38BCDEFFBD7B5DAE385E784133F81F7C50
+      4076B61F7BF78A1045CDD2FF0C0F6BEE0F3FD4515414C26BAF458C6FA8AF8F5B
+      DEEF870E8DFF92FFDCB97ED22F00B75BB1F43F83835A78D72E1DEBD7070D9DB7
+      6E0DC36E4F58F29F3D1BFB45FF7BEFF563C3063F9C4EC5D2FFB85C9AB26B9786
+      679ED1F1FCF341A31FCF9CB1CEBFBE3E82DC5C11F7DD17C05D77F9B071A31F7D
+      7DAAA5FFF17AB5EEBD7BD504EFBDA79FD68D5EDFB72F6CC9BF7DBB6E68B36041
+      0077DE39463D26243C1E7552FF5353A360F56AD9E80D7E4E7EBE86C3872354E3
+      046231201A053C9E043EF9649CEA2A62E1C200EEB9C787F9F3C7F0E9A7E235FD
+      CFE5CBAAA7B858C6238FC878F451997A5CC6934F2AD4B33A3EFE781C1F7D14A2
+      DEE27D63EA3277AECFC8FDA9A77CE8ED55AEED7F54FD505393125BB244C0430F
+      8946FD962D33B174A984254B443CF08060E4FD33F7CC995ED4D549311E7BBDFE
+      E7E041896A173072CCC909E0FEFBCD755656C0E8C5BBEFF661D6AC31AAAB97FE
+      23C294FD0FCD939FCACB45E2F353EFF90C8D39E79C393ECC9E3D86CC4C2FEEB8
+      C38BD252DEF3EAD4FD8F2096389DAAB46E9D9FBE9FF3999C3366789191318AF4
+      F451AACB181C0E459624F9C6FC8FAA970D0E2A526EAE1769691E4C9BE6414A8A
+      078C8DD07F6A14FDFD8A4C7B6EDEFFD4709D460D5E0EBE3E7A94F7A27E6BFC8F
+      5F6D3B7040209D3CA49107555502E8D9ADF53FA27ADE660BC42B2A8438CDC8DF
+      C6FF78551707DDEBFF37FEE7DF82F5EDA1
+    }
+  end
+end

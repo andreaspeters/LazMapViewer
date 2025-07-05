@@ -1,0 +1,98 @@
+object Form1: TForm1
+  Left = 314
+  Height = 372
+  Top = 130
+  Width = 706
+  Caption = 'Form1'
+  ClientHeight = 372
+  ClientWidth = 706
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  object MapView1: TMapView
+    Left = 224
+    Height = 372
+    Top = 0
+    Width = 482
+    Align = alClient
+    DownloadEngine = MapView1.BuiltInDLE
+    DrawingEngine = MapView1.BuiltInDE
+    Layers = <>
+    Font.Color = clBlack
+    MapProvider = 'OpenStreetMap Standard'
+    PluginManager = MvPluginManager1
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 372
+    Top = 0
+    Width = 224
+    Align = alLeft
+    BevelOuter = bvNone
+    ClientHeight = 372
+    ClientWidth = 224
+    TabOrder = 1
+    object Label1: TLabel
+      Left = 16
+      Height = 15
+      Top = 12
+      Width = 124
+      Caption = 'Select top-most plugin:'
+    end
+    object ComboBox1: TComboBox
+      Left = 16
+      Height = 23
+      Top = 32
+      Width = 192
+      ItemHeight = 15
+      Style = csDropDownList
+      TabOrder = 0
+      OnChange = ComboBox1Change
+    end
+    object ValueListEditor1: TValueListEditor
+      Left = 16
+      Height = 288
+      Top = 72
+      Width = 192
+      Anchors = [akTop, akLeft, akBottom]
+      FixedCols = 0
+      RowCount = 2
+      TabOrder = 1
+      DisplayOptions = [doColumnTitles, doAutoColResize]
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goAlwaysShowEditor, goThumbTracking]
+      TitleCaptions.Strings = (
+        'Index'
+        'Plugin'
+      )
+      ColWidths = (
+        94
+        94
+      )
+    end
+  end
+  object MvPluginManager1: TMvPluginManager
+    Left = 312
+    Top = 120
+    object MvPluginManager1LegalNoticePlugin1: TLegalNoticePlugin
+      BackgroundColor = clWhite
+      BackgroundOpacity = 1
+      LegalNotice = 'Test 1'
+      Font.Height = -19
+    end
+    object MvPluginManager1LegalNoticePlugin2: TLegalNoticePlugin
+      BackgroundColor = clYellow
+      BackgroundOpacity = 1
+      LegalNotice = 'Test 2'
+      Spacing = 14
+      Font.Color = clRed
+      Font.Height = -19
+    end
+    object MvPluginManager1LegalNoticePlugin3: TLegalNoticePlugin
+      BackgroundColor = clBlue
+      BackgroundOpacity = 1
+      LegalNotice = 'Test 3'
+      Spacing = 24
+      Font.Color = clWhite
+      Font.Height = -19
+    end
+  end
+end

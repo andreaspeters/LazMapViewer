@@ -1,0 +1,547 @@
+object CfgFrame: TCfgFrame
+  Left = 0
+  Height = 682
+  Top = 0
+  Width = 287
+  ClientHeight = 682
+  ClientWidth = 287
+  TabOrder = 0
+  DesignLeft = 1150
+  DesignTop = 210
+  object LblProviders: TLabel
+    AnchorSideLeft.Control = cmbProviders
+    AnchorSideTop.Control = Owner
+    Left = 4
+    Height = 15
+    Top = 8
+    Width = 52
+    BorderSpacing.Top = 8
+    Caption = 'Providers:'
+    FocusControl = cmbProviders
+    ParentColor = False
+  end
+  object cmbProviders: TComboBox
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = LblProviders
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = btnLoadMapProviders
+    Left = 4
+    Height = 23
+    Top = 25
+    Width = 213
+    Anchors = [akTop, akLeft, akRight]
+    BorderSpacing.Left = 4
+    BorderSpacing.Top = 2
+    BorderSpacing.Right = 2
+    DropDownCount = 24
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 0
+    OnChange = cmbProvidersChange
+  end
+  object btnLoadMapProviders: TSpeedButton
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = cmbProviders
+    AnchorSideTop.Side = asrCenter
+    AnchorSideRight.Control = btnSaveMapProviders
+    Left = 219
+    Height = 28
+    Top = 22
+    Width = 30
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 2
+    Glyph.Data = {
+      36040000424D3604000000000000360000002800000010000000100000000100
+      2000000000000004000064000000640000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000003591
+      DBFA439FDDFA439FDDFA429FDDFA429EDDFA419EDCFA419EDCFA419EDCFA419E
+      DCFA419EDCFA419EDCFA419EDCFA3792DAFB3080DF100000000000000000429C
+      DEF76EC7EBFF6DC7EAFF6BC6EAFF6AC5E9FF68C4E9FF67C3E8FF65C2E8FF64C1
+      E7FF63C0E7FF61BFE6FF60BEE5FF51AFE3FE308CD6450000000000000000409A
+      DDF47CD0F1FF7BD0F0FF7ACFEFFF79CEEFFF77CDEEFF76CCEEFF74CBEDFF73CA
+      EDFF71C9ECFF70C8ECFF6EC7EBFF6AC3E9FF3993DB8E00000000000000003E99
+      DCEC7ECEF1FF8AD9F6FF89D8F5FF87D7F4FF86D6F4FF84D5F3FF83D5F3FF81D4
+      F2FF80D3F2FF7ED2F1FF7DD1F1FF7BD0F0FF439ADEB40000000000000000409B
+      DDE470C1EDFF99E2FBFF97E2FBFF96E1FAFF94E0F9FF93DFF9FF91DEF8FF90DD
+      F8FF8EDCF7FF8DDBF7FF8CDAF6FF8AD9F6FF4EA4E2CD00000000000000004AA5
+      E0DF61B3E8FFA3E9FFFFA3E9FFFFA3E9FFFFA3E9FFFFA2E8FEFFA0E7FEFF9FE6
+      FDFF9DE5FDFF9CE4FCFF9AE3FCFF99E2FBFF5FB3E9E33080DF100000000051A8
+      E2DF5EB2E8FFA3E9FFFFA3E9FFFFA3E9FFFFA3E9FFFFA3E9FFFFA3E9FFFFA3E9
+      FFFFA3E9FFFFA3E9FFFFA3E9FFFFA3E9FFFF84CFF5FB348CDA450000000058AD
+      E5DF60B3E8FF61B3E9FF61B3E9FF60B2E9FF60B2E8FF60B2E8FF5FB1E8FF5FB1
+      E8FF5EB1E8FF5EB1E8FF5EB1E7FF59ADE7FB55A9E5E33B94DC85000000005FB0
+      E8DF9DE4FBFF9AE3FAFF97E1F9FF94DFF8FF91DDF7FF8EDBF5FF8BD9F4FF88D8
+      F3FF85D6F2FF82D4F1FF7FD2F0FF4FA7E1DF00000000000000000000000061B1
+      E8DFA6EAFFFFA6EAFFFFA6EAFFFFA3E8FEFF7AC6F1ED59ACE6DF58AAE5DF57AA
+      E5DF56AAE5DF53A9E4DF53A8E4DF3C94DCE20000000000000000000000004096
+      DEE25DAEE7DF5DAEE7DF5DAEE7DF57A9E6DF4399DF6E00000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000
+    }
+    OnClick = btnLoadMapProvidersClick
+  end
+  object btnSaveMapProviders: TSpeedButton
+    AnchorSideLeft.Control = btnLoadMapProviders
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = cmbProviders
+    AnchorSideTop.Side = asrCenter
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 251
+    Height = 28
+    Top = 22
+    Width = 32
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 4
+    Glyph.Data = {
+      36040000424D3604000000000000360000002800000010000000100000000100
+      2000000000000004000064000000640000000000000000000000A4653455A465
+      34FFA46534FFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BD
+      BAFFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFA465
+      34FFA46534FFB6BDBAFFA46534FFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BD
+      BAFFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFA465
+      34FFA46534FFB6BDBAFFA46534FFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BD
+      BAFFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFA465
+      34FFA46534FFB6BDBAFFA46534FFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BD
+      BAFFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFA465
+      34FFA46534FFB6BDBAFFA46534FFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BD
+      BAFFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFA465
+      34FFA46534FFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BDBAFFB6BD
+      BAFFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFA465
+      34FFA46534FFA46534FFA46534FFA46534FFA46534FFA46534FFA46534FFA465
+      34FFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFA465
+      34FFA46534FFA46534FFA46534FFA46534FFA46534FFA46534FFA46534FFA465
+      34FFA46534FFA46534FFA46534FFA46534FFA46534FF00000000A46534FFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFA46534FF00000000A46534FFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFA46534FF00000000A46534FFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFA46534FF00000000A46534FFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFA46534FF00000000A46534FFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFA46534FF00000000A46534FFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFECEE
+      EEFFECEEEEFFECEEEEFFECEEEEFFECEEEEFFA46534FF00000000A46534FF5959
+      F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959
+      F3FF5959F3FF5959F3FF5959F3FF5959F3FFA46534FF00000000A46534FF5959
+      F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959
+      F3FF5959F3FF5959F3FF5959F3FF5959F3FFA46534FF00000000
+    }
+    OnClick = btnSaveMapProvidersClick
+  end
+  object gbProxy: TGroupBox
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = cmbProviders
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 4
+    Height = 185
+    Top = 56
+    Width = 279
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = True
+    BorderSpacing.Top = 4
+    BorderSpacing.Around = 4
+    Caption = 'Proxy'
+    ClientHeight = 165
+    ClientWidth = 275
+    TabOrder = 1
+    object lblProxyHost: TLabel
+      AnchorSideLeft.Control = rbNoProxy
+      AnchorSideTop.Control = edProxyHost
+      AnchorSideTop.Side = asrCenter
+      Left = 20
+      Height = 15
+      Top = 65
+      Width = 28
+      BorderSpacing.Left = 10
+      Caption = 'Host:'
+      ParentColor = False
+    end
+    object edProxyHost: TEdit
+      AnchorSideLeft.Control = edProxyUserName
+      AnchorSideTop.Control = rbProxyData
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = gbProxy
+      AnchorSideRight.Side = asrBottom
+      Left = 85
+      Height = 23
+      Top = 61
+      Width = 184
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Right = 6
+      TabOrder = 3
+    end
+    object lblProxyPort: TLabel
+      AnchorSideLeft.Control = lblProxyHost
+      AnchorSideTop.Control = seProxyPort
+      AnchorSideTop.Side = asrCenter
+      Left = 20
+      Height = 15
+      Top = 90
+      Width = 22
+      Caption = 'Port'
+      ParentColor = False
+    end
+    object seProxyPort: TSpinEdit
+      AnchorSideLeft.Control = lblProxyUserName
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = edProxyHost
+      AnchorSideTop.Side = asrBottom
+      Left = 85
+      Height = 23
+      Top = 86
+      Width = 70
+      BorderSpacing.Top = 2
+      MaxValue = 65535
+      TabOrder = 4
+    end
+    object lblProxyUserName: TLabel
+      AnchorSideLeft.Control = lblProxyHost
+      AnchorSideTop.Control = edProxyUserName
+      AnchorSideTop.Side = asrCenter
+      Left = 20
+      Height = 15
+      Top = 115
+      Width = 59
+      BorderSpacing.Right = 6
+      Caption = 'User name:'
+      ParentColor = False
+    end
+    object edProxyUserName: TEdit
+      AnchorSideLeft.Control = lblProxyUserName
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = seProxyPort
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = gbProxy
+      AnchorSideRight.Side = asrBottom
+      Left = 85
+      Height = 23
+      Top = 111
+      Width = 184
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Top = 2
+      BorderSpacing.Right = 6
+      TabOrder = 5
+    end
+    object lblProxyPassword: TLabel
+      AnchorSideLeft.Control = lblProxyHost
+      AnchorSideTop.Control = edProxyPassword
+      AnchorSideTop.Side = asrCenter
+      Left = 20
+      Height = 15
+      Top = 140
+      Width = 50
+      Caption = 'Password'
+      ParentColor = False
+    end
+    object edProxyPassword: TEdit
+      AnchorSideLeft.Control = edProxyUserName
+      AnchorSideTop.Control = edProxyUserName
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = gbProxy
+      AnchorSideRight.Side = asrBottom
+      Left = 85
+      Height = 23
+      Top = 136
+      Width = 184
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Top = 2
+      BorderSpacing.Right = 6
+      BorderSpacing.Bottom = 6
+      TabOrder = 6
+    end
+    object rbProxyData: TRadioButton
+      AnchorSideLeft.Control = rbNoProxy
+      AnchorSideTop.Control = rbSystemProxy
+      AnchorSideTop.Side = asrBottom
+      Left = 10
+      Height = 19
+      Top = 42
+      Width = 74
+      BorderSpacing.Top = 2
+      Caption = 'Proxy data'
+      TabOrder = 2
+      OnChange = rbProxyDataChange
+    end
+    object rbNoProxy: TRadioButton
+      AnchorSideLeft.Control = gbProxy
+      AnchorSideTop.Control = gbProxy
+      Left = 10
+      Height = 19
+      Top = 0
+      Width = 67
+      BorderSpacing.Left = 10
+      Caption = 'No proxy'
+      TabOrder = 0
+      OnChange = rbNoProxyChange
+    end
+    object rbSystemProxy: TRadioButton
+      AnchorSideLeft.Control = rbNoProxy
+      AnchorSideTop.Control = rbNoProxy
+      AnchorSideTop.Side = asrBottom
+      Left = 10
+      Height = 19
+      Top = 21
+      Width = 110
+      BorderSpacing.Top = 2
+      Caption = 'Use system proxy'
+      Checked = True
+      TabOrder = 1
+      TabStop = True
+      OnChange = rbSystemProxyChange
+    end
+  end
+  object cbZoomToCursor: TCheckBox
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = gbProxy
+    AnchorSideTop.Side = asrBottom
+    Left = 4
+    Height = 19
+    Top = 249
+    Width = 100
+    BorderSpacing.Left = 4
+    BorderSpacing.Top = 8
+    BorderSpacing.Right = 16
+    Caption = 'Zoom to cursor'
+    Checked = True
+    State = cbChecked
+    TabOrder = 2
+    OnChange = cbZoomToCursorChange
+  end
+  object cbUseThreads: TCheckBox
+    AnchorSideLeft.Control = cbZoomToCursor
+    AnchorSideTop.Control = cbZoomToCursor
+    AnchorSideTop.Side = asrBottom
+    Left = 4
+    Height = 19
+    Top = 272
+    Width = 79
+    BorderSpacing.Top = 4
+    Caption = 'Use threads'
+    Checked = True
+    State = cbChecked
+    TabOrder = 3
+    OnChange = cbUseThreadsChange
+  end
+  object cbDoubleBuffer: TCheckBox
+    AnchorSideLeft.Control = cbUseThreads
+    AnchorSideTop.Control = cbUseThreads
+    AnchorSideTop.Side = asrBottom
+    Left = 4
+    Height = 19
+    Top = 295
+    Width = 85
+    BorderSpacing.Top = 4
+    BorderSpacing.Right = 6
+    Caption = 'DblBuffering'
+    Checked = True
+    State = cbChecked
+    TabOrder = 4
+    OnChange = cbDoubleBufferChange
+  end
+  object cbDebugTiles: TCheckBox
+    AnchorSideLeft.Control = cbDoubleBuffer
+    AnchorSideTop.Control = cbDoubleBuffer
+    AnchorSideTop.Side = asrBottom
+    Left = 4
+    Height = 19
+    Top = 318
+    Width = 77
+    BorderSpacing.Top = 4
+    Caption = 'Debug tiles'
+    TabOrder = 5
+    OnChange = cbDebugTilesChange
+  end
+  object cbCyclicView: TCheckBox
+    AnchorSideLeft.Control = cbZoomToCursor
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = cbZoomToCursor
+    Left = 120
+    Height = 19
+    Top = 249
+    Width = 77
+    Caption = 'Cyclic view'
+    Checked = True
+    State = cbChecked
+    TabOrder = 6
+    OnChange = cbCyclicViewChange
+  end
+  object cbPreviewTiles: TCheckBox
+    AnchorSideLeft.Control = cbCyclicView
+    AnchorSideTop.Control = cbUseThreads
+    Left = 120
+    Height = 19
+    Top = 272
+    Width = 83
+    Caption = 'Preview tiles'
+    Checked = True
+    State = cbChecked
+    TabOrder = 7
+    OnChange = cbPreviewTilesChange
+  end
+  object clbBackColor: TColorButton
+    AnchorSideLeft.Control = cbCyclicView
+    AnchorSideTop.Control = cbDoubleBuffer
+    AnchorSideTop.Side = asrCenter
+    Left = 120
+    Height = 28
+    Top = 290
+    Width = 108
+    BorderWidth = 2
+    ButtonColorAutoSize = False
+    ButtonColorSize = 15
+    ButtonColor = clWhite
+    Caption = 'Map backgr.'
+    Margin = 4
+    OnColorChanged = clbBackColorColorChanged
+  end
+  object Bevel1: TBevel
+    AnchorSideLeft.Control = cbDebugTiles
+    AnchorSideTop.Control = cbDebugTiles
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Side = asrBottom
+    Left = 4
+    Height = 2
+    Top = 343
+    Width = 257
+    Anchors = [akTop, akLeft, akRight]
+    BorderSpacing.Top = 6
+    Shape = bsTopLine
+  end
+  object rgPOIMode: TRadioGroup
+    AnchorSideLeft.Control = cmbProviders
+    AnchorSideTop.Control = Bevel1
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 4
+    Height = 128
+    Top = 351
+    Width = 279
+    Anchors = [akTop, akLeft, akRight]
+    AutoFill = False
+    BorderSpacing.Top = 6
+    BorderSpacing.Right = 4
+    Caption = 'POI Mode'
+    ChildSizing.LeftRightSpacing = 12
+    ChildSizing.TopBottomSpacing = 4
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclTopToBottomThenLeftToRight
+    ChildSizing.ControlsPerLine = 4
+    ClientHeight = 108
+    ClientWidth = 275
+    ItemIndex = 0
+    Items.Strings = (
+      'default drawing'
+      'default POI image'
+      'image from imagelist'
+      'custom drawing'
+    )
+    TabOrder = 8
+    OnClick = rgPOIModeClick
+    object Bevel3: TBevel
+      Left = 151
+      Height = 25
+      Top = 4
+      Width = 66
+      Constraints.MaxHeight = 25
+      Shape = bsSpacer
+    end
+    object btnSelectPOIImage: TButton
+      Left = 151
+      Height = 25
+      Top = 29
+      Width = 66
+      AutoSize = True
+      BorderSpacing.Left = 8
+      Caption = 'Select...'
+      Enabled = False
+      TabOrder = 4
+      OnClick = btnSelectPOIImageClick
+    end
+    object Bevel4: TBevel
+      Left = 151
+      Height = 25
+      Top = 54
+      Width = 66
+      Constraints.MaxHeight = 25
+      Shape = bsSpacer
+    end
+    object Bevel5: TBevel
+      Left = 151
+      Height = 25
+      Top = 79
+      Width = 66
+      Constraints.MaxHeight = 25
+      Shape = bsSpacer
+    end
+  end
+  object btnPOITextFont: TButton
+    AnchorSideLeft.Control = rgPOIMode
+    AnchorSideTop.Control = rgPOIMode
+    AnchorSideTop.Side = asrBottom
+    Left = 4
+    Height = 30
+    Top = 487
+    Width = 87
+    BorderSpacing.Top = 8
+    Caption = 'POI text font'
+    TabOrder = 9
+    OnClick = btnPOITextFontClick
+  end
+  object LblPOITextBgColor: TLabel
+    AnchorSideLeft.Control = btnPOITextFont
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = btnPOITextFont
+    AnchorSideTop.Side = asrCenter
+    Left = 97
+    Height = 15
+    Top = 495
+    Width = 39
+    BorderSpacing.Left = 6
+    Caption = 'Backgr.'
+    ParentColor = False
+  end
+  object cbPOITextBgColor: TColorBox
+    AnchorSideLeft.Control = LblPOITextBgColor
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = btnPOITextFont
+    AnchorSideTop.Side = asrCenter
+    AnchorSideRight.Control = rgPOIMode
+    AnchorSideRight.Side = asrBottom
+    Left = 142
+    Height = 21
+    Top = 492
+    Width = 141
+    NoneColorColor = clWhite
+    Style = [cbStandardColors, cbExtendedColors, cbIncludeNone, cbCustomColor, cbPrettyNames, cbCustomColors]
+    Anchors = [akTop, akLeft, akRight]
+    BorderSpacing.Left = 6
+    ItemHeight = 15
+    TabOrder = 10
+    OnChange = cbPOITextBgColorChange
+  end
+  object OpenPictureDialog: TOpenPictureDialog
+    Left = 184
+    Top = 344
+  end
+  object FontDialog: TFontDialog
+    MinFontSize = 0
+    MaxFontSize = 0
+    Left = 40
+    Top = 528
+  end
+end

@@ -1,0 +1,72 @@
+object MainForm: TMainForm
+  Left = 324
+  Height = 307
+  Top = 119
+  Width = 451
+  Caption = 'User-defined Plugin Demo'
+  ClientHeight = 307
+  ClientWidth = 451
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  object MapView: TMapView
+    Left = 0
+    Height = 261
+    Top = 0
+    Width = 451
+    Align = alClient
+    DownloadEngine = MapView.BuiltInDLE
+    DrawingEngine = MapView.BuiltInDE
+    Layers = <>
+    Font.Color = clBlack
+    MapProvider = 'OpenStreetMap Standard'
+    PluginManager = PluginManager
+  end
+  object InfoPanel: TPanel
+    Left = 8
+    Height = 30
+    Top = 269
+    Width = 435
+    Align = alBottom
+    AutoSize = True
+    BorderSpacing.Around = 8
+    BevelOuter = bvNone
+    ClientHeight = 30
+    ClientWidth = 435
+    TabOrder = 1
+    object lblMessageLabel: TLabel
+      AnchorSideLeft.Control = InfoPanel
+      AnchorSideTop.Control = Label1
+      AnchorSideTop.Side = asrBottom
+      Left = 0
+      Height = 15
+      Top = 15
+      Width = 146
+      Caption = 'UserdefinedPlugin Message'
+    end
+    object lblUserdefinedPluginMessage: TLabel
+      AnchorSideLeft.Control = lblMessageLabel
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = lblMessageLabel
+      AnchorSideTop.Side = asrCenter
+      Left = 154
+      Height = 15
+      Top = 15
+      Width = 38
+      BorderSpacing.Left = 8
+      Caption = ' (none)'
+    end
+    object Label1: TLabel
+      AnchorSideLeft.Control = InfoPanel
+      AnchorSideTop.Control = InfoPanel
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 106
+      Caption = 'Click into the map...'
+    end
+  end
+  object PluginManager: TMvPluginManager
+    Left = 262
+    Top = 31
+  end
+end

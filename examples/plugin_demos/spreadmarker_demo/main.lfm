@@ -1,0 +1,58 @@
+object MainForm: TMainForm
+  Left = 324
+  Height = 473
+  Top = 118
+  Width = 669
+  Caption = 'Spread Marker Demo'
+  ClientHeight = 473
+  ClientWidth = 669
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  object MapView: TMapView
+    Left = 0
+    Height = 447
+    Top = 0
+    Width = 669
+    Align = alClient
+    Cyclic = True
+    DownloadEngine = MapView.BuiltInDLE
+    DrawingEngine = MapView.BuiltInDE
+    Layers = <>
+    Font.Color = clBlack
+    MapProvider = 'OpenStreetMap Standard'
+    PluginManager = PluginManager
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 26
+    Top = 447
+    Width = 669
+    Align = alBottom
+    ClientHeight = 26
+    ClientWidth = 669
+    TabOrder = 1
+    object CheckBox1: TCheckBox
+      Left = 8
+      Height = 19
+      Top = 0
+      Width = 257
+      Caption = 'Delete some of the spreaded markers on click'
+      TabOrder = 0
+    end
+  end
+  object PluginManager: TMvPluginManager
+    Left = 408
+    Top = 104
+    object DraggableMarkerPlugin: TDraggableMarkerPlugin
+    end
+    object UserDefinedPlugin: TUserDefinedPlugin
+      OnMouseDown = UserDefinedPluginMouseDown
+    end
+    object SpreadMarkerPlugin: TSpreadMarkerPlugin
+      SpreadByPixel = 16
+      MarkerCatchSize = 6
+      MarkerSpreadDelayMS = 150
+      MarkerCollapseDelayMS = 1500
+    end
+  end
+end

@@ -1,0 +1,139 @@
+inherited CfgFrame_with_addons: TCfgFrame_with_addons
+  inherited LblProviders: TLabel
+    AnchorSideTop.Control = Owner
+  end
+  inherited cmbProviders: TComboBox
+    AnchorSideLeft.Control = Owner
+  end
+  inherited btnSaveMapProviders: TSpeedButton
+    AnchorSideRight.Control = Owner
+  end
+  inherited gbProxy: TGroupBox
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = cbDownloadEngine
+    AnchorSideRight.Control = Owner
+    Top = 154
+    BorderSpacing.Top = 6
+  end
+  inherited cbZoomToCursor: TCheckBox
+    AnchorSideLeft.Control = Owner
+    Top = 347
+  end
+  inherited cbUseThreads: TCheckBox
+    Top = 370
+  end
+  inherited cbDoubleBuffer: TCheckBox
+    Top = 393
+  end
+  inherited cbDebugTiles: TCheckBox
+    Top = 416
+  end
+  inherited cbCyclicView: TCheckBox
+    Top = 347
+  end
+  inherited cbPreviewTiles: TCheckBox
+    Top = 370
+  end
+  inherited clbBackColor: TColorButton
+    Top = 388
+  end
+  inherited Bevel1: TBevel
+    Top = 441
+  end
+  inherited rgPOIMode: TRadioGroup
+    AnchorSideRight.Control = Owner
+    Top = 449
+  end
+  inherited btnPOITextFont: TButton
+    Top = 585
+  end
+  inherited LblPOITextBgColor: TLabel
+    Top = 593
+  end
+  inherited cbPOITextBgColor: TColorBox
+    Top = 590
+  end
+  object Label1: TLabel[17]
+    AnchorSideLeft.Control = cbDrawingEngine
+    AnchorSideTop.Control = cmbProviders
+    AnchorSideTop.Side = asrBottom
+    Left = 6
+    Height = 15
+    Top = 56
+    Width = 86
+    BorderSpacing.Top = 8
+    Caption = 'Drawing engine:'
+    ParentColor = False
+  end
+  object cbDrawingEngine: TComboBox[18]
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Label1
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 6
+    Height = 23
+    Top = 73
+    Width = 275
+    Anchors = [akTop, akLeft, akRight]
+    BorderSpacing.Left = 6
+    BorderSpacing.Top = 2
+    BorderSpacing.Right = 6
+    ItemHeight = 15
+    ItemIndex = 0
+    Items.Strings = (
+      'default'
+      'RGBGraphics'
+      'BGRABitmap'
+    )
+    Style = csDropDownList
+    TabOrder = 11
+    Text = 'default'
+    OnChange = cbDrawingEngineChange
+  end
+  object Label2: TLabel[19]
+    AnchorSideLeft.Control = cbDownloadEngine
+    AnchorSideTop.Control = cbDrawingEngine
+    AnchorSideTop.Side = asrBottom
+    Left = 6
+    Height = 15
+    Top = 104
+    Width = 96
+    BorderSpacing.Top = 8
+    Caption = 'Download engine:'
+    ParentColor = False
+  end
+  object cbDownloadEngine: TComboBox[20]
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Label2
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 6
+    Height = 23
+    Top = 121
+    Width = 275
+    Anchors = [akTop, akLeft, akRight]
+    BorderSpacing.Left = 6
+    BorderSpacing.Top = 2
+    BorderSpacing.Right = 6
+    ItemHeight = 15
+    ItemIndex = 0
+    Items.Strings = (
+      'default'
+      'Synapse'
+      'FpHTTPClient'
+      'WinInet'
+      'local files from cache only'
+    )
+    Style = csDropDownList
+    TabOrder = 12
+    Text = 'default'
+    OnChange = cbDownloadEngineChange
+  end
+  inherited OpenPictureDialog: TOpenPictureDialog[21]
+  end
+  inherited FontDialog: TFontDialog[22]
+    Top = 616
+  end
+end

@@ -1,0 +1,385 @@
+object MainForm: TMainForm
+  Left = 314
+  Height = 515
+  Top = 130
+  Width = 991
+  Caption = 'MainForm'
+  ClientHeight = 515
+  ClientWidth = 991
+  ShowHint = True
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  object Panel1: TPanel
+    Left = 622
+    Height = 503
+    Top = 6
+    Width = 363
+    Align = alRight
+    BorderSpacing.Left = 3
+    BorderSpacing.Top = 6
+    BorderSpacing.Right = 6
+    BorderSpacing.Bottom = 6
+    BevelOuter = bvNone
+    ClientHeight = 503
+    ClientWidth = 363
+    TabOrder = 0
+    object Log: TMemo
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = Splitter1
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      AnchorSideBottom.Control = Label1
+      Left = 0
+      Height = 184
+      Top = 298
+      Width = 363
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      Font.Height = -11
+      Font.Name = 'Courier New'
+      Lines.Strings = (
+        ''
+      )
+      ParentFont = False
+      TabOrder = 0
+    end
+    object DataGrid: TDrawGrid
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = cbElevDatasets
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      AnchorSideBottom.Control = Splitter1
+      Left = 0
+      Height = 247
+      Top = 46
+      Width = 363
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      BorderSpacing.Top = 6
+      ColCount = 4
+      ExtendedSelect = False
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect, goSmoothScroll]
+      RowCount = 1
+      TabOrder = 1
+      OnDrawCell = DataGridDrawCell
+      OnPrepareCanvas = DataGridPrepareCanvas
+    end
+    object cbElevDatasets: TComboBox
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = lblDatasets
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = btnDelete
+      Left = 0
+      Height = 23
+      Top = 17
+      Width = 338
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Top = 2
+      BorderSpacing.Right = 2
+      ItemHeight = 15
+      ItemIndex = 3
+      Items.Strings = (
+        'nzdem8m (New Zealand, resolution 8 m)'
+        'ned10m (Continental U.S.A., Hawaii, parts of Alaska, resolution 10 m)'
+        'eudem25m (Europe, resolution 25 m)'
+        'mapzen (global,  resolution 30 m)'
+        'aster30m (global, resolution 30 m)'
+        'bkg200m (Germany, resolution 200 m)'
+      )
+      Style = csDropDownList
+      TabOrder = 2
+      Text = 'mapzen (global,  resolution 30 m)'
+    end
+    object lblDatasets: TLabel
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = Panel1
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 166
+      Caption = 'Elevation datasets, provided by '
+    end
+    object OpenTopoDataLink: TLabel
+      AnchorSideLeft.Control = lblDatasets
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = Panel1
+      Cursor = crHandPoint
+      Left = 166
+      Height = 15
+      Hint = 'https://www.opentopodata.org/'
+      Top = 0
+      Width = 166
+      Caption = 'https://www.opentopodata.org'
+      Font.Color = clBlue
+      ParentColor = False
+      ParentFont = False
+      OnClick = URLClick
+      OnMouseEnter = URLMouseEnter
+      OnMouseLeave = URLMouseLeave
+    end
+    object Splitter1: TSplitter
+      AnchorSideLeft.Control = Panel1
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      Cursor = crVSplit
+      Left = 0
+      Height = 5
+      Top = 293
+      Width = 363
+      Align = alNone
+      Anchors = [akTop, akLeft, akRight]
+      ResizeAnchor = akTop
+    end
+    object btnDelete: TSpeedButton
+      AnchorSideTop.Control = cbElevDatasets
+      AnchorSideTop.Side = asrCenter
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      Left = 340
+      Height = 22
+      Hint = 'Delete selected data point'
+      Top = 17
+      Width = 23
+      Anchors = [akTop, akRight]
+      Images = ImageList1
+      ImageIndex = 0
+      OnClick = btnDeleteClick
+    end
+    object Label1: TLabel
+      Left = 0
+      Height = 15
+      Top = 488
+      Width = 363
+      Align = alBottom
+      BorderSpacing.Top = 6
+      Caption = 'CTRL+click in the map to measure the elevation.'
+      WordWrap = True
+    end
+  end
+  object Splitter2: TSplitter
+    Left = 614
+    Height = 515
+    Top = 0
+    Width = 5
+    Align = alRight
+    ResizeAnchor = akRight
+    ResizeStyle = rsPattern
+  end
+  object MapPanel: TPanel
+    Left = 0
+    Height = 515
+    Top = 0
+    Width = 614
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 515
+    ClientWidth = 614
+    TabOrder = 2
+    object MapView: TMapView
+      Left = 0
+      Height = 484
+      Top = 0
+      Width = 614
+      Align = alClient
+      DownloadEngine = MapView.BuiltInDLE
+      DrawingEngine = MapView.BuiltInDE
+      Layers = <>
+      Font.Color = clBlack
+      OnDrawGpsPoint = MapViewDrawGpsPoint
+      OnMouseDown = MapViewMouseDown
+    end
+    object Panel2: TPanel
+      Left = 8
+      Height = 15
+      Top = 492
+      Width = 598
+      Align = alBottom
+      AutoSize = True
+      BorderSpacing.Around = 8
+      BevelOuter = bvNone
+      ClientHeight = 15
+      ClientWidth = 598
+      TabOrder = 1
+      object lblMapData: TLabel
+        AnchorSideLeft.Control = Panel2
+        AnchorSideTop.Control = Panel2
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 70
+        Caption = 'Map data: (c)'
+      end
+      object MapDataLink: TLabel
+        AnchorSideLeft.Control = lblMapData
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Cursor = crHandPoint
+        Left = 76
+        Height = 15
+        Hint = 'https://openstreetmap.org/copyright'
+        Top = 0
+        Width = 151
+        BorderSpacing.Left = 6
+        Caption = 'OpenStreetMap contributors'
+        Font.Color = clBlue
+        ParentFont = False
+        OnClick = URLClick
+        OnMouseEnter = URLMouseEnter
+        OnMouseLeave = URLMouseLeave
+      end
+      object lblMapPresentation: TLabel
+        AnchorSideLeft.Control = MapDataLink
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Left = 251
+        Height = 15
+        Top = 0
+        Width = 71
+        BorderSpacing.Left = 24
+        Caption = 'Map style: (c)'
+      end
+      object MapStyleLink: TLabel
+        AnchorSideLeft.Control = lblMapPresentation
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Cursor = crHandPoint
+        Left = 328
+        Height = 15
+        Hint = 'http://opentopomap.org/'
+        Top = 0
+        Width = 86
+        BorderSpacing.Left = 6
+        Caption = 'Open Topo Map'
+        Font.Color = clBlue
+        ParentFont = False
+        OnClick = URLClick
+        OnMouseEnter = URLMouseEnter
+        OnMouseLeave = URLMouseLeave
+      end
+      object Label2: TLabel
+        AnchorSideLeft.Control = MapStyleLink
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Left = 422
+        Height = 15
+        Top = 0
+        Width = 4
+        BorderSpacing.Left = 8
+        Caption = '('
+      end
+      object MapLicenseLink: TLabel
+        AnchorSideLeft.Control = Label2
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Cursor = crHandPoint
+        Left = 426
+        Height = 15
+        Hint = 'https://creativecommons.org/licenses/by-sa/3.0/'
+        Top = 0
+        Width = 54
+        Caption = 'CC-BY-SA'
+        Font.Color = clBlue
+        ParentFont = False
+        OnClick = URLClick
+        OnMouseEnter = URLMouseEnter
+        OnMouseLeave = URLMouseLeave
+      end
+      object Label3: TLabel
+        AnchorSideLeft.Control = MapLicenseLink
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Left = 480
+        Height = 15
+        Top = 0
+        Width = 4
+        Caption = ')'
+      end
+    end
+  end
+  object ImageList1: TImageList
+    Scaled = True
+    Left = 421
+    Top = 89
+    Bitmap = {
+      4C7A010000001000000010000000D20100000000000078DA8D934B2F035114C7
+      6FE2992AAA6B1516D61EDF401356361E0B62CD37F0117C062C8904EDB49D466B
+      51F108225DB0C04C4751A9B4452AD59966461F53AE7BEE1899A9F1589CDC73CE
+      FDFFE6DC7BCF198C31C21676BE8A5A780F72735E34052BC4F807AD95F19E7AF9
+      36D29FBF3F1C2DC00AF17F59A8C579885B54BE0CE29B35D466A5E736505FCC6F
+      6705D629C4FC3689671A2BBCCF568E6F754A37DBBD627CCB25C57C2D459E692A
+      F34CB34C7471C16F0F02A7F3E4FB6CEA68ACAAE66F4D756B4D95EE71EA785C05
+      BDCE6BF74573E9E88C0C1AF96E19BF111DF885AB05BA420C79F0D327D332B789
+      66CDEF852693072392C62F62357741B52237AFD5CD9D93FC12F5937BC312E127
+      6A78776267300FFB4A7215579EA3261E62C8839F880CE4093F54C3F75F877B44
+      D87F4D7971F969CFC4971F77499EA1FE75A85B34DEFD93EF22EF4AEF5FCC84A9
+      19F96226844B0F5A4E603BE4CB75E432F25741D40A7DA3B5486D388391D7CEB4
+      4F7DDEDB5021F5ECDF66CE5B577D575E4C77D57925B942F3B00F3AAB3982D951
+      C53BFAF6D003232F27B49EA86202C7189B64C50BAC235DCA9E997AADF75F9F89
+      52F6140B0147CA920F387925B3F3EBFC299908793F276779FE407B00FE93BF0C
+      743AF30115F110EB
+    }
+    BitmapAdv = {
+      4C69020000004C7A010000001800000018000000210300000000000078DAA595
+      4B4F534114C7A7428C5174E352A3F10BA810127706F51B883BE20A75A50B1F24
+      6E7C41742124120DAE8CA851A1BD95041A1310230B850891A2F65EFAB65229B6
+      943E6E4B5BFA3CCE99E9BDA96468212C4EA6E7F1FF75EEDC7BCE0000812DD837
+      0BD90D5BD454335F3FD9251B499762DA31AB483BD66413015CD1C738E6B7C39F
+      379293C8F47E682A0567AF42D8D605B8A28F71CC6F876F93480B725617470132
+      29DDD0C738E6B7C2534CA4C16626CD3613392F4BA493AE43C8095AAF2F469D4F
+      16238EDE50C4F13810B45E5BC238B5119B91F4D0BA76C54C4EB85F937D222EAD
+      EB57A4FAE5B206F839D797ECC3FBF34ECBC18277ACB1E89B3805FECF670157EF
+      7873D1F5FE48C161399057CC3B8BEB7461E4ADDBF733452256CCC73D2F201BFE
+      0EA5B4FADF996C68E924642332A8BFDE70BE91CC224F703697309F8BB999AE98
+      FC0BD9E5C90A8E0AD9E0045BB518E6B10E7FE7622EFE0C46727183B33F87F94C
+      68866B292B2E77402915617E3EA6301F57F4318E3EFB4FEA6742D31ABF55C897
+      C899CA6F2517FECAF4C5849FF3A3657E94F38B8905E6635DE53745F7795AC837
+      9346CCABBE01CE8BFC60FA42DC29E417620EEE477E325FF5BDD5F8C785BDF48E
+      1CC67CD4F994EBE36EAE5F9913F231CEFF9FBFAFA8B34FE31F12F11DC3642FE6
+      C3F283F2F32FF2F35D9E12F231CECE2F19607E58BEAFF11B36EA2F5932E44373
+      1DE5F71765FAB5E047217F2D385E7EFF31E607AD3700F5D5FBB72EB2347341FF
+      FEE2CA4DC8042C427E2630C2F29059657E60BA1D1473DD4A0DBEDBFFA555E7AB
+      F6BB90FE6314F2D37E23CDDFD36BB1B769EFBAAAF30D53D8FF9A26E97A08295F
+      BF908FF1A4AB5BAFF57D6AC1F399ACC6A7EFC7E2193B56D0E7A4A70F56BD7D42
+      3EC6B51C9A67F46801E75D8DF9F98ACEB3BCA649F99E43D2DD23E427DDDD2CAF
+      D5E2ACA3BDFBB206BFD73ED4A0EF3FED1F8084A34BC84FD83B697E50E7CF0FED
+      2950FEA3AA7C89DC914D067D76E26CD1F65F54FDA0CEDF622BDF7F8F3E7BB01E
+      75747FB76BF0AF608FE4D585CDCDE6B2E5D5DF5A6F5DAEC16F63F755F9AEDDAC
+      613DBF5B485BD5FB7C9034D1E7CC55DE479B37430EF595BC7FEEC201834C7A01
+      0000002000000020000000A10300000000000078DAD596494C535114862F4B63
+      1C125726463171A58971887165A2896E7443D4E8C295C342576C7421BA204E0B
+      D0859060A2908843A00F4A4D4084A080B68A2546860ED096D252DAD281746E19
+      5AB8DE731FAFAF2DAFBDAF62172E4EF272FA9FFFBBEFBED3732FC618E1FF280C
+      EDE8808E4395FA36F452CFA14E1AE41972F05B29D984A5218119A129219F329C
+      43577060B21E47ECED34E01972C2EFA5E6E385B864948A3FF6066D3670689F5C
+      BEAE1D1D342AD1CEA2394AB48BF4D1399D0255119FF7E47988707D32BE79BE88
+      93FA71121DA4471F1815A8823CEFCEB3B7EA7C3E46E5266CEE2AC7D37DC7F1CC
+      B7B378567311BBB4D772E22A76A82BB0EDCB096CE9D98F273EEC28B42E751EFE
+      BC5E8156401398ACC371571F4E86AC79F79B15A9C81C4E7834386879C573796F
+      BF143F631D2ED02E072D7FCDCD8DE5A099F2C9DE3B593D40BEB90EB40BDEE174
+      FD92EF3B0E1BEFE354C89CE51B9BAAA791F5CE44035AA811720B5EADC01F97C1
+      FF0ADA98B347AC772A71487F072F7A3E67B120079199030DE4A026BD4EE2B5C6
+      1F94C1578136626B153DDDDDBCA7AB93C9070D5DABFB533A17B6B508FC0EE67C
+      6F434DB4FF4C2FC4FDF70C52CFC42CC7E4276615340735422E606A10F88D32F8
+      B5A0F5EB9F88FDE3D752CFB8AD99C98FDB5ED31CD40839BFFEB1C0AF61EE3F3F
+      7BB07744F44D06F4D433666D60F2410339A811729EDFB7797E1BBA2BE3FBDF02
+      AD7BF886D8D3612BF58C5A9E32F9A0815C2A349DCEB9B4D7F9B9AC403765F02F
+      83D6A1B990AE5F89BAA96764F221930F1AC8AD44E7D23987FABCC0BF24837F06
+      B4B68153E9FAD578887A868D554C3E6820073542CED67F929FE30A749AC51FE7
+      D051D05A7B0F337D73F9ABF1A0E43AA77A0FF1FC567484790672682F68E1BC91
+      DE57775EBEF89D1E65D59ABAF650FE440B2A67F14754683BD5AAB64AF755D89A
+      979F0A4FF17D6A7E96556B546DA1FC5F1CDAC6BE07A032A24DEAB932BC9A0817
+      FC5FE5F29301DDDAFF549C5DE0015EE009DE32EF59704692F77164CC95E67573
+      2597BFECFFC9CF29BB38A792E11961F6F88AB8E799A066C93F9A3157B9757335
+      97BFE4195837A71789C71A7F522E1FEE5D5093700F489C2BDD79F9E239D525EE
+      9BBB5FE0FF28E2FDBBA1266AEF2878AEE6F2A5CEE9885DC9CF1E0E7D94FDFE0A
+      F40E6A8296A682F78ADCFB87D43D2568691466FFDB22F87550336FA8DDF0DD6B
+      DE5023F09F17C1AF861ADFD8BD0DF3BDA355C2ECAF2EA2FF2A3770E7970CF094
+      DD7FADE818A989FD437E0C3CA5587F00DD799616
+    }
+  end
+  object ApplicationProperties: TApplicationProperties
+    OnIdle = ApplicationPropertiesIdle
+    Left = 421
+    Top = 150
+  end
+end

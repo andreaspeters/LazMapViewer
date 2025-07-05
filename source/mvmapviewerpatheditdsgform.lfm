@@ -1,0 +1,6 @@
+inherited MapViewerPathEditDsgForm: TMapViewerPathEditDsgForm
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
+end

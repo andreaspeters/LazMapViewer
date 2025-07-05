@@ -1,0 +1,66 @@
+object MainForm: TMainForm
+  Left = 324
+  Height = 497
+  Top = 119
+  Width = 579
+  Caption = 'Area Selection Plugin Demo'
+  ClientHeight = 497
+  ClientWidth = 579
+  Color = clWindow
+  OnCreate = FormCreate
+  LCLVersion = '3.6.0.0'
+  object MapView: TMapView
+    Left = 0
+    Height = 346
+    Top = 0
+    Width = 579
+    Align = alClient
+    Cyclic = True
+    DownloadEngine = MapView.BuiltInDLE
+    DrawingEngine = MapView.BuiltInDE
+    Layers = <>
+    Font.Color = clBlack
+    MapProvider = 'OpenStreetMap Standard'
+    PluginManager = PluginManager
+  end
+  object Memo: TMemo
+    Left = 0
+    Height = 134
+    Top = 363
+    Width = 579
+    Align = alBottom
+    BorderSpacing.InnerBorder = 2
+    Font.Height = -11
+    Font.Name = 'Liberation Mono'
+    ParentFont = False
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 1
+  end
+  object Splitter1: TSplitter
+    Cursor = crVSplit
+    Left = 0
+    Height = 5
+    Top = 358
+    Width = 579
+    Align = alBottom
+    ResizeAnchor = akBottom
+  end
+  object lblHeader: TStaticText
+    Left = 0
+    Height = 12
+    Top = 346
+    Width = 579
+    Align = alBottom
+    Color = clDefault
+    Font.Height = -11
+    Font.Name = 'Liberation Mono'
+    ParentFont = False
+    ParentColor = False
+    TabOrder = 3
+  end
+  object PluginManager: TMvPluginManager
+    Left = 320
+    Top = 24
+  end
+end

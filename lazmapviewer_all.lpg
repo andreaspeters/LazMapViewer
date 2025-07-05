@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectGroup FileVersion="2">
+    <Targets>
+      <Target FileName="lazmapviewerpkg.lpk"/>
+      <Target FileName="lazmapviewer_rgbgraphics.lpk"/>
+      <Target FileName="lazmapviewer_bgra.lpk"/>
+      <Target FileName="lazmapviewer_synapse.lpk"/>
+      <Target FileName="examples\colored_tracks\coloredtracks_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\elevations\Elevations_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\flights\flights.lpi">
+        <BuildModes>
+          <Mode Name="default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\fulldemo\MapViewer_Demo.lpi">
+        <BuildModes>
+          <Mode Name="default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\gpstilelayer_demo\GPSTileLayer_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\point_of_interest_markers\PointOfInterestMarkers_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\restricted_zoom_pan\RestrictedZoomPan_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\trackdemo\track_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="unittests\mapviewer_tests.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\dragmarker_demo\dragmarker_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\greatcirclepaint_demo\greatcircle_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default" Compile="True"/>
+          <Mode Name="Debug"/>
+          <Mode Name="Release"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\grid_demo\GridPlugin_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\legalnotice_demo\LegalNoticePlugin_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\linkedmaps_demo\linkedmaps_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\mousepaintorder_demo\MousePaintOrder_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\reorderplugins_demo\reorder_plugins_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\scale_demo\mapscale_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\spreadmarker_demo\spreadmarker_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default" Compile="True"/>
+          <Mode Name="Debug"/>
+          <Mode Name="Release"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\tileinfo_demo\tileinfo_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\userdefined_demo\UserdefinedPlugin_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+    </Targets>
+  </ProjectGroup>
+</CONFIG>

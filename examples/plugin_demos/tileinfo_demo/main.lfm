@@ -1,0 +1,84 @@
+object MainForm: TMainForm
+  Left = 351
+  Height = 634
+  Top = 173
+  Width = 715
+  Caption = 'TileInfo Plugin Demo'
+  ClientHeight = 634
+  ClientWidth = 715
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  object MapView: TMapView
+    Left = 0
+    Height = 599
+    Top = 0
+    Width = 715
+    Active = True
+    Align = alClient
+    Cyclic = True
+    DownloadEngine = MapView.BuiltInDLE
+    DrawingEngine = MapView.BuiltInDE
+    Layers = <>
+    Font.Color = clBlack
+    MapProvider = 'OpenStreetMap Standard'
+    PluginManager = PluginManager
+  end
+  object ParamsPanel: TPanel
+    Left = 0
+    Height = 35
+    Top = 599
+    Width = 715
+    Align = alBottom
+    AutoSize = True
+    BevelOuter = bvNone
+    ClientHeight = 35
+    ClientWidth = 715
+    TabOrder = 1
+    object cbShowTileInfo: TCheckBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = ParamsPanel
+      Left = 8
+      Height = 19
+      Top = 8
+      Width = 90
+      BorderSpacing.Around = 8
+      Caption = 'Show tile info'
+      Checked = True
+      State = cbChecked
+      TabOrder = 0
+      OnChange = cbShowTileInfoChange
+    end
+    object cbShowCenter: TCheckBox
+      AnchorSideLeft.Control = cbShowTileInfo
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = cbShowTileInfo
+      Left = 114
+      Height = 19
+      Top = 8
+      Width = 83
+      BorderSpacing.Left = 16
+      Caption = 'Show center'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+      OnChange = cbShowCenterChange
+    end
+  end
+  object PluginManager: TMvPluginManager
+    Left = 296
+    Top = 168
+    object TileInfoPlugin: TTileInfoPlugin
+      MapView = MapView
+      BackgroundOpacity = 0.00100000004749745
+      Font.Color = clFuchsia
+      Font.Height = -19
+      InfoMask = 'zoom=%2:d'#13#10'x=%0:d y=%1:d'
+      Pen.Color = clFuchsia
+    end
+    object CenterMarkerPlugin: TCenterMarkerPlugin
+      MapView = MapView
+      Pen.Color = clRed
+      Pen.Width = 3
+    end
+  end
+end

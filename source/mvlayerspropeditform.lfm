@@ -1,0 +1,72 @@
+inherited LayersPropertyEditForm: TLayersPropertyEditForm
+  Left = 555
+  Height = 343
+  Top = 369
+  Width = 346
+  Caption = 'MapView Layers'
+  ClientHeight = 343
+  ClientWidth = 346
+  OnActivate = FormActivate
+  OnCreate = FormCreate
+  inherited ToolBar1: TToolBar
+    Width = 346
+    inherited DividerToolButton: TToolButton
+      Height = 40
+    end
+    object ToolButton1: TToolButton[5]
+      Left = 182
+      Height = 40
+      Top = 2
+      Caption = 'ToolButton1'
+      Style = tbsDivider
+    end
+    object LoadButton: TToolButton[6]
+      Left = 187
+      Top = 2
+      Caption = 'Load GPX'
+      DropdownMenu = LoadPopup
+      Style = tbsDropDown
+    end
+    object SaveButton: TToolButton[7]
+      Left = 258
+      Top = 2
+      Action = actSaveGPX
+    end
+  end
+  inherited CollectionListBox: TListBox
+    Height = 301
+    Width = 346
+    OnClick = CollectionListBoxClick
+  end
+  inherited ActionList1: TActionList
+    Left = 64
+    inherited actAdd: TAction
+      OnExecute = actAddExecute
+    end
+    inherited actDel: TAction
+      OnExecute = actDelExecute
+    end
+    object actLoadGPX: TAction[4]
+      Caption = 'Load...'
+      OnExecute = actLoadGPXExecute
+    end
+    object actLoadAndZoom: TAction[5]
+      Caption = 'Load and zoom...'
+      OnExecute = actLoadGPXExecute
+    end
+    object actSaveGPX: TAction[6]
+      Caption = 'Save GPX...'
+      OnExecute = actSaveGPXExecute
+    end
+  end
+  object LoadPopup: TPopupMenu[3]
+    Left = 168
+    Top = 109
+    object mnuLoadGPX: TMenuItem
+      Action = actLoadGPX
+    end
+    object mnuLoadAndZoom: TMenuItem
+      Action = actLoadAndZoom
+    end
+  end
+end

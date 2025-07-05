@@ -1,0 +1,338 @@
+object MainForm: TMainForm
+  Left = 285
+  Height = 600
+  Top = 131
+  Width = 1000
+  Caption = 'Grand Canyon Hike'
+  ClientHeight = 600
+  ClientWidth = 1000
+  LCLVersion = '4.99.0.0'
+  OnActivate = FormActivate
+  object Panel1: TPanel
+    Left = 619
+    Height = 584
+    Top = 8
+    Width = 373
+    Align = alRight
+    BorderSpacing.Around = 8
+    BevelOuter = bvNone
+    ClientHeight = 584
+    ClientWidth = 373
+    TabOrder = 0
+    object TrackGrid: TStringGrid
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = lblInfo
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      AnchorSideBottom.Control = clbTrackColor
+      Left = 0
+      Height = 469
+      Top = 58
+      Width = 373
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      AutoFillColumns = True
+      BorderSpacing.Top = 8
+      BorderSpacing.Bottom = 8
+      DefaultColWidth = 30
+      MouseWheelOption = mwGrid
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect, goThumbTracking, goFixedRowNumbering, goTruncCellHints]
+      TabOrder = 0
+      OnClick = TrackGridClick
+      OnPrepareCanvas = TrackGridPrepareCanvas
+      ColWidths = (
+        30
+        85
+        85
+        85
+        84
+      )
+      Cells = (
+        4
+        1
+        0
+        'Latitude'
+        2
+        0
+        'Longitude'
+        3
+        0
+        'Altitude'
+        4
+        0
+        'Time'
+      )
+    end
+    object cbAutoTrace: TCheckBox
+      AnchorSideLeft.Control = Panel1
+      AnchorSideBottom.Control = Panel1
+      AnchorSideBottom.Side = asrBottom
+      Left = 0
+      Height = 19
+      Top = 565
+      Width = 151
+      Anchors = [akLeft, akBottom]
+      BorderSpacing.Top = 8
+      Caption = 'Trace track automatically'
+      TabOrder = 1
+      OnChange = cbAutoTraceChange
+    end
+    object Label1: TLabel
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = clbTrackColor
+      AnchorSideTop.Side = asrCenter
+      Left = 0
+      Height = 15
+      Top = 539
+      Width = 61
+      BorderSpacing.Right = 8
+      Caption = 'Track color:'
+    end
+    object clbTrackColor: TColorBox
+      AnchorSideLeft.Control = Label1
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      AnchorSideBottom.Control = cbAutoTrace
+      Left = 69
+      Height = 22
+      Top = 535
+      Width = 304
+      Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeNone, cbCustomColor, cbPrettyNames, cbCustomColors]
+      Anchors = [akLeft, akRight, akBottom]
+      DropDownCount = 32
+      ItemHeight = 16
+      TabOrder = 2
+      OnChange = clbTrackColorChange
+    end
+    object lblInfo: TLabel
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = Bevel1
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 15
+      Top = 35
+      Width = 373
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Top = 8
+      Caption = 'Click on row to display point in map'
+    end
+    object lblMapCenter: TLabel
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = Panel1
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 373
+      Anchors = [akTop, akLeft, akRight]
+      Caption = 'Map center: -'
+    end
+    object Bevel1: TBevel
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = lblMapCenter
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 4
+      Top = 23
+      Width = 373
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Top = 8
+      Shape = bsBottomLine
+    end
+    object cbUseThreads: TCheckBox
+      AnchorSideLeft.Control = cbAutoTrace
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = cbAutoTrace
+      Left = 167
+      Height = 19
+      Top = 565
+      Width = 79
+      BorderSpacing.Left = 16
+      Caption = 'Use threads'
+      Checked = True
+      State = cbChecked
+      TabOrder = 3
+      OnChange = cbUseThreadsChange
+    end
+  end
+  object Splitter1: TSplitter
+    Left = 606
+    Height = 600
+    Top = 0
+    Width = 5
+    Align = alRight
+    ResizeAnchor = akRight
+  end
+  object MapPanel: TPanel
+    Left = 0
+    Height = 600
+    Top = 0
+    Width = 606
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 600
+    ClientWidth = 606
+    TabOrder = 2
+    object MapView: TMapView
+      Left = 0
+      Height = 569
+      Top = 0
+      Width = 606
+      Align = alClient
+      DefaultTrackColor = 140
+      DefaultTrackWidth = 3
+      DownloadEngine = MapView.BuiltInDLE
+      DrawingEngine = MapView.BuiltInDE
+      Layers = <>
+      Font.CharSet = ANSI_CHARSET
+      Font.Color = clBlack
+      Font.Pitch = fpVariable
+      POIImage.Data = {
+        4503000089504E470D0A1A0A0000000D49484452000000200000002E08060000
+        0049701B840000030C49444154789CB5983B68145114867F4410C54644B0107C
+        152262A7A4D2C2DA3422DAD8D868631510B1D1688855409104A2088634819056
+        B00C488845626C82C55662A29204C40DC96ED66CD6F38F77976B76E6DCC7CC14
+        077667CEF9FFEF3EE6CC03AD560B3EB1021C6C023777805189598955892D13AB
+        E6D8287398EBABEB4CA803A745F895C47A92EE11CC650D6BA3012AC03E1119E4
+        087D8D5340383B83D40A0210F29352381F6B9C02F2899A5E000DE09C142C1765
+        6E412C535B05A801C72571A968730B62891EA90066CDE7CA32B720E6EC3DD101
+        901303012215893772C93D62F0378F05D40FFC07201BE4841CAC7B147EF8035C
+        CADAD13CC71C0F9D3A3D3B007260C451B023237DDC0FEC715DD7CC612E6B1C9A
+        2309C077E080FCA96AC99C66DFCED68EA44607A8D21BDBC03547E2B4CFC8D366
+        82B59A36BD39FDC35A92AC6B4FA8B9B5277A1C831B26C08C92B0186B6E5D5D8B
+        8AFE0C137EBA364A4E80CC0D4E6F26D494CD773F2F40A2910D5023404301E82B
+        00A04F016810604D49182A60098614FD3568B7DD6483E607D036F93C13C69484
+        A6CF534D5698A7A9A6A23FC635BAEDB856C7738C7E5CD3A637D68123DA46644F
+        978E753DD49C35DAFD809EF46E934E39666153047B03CC7B59E3D09C6AFDFB97
+        B4CC0B1E77AFA6C4CB2A7038CB98E798A3AD7B7B56E9D90130B330A115D9CD43
+        E29DC41359C3BB0CFE36C7329BDA2E8D89B66F07600B38E3222F22CC9575AA0B
+        C0CCC2D3B20164C61EDA9E5DEB28100B258EFEE36EBF2E00D33C9CCF8711E61B
+        9BC0312780B9813C2861EAEFA579A5024C037B85F87381A39FCD7AAC4B0530BD
+        E1A2146E1760DE9057B2F3593E99006643BE2800E099E6A102F04383087CCD61
+        5EF906EC8F06307DFD6AA4396F62575CFA4E00B3149311006F7DB4BD003680A3
+        22F82BC07C45BB69050398DE7027E09ABFE5ABEB0D605EB57CDE7CDFFB6A0601
+        30E48E7956FB68C5769BF52DA81000B321FB95A90F7E910906309F72BEA48C7E
+        812DBC740086B4E9CBF6231C5B365B778C561480598AD716C0F3589D6880DFC0
+        2131FEC1561DF26DB83000866CBA1B49ABCEA1F117D2B9A057721AC774000000
+        0049454E44AE426082
+      }
+      POITextBgColor = clCream
+      OnCenterMove = MapViewCenterMove
+      OnZoomChange = MapViewZoomChange
+    end
+    object Panel2: TPanel
+      Left = 8
+      Height = 15
+      Top = 577
+      Width = 590
+      Align = alBottom
+      AutoSize = True
+      BorderSpacing.Around = 8
+      BevelOuter = bvNone
+      ClientHeight = 15
+      ClientWidth = 590
+      TabOrder = 1
+      object lblMapData: TLabel
+        AnchorSideLeft.Control = Panel2
+        AnchorSideTop.Control = Panel2
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 70
+        Caption = 'Map data: (c)'
+      end
+      object MapDataLink: TLabel
+        AnchorSideLeft.Control = lblMapData
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Cursor = crHandPoint
+        Left = 76
+        Height = 15
+        Hint = 'https://openstreetmap.org/copyright'
+        Top = 0
+        Width = 151
+        BorderSpacing.Left = 6
+        Caption = 'OpenStreetMap contributors'
+        Font.Color = clBlue
+        ParentFont = False
+        OnClick = URLClick
+        OnMouseEnter = URLMouseEnter
+        OnMouseLeave = URLMouseLeave
+      end
+      object lblMapPresentation: TLabel
+        AnchorSideLeft.Control = MapDataLink
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Left = 251
+        Height = 15
+        Top = 0
+        Width = 71
+        BorderSpacing.Left = 24
+        Caption = 'Map style: (c)'
+      end
+      object MapStyleLink: TLabel
+        AnchorSideLeft.Control = lblMapPresentation
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Cursor = crHandPoint
+        Left = 328
+        Height = 15
+        Hint = 'http://opentopomap.org/'
+        Top = 0
+        Width = 86
+        BorderSpacing.Left = 6
+        Caption = 'Open Topo Map'
+        Font.Color = clBlue
+        ParentFont = False
+      end
+      object Label2: TLabel
+        AnchorSideLeft.Control = MapStyleLink
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Left = 422
+        Height = 15
+        Top = 0
+        Width = 4
+        BorderSpacing.Left = 8
+        Caption = '('
+      end
+      object MapLicenseLink: TLabel
+        AnchorSideLeft.Control = Label2
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Cursor = crHandPoint
+        Left = 426
+        Height = 15
+        Hint = 'https://creativecommons.org/licenses/by-sa/3.0/'
+        Top = 0
+        Width = 54
+        Caption = 'CC-BY-SA'
+        Font.Color = clBlue
+        ParentFont = False
+      end
+      object Label3: TLabel
+        AnchorSideLeft.Control = MapLicenseLink
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = Panel2
+        Left = 480
+        Height = 15
+        Top = 0
+        Width = 4
+        Caption = ')'
+      end
+    end
+  end
+  object Timer: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = TimerTimer
+    Left = 733
+    Top = 392
+  end
+end

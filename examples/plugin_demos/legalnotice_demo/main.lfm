@@ -1,0 +1,217 @@
+object MainForm: TMainForm
+  Left = 314
+  Height = 487
+  Top = 130
+  Width = 943
+  Caption = 'Legal Notice Plugin Demo'
+  ClientHeight = 487
+  ClientWidth = 943
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  object ParamsPanel: TPanel
+    Left = 8
+    Height = 54
+    Top = 425
+    Width = 927
+    Align = alBottom
+    AutoSize = True
+    BorderSpacing.Around = 8
+    BevelOuter = bvNone
+    ClientHeight = 54
+    ClientWidth = 927
+    TabOrder = 0
+    object edLegalNotice: TEdit
+      AnchorSideLeft.Control = lblLegalNotice
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = ParamsPanel
+      AnchorSideRight.Control = cmbPosition
+      Left = 253
+      Height = 23
+      Top = 0
+      Width = 423
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Left = 8
+      BorderSpacing.Right = 4
+      TabOrder = 0
+      Text = 'edLegalNotice'
+      OnChange = edLegalNoticeChange
+    end
+    object lblLegalNotice: TLabel
+      AnchorSideLeft.Control = rbRightMap
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = edLegalNotice
+      AnchorSideTop.Side = asrCenter
+      Left = 178
+      Height = 15
+      Top = 4
+      Width = 67
+      BorderSpacing.Left = 32
+      Caption = 'Legal notice:'
+    end
+    object btnSaveToImage: TButton
+      AnchorSideTop.Control = ParamsPanel
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 800
+      Height = 25
+      Top = 0
+      Width = 127
+      Anchors = [akTop, akRight]
+      AutoSize = True
+      Caption = 'Save map to image'
+      TabOrder = 1
+      OnClick = btnSaveToImageClick
+    end
+    object cmbPosition: TComboBox
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = edLegalNotice
+      AnchorSideTop.Side = asrCenter
+      AnchorSideRight.Control = btnSaveToImage
+      Left = 680
+      Height = 23
+      Top = 0
+      Width = 116
+      Anchors = [akTop, akRight]
+      BorderSpacing.Right = 4
+      ItemHeight = 15
+      ItemIndex = 3
+      Items.Strings = (
+        'top/left'
+        'top/right'
+        'bottom/left'
+        'bottom/right'
+      )
+      Style = csDropDownList
+      TabOrder = 2
+      Text = 'bottom/right'
+      OnChange = cmbPositionChange
+    end
+    object cbShowMapCenter: TCheckBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = seOpacity
+      AnchorSideTop.Side = asrCenter
+      Left = 0
+      Height = 19
+      Top = 33
+      Width = 110
+      Caption = 'Show map center'
+      Checked = True
+      State = cbChecked
+      TabOrder = 3
+      OnChange = cbShowMapCenterChange
+    end
+    object cbShowLegalNotice: TCheckBox
+      AnchorSideLeft.Control = cbShowMapCenter
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = seOpacity
+      AnchorSideTop.Side = asrCenter
+      Left = 134
+      Height = 19
+      Top = 33
+      Width = 111
+      BorderSpacing.Left = 24
+      Caption = 'Show legal notice'
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+      OnChange = cbShowLegalNoticeChange
+    end
+    object lblOpacity: TLabel
+      AnchorSideLeft.Control = cbShowLegalNotice
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = cbShowMapCenter
+      AnchorSideTop.Side = asrCenter
+      Left = 277
+      Height = 15
+      Top = 35
+      Width = 124
+      BorderSpacing.Left = 32
+      Caption = 'Legal note opacity: (%):'
+    end
+    object seOpacity: TSpinEdit
+      AnchorSideLeft.Control = lblOpacity
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = edLegalNotice
+      AnchorSideTop.Side = asrBottom
+      Left = 409
+      Height = 23
+      Top = 31
+      Width = 55
+      Alignment = taRightJustify
+      BorderSpacing.Left = 8
+      BorderSpacing.Top = 8
+      Increment = 5
+      MaxValue = 100
+      TabOrder = 5
+      Value = 50
+      OnChange = seOpacityChange
+    end
+    object rbLeftMap: TRadioButton
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = edLegalNotice
+      AnchorSideTop.Side = asrCenter
+      Left = 0
+      Height = 19
+      Top = 2
+      Width = 65
+      Caption = 'Left map'
+      Checked = True
+      TabOrder = 7
+      TabStop = True
+      OnChange = rbLeftMapChange
+    end
+    object rbRightMap: TRadioButton
+      AnchorSideLeft.Control = rbLeftMap
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = edLegalNotice
+      AnchorSideTop.Side = asrCenter
+      Left = 73
+      Height = 19
+      Top = 2
+      Width = 73
+      BorderSpacing.Left = 8
+      Caption = 'Right map'
+      TabOrder = 6
+    end
+  end
+  object FormCenterBevel: TBevel
+    AnchorSideLeft.Control = Owner
+    AnchorSideLeft.Side = asrCenter
+    AnchorSideTop.Control = Owner
+    AnchorSideBottom.Control = ParamsPanel
+    Left = 469
+    Height = 417
+    Top = 0
+    Width = 4
+    Anchors = [akTop, akLeft, akBottom]
+    Shape = bsSpacer
+  end
+  object LeftPanel: TPanel
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = FormCenterBevel
+    AnchorSideBottom.Control = ParamsPanel
+    Left = 0
+    Height = 417
+    Top = 0
+    Width = 469
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BevelOuter = bvNone
+    TabOrder = 1
+  end
+  object RightPanel: TPanel
+    AnchorSideLeft.Control = FormCenterBevel
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = ParamsPanel
+    Left = 473
+    Height = 417
+    Top = 0
+    Width = 470
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BevelOuter = bvNone
+    TabOrder = 2
+  end
+end

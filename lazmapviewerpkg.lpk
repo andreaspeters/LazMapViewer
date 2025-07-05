@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="lazMapViewerPkg"/>
+    <Type Value="RunAndDesignTime"/>
+    <Author Value="Maciej Kaczkowski, ti_dic, Werner Pamler, Ekkehard Domning, Yuliyan Ivanov"/>
+    <ExamplesDirectory Value="examples"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <IncludeFiles Value="source"/>
+        <OtherUnitFiles Value="source;source/addons/plugins;source/addons/plugins/spreadmarkers;source/addons/plugins/grids;source/addons/plugins/scale;source/addons/plugins/greatcircle;source/addons/plugins/areaselection"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx6058="True"/>
+        </CompilerMessages>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Component for viewing maps (Google, OpenStreetMap, etc).   This is a fork of MapViewer by ti_dic (https://sourceforge.net/p/roadbook/code/ci/master/tree/mapviewer/) which itself is based on the MapViewer by Maciej Kaczkowski (https://github.com/maciejkaczkowski/mapviewer).
+
+FPC 3.2.0 or newer required."/>
+    <License Value="Modified LGPL with linking exception, like FreePascal RTL/FCL and Lazarus LCL"/>
+    <Version Minor="2" Release="7"/>
+    <Files Count="35">
+      <Item1>
+        <Filename Value="source/mvcache.pas"/>
+        <UnitName Value="mvCache"/>
+      </Item1>
+      <Item2>
+        <Filename Value="source/mvdownloadengine.pas"/>
+        <UnitName Value="mvDownloadEngine"/>
+      </Item2>
+      <Item3>
+        <Filename Value="source/mvdragobj.pas"/>
+        <UnitName Value="mvDragObj"/>
+      </Item3>
+      <Item4>
+        <Filename Value="source/mvengine.pas"/>
+        <UnitName Value="mvEngine"/>
+      </Item4>
+      <Item5>
+        <Filename Value="source/mvgeonames.pas"/>
+        <UnitName Value="mvGeoNames"/>
+      </Item5>
+      <Item6>
+        <Filename Value="source/mvgpsobj.pas"/>
+        <UnitName Value="mvGpsObj"/>
+      </Item6>
+      <Item7>
+        <Filename Value="source/mvjobqueue.pas"/>
+        <UnitName Value="mvJobQueue"/>
+      </Item7>
+      <Item8>
+        <Filename Value="source/mvjobs.pas"/>
+        <UnitName Value="mvJobs"/>
+      </Item8>
+      <Item9>
+        <Filename Value="source/mvmapprovider.pas"/>
+        <UnitName Value="mvMapProvider"/>
+      </Item9>
+      <Item10>
+        <Filename Value="source/mvtypes.pas"/>
+        <UnitName Value="mvTypes"/>
+      </Item10>
+      <Item11>
+        <Filename Value="source/mvmapviewer.pas"/>
+        <UnitName Value="mvMapViewer"/>
+      </Item11>
+      <Item12>
+        <Filename Value="source/mvextradata.pas"/>
+        <UnitName Value="mvExtraData"/>
+      </Item12>
+      <Item13>
+        <Filename Value="source/mvdlefpc.pas"/>
+        <UnitName Value="mvDLEFpc"/>
+      </Item13>
+      <Item14>
+        <Filename Value="source/mvmapviewerreg.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="mvMapViewerReg"/>
+      </Item14>
+      <Item15>
+        <Filename Value="source/mvgpx.pas"/>
+        <UnitName Value="mvGPX"/>
+      </Item15>
+      <Item16>
+        <Filename Value="source/mvdrawingengine.pas"/>
+        <UnitName Value="mvDrawingEngine"/>
+      </Item16>
+      <Item17>
+        <Filename Value="source/mvde_intfgraphics.pas"/>
+        <UnitName Value="mvDE_IntfGraphics"/>
+      </Item17>
+      <Item18>
+        <Filename Value="source/mvdlewin.pas"/>
+        <UnitName Value="mvDLEWin"/>
+      </Item18>
+      <Item19>
+        <Filename Value="source/mvmapviewerpropedits.pas"/>
+        <UnitName Value="mvMapViewerPropEdits"/>
+      </Item19>
+      <Item20>
+        <Filename Value="source/mvlayerspropeditform.pas"/>
+        <UnitName Value="mvLayersPropEditForm"/>
+      </Item20>
+      <Item21>
+        <Filename Value="source/mvgeomath.pas"/>
+        <UnitName Value="mvGeoMath"/>
+      </Item21>
+      <Item22>
+        <Filename Value="source/mvmapviewerpatheditform.pas"/>
+        <UnitName Value="mvMapViewerPathEditForm"/>
+      </Item22>
+      <Item23>
+        <Filename Value="source/mvmapviewerpatheditdsgform.pas"/>
+        <UnitName Value="mvMapViewerPathEditDsgForm"/>
+      </Item23>
+      <Item24>
+        <Filename Value="source/mvdlecache.pas"/>
+        <UnitName Value="mvDLECache"/>
+      </Item24>
+      <Item25>
+        <Filename Value="source/mvplugineditors.pas"/>
+        <UnitName Value="mvPluginEditors"/>
+      </Item25>
+      <Item26>
+        <Filename Value="source/mvclassregistration.pas"/>
+        <UnitName Value="mvClassRegistration"/>
+      </Item26>
+      <Item27>
+        <Filename Value="source/mvplugincommon.pas"/>
+        <UnitName Value="mvPluginCommon"/>
+      </Item27>
+      <Item28>
+        <Filename Value="source/addons/plugins/mvplugins.pas"/>
+        <UnitName Value="mvPlugins"/>
+      </Item28>
+      <Item29>
+        <Filename Value="source/addons/plugins/spreadmarkers/mvspreadmarker_plugin.pas"/>
+        <UnitName Value="mvspreadmarker_plugin"/>
+      </Item29>
+      <Item30>
+        <Filename Value="source/addons/plugins/spreadmarkers/uinactivityalarmtimer.pas"/>
+        <UnitName Value="uInactivityAlarmTimer"/>
+      </Item30>
+      <Item31>
+        <Filename Value="source/addons/plugins/grids/mvmapgridplugin.pas"/>
+        <UnitName Value="mvMapGridPlugin"/>
+      </Item31>
+      <Item32>
+        <Filename Value="source/addons/plugins/scale/mvmapscaleplugin.pas"/>
+        <UnitName Value="mvMapScalePlugin"/>
+      </Item32>
+      <Item33>
+        <Filename Value="source/mvengine_mapreg.inc"/>
+        <Type Value="Include"/>
+      </Item33>
+      <Item34>
+        <Filename Value="source/addons/plugins/greatcircle/mvgreatcirclepainterplugin.pas"/>
+        <UnitName Value="mvGreatCirclePainterPlugin"/>
+      </Item34>
+      <Item35>
+        <Filename Value="source/addons/plugins/areaselection/mvareaselectionplugin.pas"/>
+        <UnitName Value="mvAreaSelectionPlugin"/>
+      </Item35>
+    </Files>
+    <CompatibilityMode Value="True"/>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="IDEIntf"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="LCLBase"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <CustomOptions Items="ExternHelp" Version="2">
+      <_ExternHelp Items="Count"/>
+    </CustomOptions>
+  </Package>
+</CONFIG>

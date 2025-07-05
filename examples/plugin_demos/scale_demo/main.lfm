@@ -1,0 +1,403 @@
+object MainForm: TMainForm
+  Left = 390
+  Height = 555
+  Top = 139
+  Width = 936
+  Caption = 'Map Scale Demo'
+  ClientHeight = 555
+  ClientWidth = 936
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  object MapView: TMapView
+    Left = 336
+    Height = 555
+    Top = 0
+    Width = 600
+    Align = alClient
+    DownloadEngine = MapView.BuiltInDLE
+    DrawingEngine = MapView.BuiltInDE
+    Layers = <    
+      item
+        PointsOfInterest = <>
+        Areas = <>
+        Tracks = <>
+      end>
+    Font.Color = clBlack
+    MapProvider = 'Open Topo Map'
+    MapCenter.Longitude = 10
+    MapCenter.Latitude = 50
+    PluginManager = PluginManager
+    Zoom = 8
+    OnZoomChange = MapViewZoomChange
+  end
+  object ParamsPanel: TPanel
+    Left = 12
+    Height = 531
+    Top = 12
+    Width = 312
+    Align = alLeft
+    AutoSize = True
+    BorderSpacing.Around = 12
+    BevelOuter = bvNone
+    ClientHeight = 531
+    ClientWidth = 312
+    TabOrder = 1
+    object cbScaleVisible: TCheckBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = ParamsPanel
+      Left = 0
+      Height = 19
+      Top = 0
+      Width = 96
+      Caption = 'Show the scale'
+      Checked = True
+      State = cbChecked
+      TabOrder = 0
+      OnChange = cbScaleVisibleChange
+    end
+    object rgScaleAlign: TRadioGroup
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = cbScaleVisible
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 97
+      Top = 31
+      Width = 312
+      Anchors = [akTop, akLeft, akRight]
+      AutoFill = True
+      AutoSize = True
+      BorderSpacing.Top = 12
+      Caption = 'Scale Alignment'
+      ChildSizing.LeftRightSpacing = 6
+      ChildSizing.TopBottomSpacing = 6
+      ChildSizing.HorizontalSpacing = 6
+      ChildSizing.VerticalSpacing = 4
+      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+      ChildSizing.EnlargeVertical = crsHomogenousChildResize
+      ChildSizing.ShrinkHorizontal = crsScaleChilds
+      ChildSizing.ShrinkVertical = crsScaleChilds
+      ChildSizing.Layout = cclLeftToRightThenTopToBottom
+      ChildSizing.ControlsPerLine = 3
+      ClientHeight = 77
+      ClientWidth = 308
+      Columns = 3
+      ItemIndex = 8
+      Items.Strings = (
+        'left/top'
+        'center/top'
+        'right/top'
+        'left/center'
+        'center/center'
+        'right/center'
+        'left/bottom'
+        'center/bottom'
+        'right/bottom'
+      )
+      TabOrder = 1
+      OnClick = rgScaleAlignClick
+    end
+    object rgLengthUnits: TRadioGroup
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = rgScaleAlign
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 51
+      Top = 144
+      Width = 312
+      Anchors = [akTop, akLeft, akRight]
+      AutoFill = True
+      AutoSize = True
+      BorderSpacing.Top = 16
+      Caption = 'Length Units'
+      ChildSizing.LeftRightSpacing = 6
+      ChildSizing.TopBottomSpacing = 6
+      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+      ChildSizing.EnlargeVertical = crsHomogenousChildResize
+      ChildSizing.ShrinkHorizontal = crsScaleChilds
+      ChildSizing.ShrinkVertical = crsScaleChilds
+      ChildSizing.Layout = cclLeftToRightThenTopToBottom
+      ChildSizing.ControlsPerLine = 2
+      ClientHeight = 31
+      ClientWidth = 308
+      Columns = 2
+      ItemIndex = 0
+      Items.Strings = (
+        'metric (km, m)'
+        'imperial (miles, feet)'
+      )
+      TabOrder = 2
+      OnClick = rgLengthUnitsClick
+    end
+    object gbZoomMin: TGroupBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = rgLengthUnits
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 105
+      Top = 211
+      Width = 312
+      BorderSpacing.Top = 16
+      Caption = 'Zoom Minimum'
+      ClientHeight = 85
+      ClientWidth = 308
+      TabOrder = 3
+      object lblZoomMinInfo: TLabel
+        AnchorSideLeft.Control = gbZoomMin
+        AnchorSideTop.Control = seZoomMin
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = gbZoomMin
+        AnchorSideRight.Side = asrBottom
+        Left = 12
+        Height = 30
+        Top = 39
+        Width = 284
+        Alignment = taCenter
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 4
+        BorderSpacing.Around = 12
+        Caption = 'The map scale is displayed only when the current zoom level is less than this value.'
+        WordWrap = True
+      end
+      object seZoomMin: TSpinEdit
+        AnchorSideLeft.Control = gbZoomMin
+        AnchorSideTop.Control = gbZoomMin
+        Left = 24
+        Height = 23
+        Top = 0
+        Width = 92
+        Alignment = taRightJustify
+        BorderSpacing.Left = 24
+        TabOrder = 0
+        OnChange = seZoomMinChange
+      end
+      object lblCurrentZoom: TLabel
+        AnchorSideLeft.Control = seZoomMin
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = seZoomMin
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = gbZoomMin
+        AnchorSideRight.Side = asrBottom
+        Left = 116
+        Height = 15
+        Top = 4
+        Width = 192
+        Alignment = taCenter
+        Anchors = [akTop, akLeft, akRight]
+        Caption = 'Current zoom level: '
+      end
+    end
+    object gbPen: TGroupBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = gbZoomMin
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 53
+      Top = 332
+      Width = 312
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = True
+      BorderSpacing.Top = 16
+      Caption = 'Scale Bar Pen'
+      ClientHeight = 33
+      ClientWidth = 308
+      TabOrder = 4
+      object lblPenWidth: TLabel
+        AnchorSideLeft.Control = gbPen
+        AnchorSideTop.Control = sePenWidth
+        AnchorSideTop.Side = asrCenter
+        Left = 24
+        Height = 15
+        Top = 4
+        Width = 32
+        BorderSpacing.Left = 24
+        Caption = 'Width'
+      end
+      object sePenWidth: TSpinEdit
+        AnchorSideLeft.Control = lblPenWidth
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = Bevel1
+        Left = 68
+        Height = 23
+        Top = 0
+        Width = 74
+        Alignment = taRightJustify
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 12
+        MaxValue = 10
+        MinValue = 1
+        TabOrder = 0
+        Value = 1
+        OnChange = sePenWidthChange
+      end
+      object clbPenColor: TColorButton
+        AnchorSideLeft.Control = Bevel1
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = gbPen
+        AnchorSideRight.Control = gbPen
+        AnchorSideRight.Side = asrBottom
+        Left = 166
+        Height = 25
+        Top = 0
+        Width = 134
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Right = 8
+        BorderSpacing.Bottom = 8
+        BorderWidth = 2
+        ButtonColorAutoSize = False
+        ButtonColorSize = 16
+        ButtonColor = clBlack
+        Caption = 'Line color'
+        OnColorChanged = clbPenColorChanged
+      end
+      object Bevel1: TBevel
+        AnchorSideLeft.Control = gbPen
+        AnchorSideLeft.Side = asrCenter
+        Left = 142
+        Height = 26
+        Top = 1
+        Width = 24
+        Shape = bsSpacer
+      end
+    end
+    object gbFont: TGroupBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = gbPen
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 53
+      Top = 401
+      Width = 312
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = True
+      BorderSpacing.Top = 16
+      Caption = 'Font'
+      ClientHeight = 33
+      ClientWidth = 308
+      TabOrder = 5
+      object btnFont: TButton
+        AnchorSideLeft.Control = gbFont
+        AnchorSideTop.Control = gbFont
+        Left = 24
+        Height = 25
+        Top = 0
+        Width = 75
+        BorderSpacing.Left = 24
+        BorderSpacing.Bottom = 8
+        Caption = 'Font...'
+        TabOrder = 0
+        OnClick = btnFontClick
+      end
+      object lblFontSample: TLabel
+        AnchorSideLeft.Control = btnFont
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = btnFont
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = gbFont
+        AnchorSideRight.Side = asrBottom
+        Left = 99
+        Height = 15
+        Top = 5
+        Width = 209
+        Alignment = taCenter
+        Anchors = [akTop, akLeft, akRight]
+        Caption = '1000 km'
+      end
+    end
+    object gbBackground: TGroupBox
+      AnchorSideLeft.Control = ParamsPanel
+      AnchorSideTop.Control = gbFont
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ParamsPanel
+      AnchorSideRight.Side = asrBottom
+      Left = 0
+      Height = 53
+      Top = 470
+      Width = 312
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = True
+      BorderSpacing.Top = 16
+      Caption = 'Background'
+      ClientHeight = 33
+      ClientWidth = 308
+      TabOrder = 6
+      object lblOpacity: TLabel
+        AnchorSideLeft.Control = gbBackground
+        AnchorSideTop.Side = asrCenter
+        Left = 16
+        Height = 15
+        Top = 5
+        Width = 41
+        BorderSpacing.Left = 16
+        Caption = 'Opacity'
+      end
+      object clbBackgroundColor: TColorButton
+        AnchorSideLeft.Control = Bevel2
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = gbBackground
+        AnchorSideRight.Control = gbBackground
+        AnchorSideRight.Side = asrBottom
+        Left = 166
+        Height = 25
+        Top = 0
+        Width = 134
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Right = 8
+        BorderSpacing.Bottom = 8
+        BorderWidth = 2
+        ButtonColorAutoSize = False
+        ButtonColorSize = 16
+        ButtonColor = clBlack
+        Caption = 'Background color'
+        OnColorChanged = clbBackgroundColorChanged
+      end
+      object Bevel2: TBevel
+        AnchorSideLeft.Control = gbBackground
+        AnchorSideLeft.Side = asrCenter
+        Left = 142
+        Height = 26
+        Top = 2
+        Width = 24
+        Shape = bsSpacer
+      end
+      object seOpacity: TFloatSpinEdit
+        AnchorSideLeft.Control = lblOpacity
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = Bevel2
+        Left = 69
+        Height = 23
+        Top = 2
+        Width = 73
+        Alignment = taRightJustify
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 12
+        Increment = 0.05
+        MaxValue = 1
+        TabOrder = 0
+        Value = 1
+        OnChange = seOpacityChange
+      end
+    end
+  end
+  object PluginManager: TMvPluginManager
+    Left = 429
+    Top = 105
+  end
+  object FontDialog: TFontDialog
+    MinFontSize = 0
+    MaxFontSize = 0
+    Left = 132
+    Top = 398
+  end
+end
