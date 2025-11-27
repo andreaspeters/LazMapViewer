@@ -17,6 +17,14 @@ type
     procedure Test_LatToStr_Deg;
     procedure Test_LonToStr_DMS;
     procedure Test_LonToStr_Deg;
+    procedure Test_StrToGPS_Lat;
+    procedure Test_StrToGPS_Lon;
+    procedure Test_StrToGPS_Lat_UTF8;
+    procedure Test_StrToGPS_Lon_UTF8;
+    procedure Test_StrDMSToDeg_Lat;
+    procedure Test_StrDMSToDeg_Lon;
+    procedure Test_StrDMSToDeg_Lat_UTF8;
+    procedure Test_StrDMSToDeg_Lon_UTF8;
     procedure Test_SplitGPS;
     procedure Test_ZoomFactor;
 
@@ -30,7 +38,7 @@ type
 implementation
 
 uses
-  Math, mvGeoMath;
+  LazUTF8, Math, mvGeoMath;
 
 type
   TDistanceRec = record
@@ -45,14 +53,14 @@ const
   Distance_TestData: array[0..2] of TDistanceRec = (
     // Calculated on https://keisan.casio.com/exec/system/1224587128 for R=6378km
     (Name1: 'Sydney'; Lat1:-33.865143; Lon1:151.209900;
-     Name2: 'San Francisco'; Lat2:37.828724; Lon2:-122.355537;
-     Distance_km: 11968),
+      Name2: 'San Francisco'; Lat2:37.828724; Lon2:-122.355537;
+      Distance_km: 11968),
     (Name1: 'London'; Lat1: 51.503368; Lon1: -0.127721;
-     Name2: 'Istanbul'; Lat2: 41.276901; Lon2: 28.729324;
-     Distance_km: 2468.6),
+      Name2: 'Istanbul'; Lat2: 41.276901; Lon2: 28.729324;
+      Distance_km: 2468.6),
     (Name1: 'Tokyo'; Lat1:35.652832; Lon1:139.839478;
-     Name2: 'Singapore'; Lat2:1.290270; Lon2:103.851959;
-     Distance_km: 5331.97)
+      Name2: 'Singapore'; Lat2:1.290270; Lon2:103.851959;
+      Distance_km: 5331.97)
   );
 
 type
@@ -339,6 +347,216 @@ begin
         Lon_DMS,                                       // expected
         LonToStr(Lon, NEED_DMS, PointFormatSettings)   // actual
       );
+end;
+
+procedure TmvTests_GeoMath.Test_StrToGPS_Lat;
+var
+  i: Integer;
+  deg: Double;
+  sec: Double;
+  ok: Boolean;
+begin
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      ok := TryStrToGPS(Lat_DMS, deg);
+      AssertEquals(
+        'No valid DMS string for latitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Latitude value mismatch for ' + Name + ' (Test index: '+ IntToStr(i) + ')',
+        Lat, deg);
+    end;
+end;
+
+procedure TmvTests_GeoMath.Test_StrToGPS_Lon;
+var
+  i: Integer;
+  deg: Double;
+  sec: Double;
+  ok: Boolean;
+begin
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      ok := TryStrToGPS(Lon_DMS, deg);
+      AssertEquals(
+        'No valid DMS string for longitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Longitude value mismatch for ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        Lon, deg);
+    end;
+end;
+
+// Like Test_StrDMSToDeg, but checks also whether UTF8 in NWES is handled correctly.
+procedure TmvTests_GeoMath.Test_StrToGPS_Lat_UTF8;
+var
+  i: Integer;
+  deg: Double;
+  ok: Boolean;
+  testStr: String;
+  N, E, S, W: String;
+begin
+  N := 'ν';
+  E := 'ε';
+  S := 'σ';
+  W := 'ω';
+
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      testStr := Lat_DMS;
+      testStr := Utf8StringReplace(testStr, 'N', N,[]);
+      testStr := UTF8StringReplace(testStr, 'E', E, []);
+      testStr := UTF8StringReplace(testStr, 'S', S, []);
+      testStr := Utf8StringReplace(testStr, 'W', W, []);
+
+      ok := TryStrToGPS(Lat_DMS, deg, N,E,S,W);
+      AssertEquals(
+        'No valid DMS string for latitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Latitude value mismatch for ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        Lat, deg);
+    end;
+end;
+
+procedure TmvTests_GeoMath.Test_StrToGPS_Lon_UTF8;
+var
+  i: Integer;
+  deg: Double;
+  ok: Boolean;
+  testStr: String;
+  N, E, S, W: String;
+begin
+  N := 'ν';
+  E := 'ε';
+  S := 'σ';
+  W := 'ω';
+
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      testStr := Lon_DMS;
+      testStr := Utf8StringReplace(testStr, 'N', N,[]);
+      testStr := UTF8StringReplace(testStr, 'E', E, []);
+      testStr := UTF8StringReplace(testStr, 'S', S, []);
+      testStr := Utf8StringReplace(testStr, 'W', W, []);
+
+      ok := TryStrToGPS(testStr, deg, N,E,S,W);
+      AssertEquals(
+        'No valid DMS string for longitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Longitude value mismatch for ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        Lon, deg);
+    end;
+end;
+
+procedure TmvTests_GeoMath.Test_StrDMSToDeg_Lat;
+var
+  i: Integer;
+  deg: Double;
+  sec: Double;
+  ok: Boolean;
+begin
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      ok := TryStrDMSToDeg(Lat_DMS, deg);
+      AssertEquals(
+        'No valid DMS string for latitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Latitude value mismatch for ' + Name + ' (Test index: '+ IntToStr(i) + ')',
+        Lat, deg);
+    end;
+end;
+
+procedure TmvTests_GeoMath.Test_StrDMSToDeg_Lon;
+var
+  i: Integer;
+  deg: Double;
+  sec: Double;
+  ok: Boolean;
+begin
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      ok := TryStrDMSToDeg(Lon_DMS, deg);
+      AssertEquals(
+        'No valid DMS string for longitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Longitude value mismatch for ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        Lon, deg);
+    end;
+end;
+
+// Like Test_StrDMSToDeg, but checks also whether UTF8 in NWES is handled correctly.
+procedure TmvTests_GeoMath.Test_StrDMSToDeg_Lat_UTF8;
+var
+  i: Integer;
+  deg: Double;
+  ok: Boolean;
+  testStr: String;
+  N, E, S, W: String;
+begin
+  N := 'ν';
+  E := 'ε';
+  S := 'σ';
+  W := 'ω';
+
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      testStr := Lat_DMS;
+      testStr := Utf8StringReplace(testStr, 'N', N,[]);
+      testStr := UTF8StringReplace(testStr, 'E', E, []);
+      testStr := UTF8StringReplace(testStr, 'S', S, []);
+      testStr := Utf8StringReplace(testStr, 'W', W, []);
+
+      ok := TryStrDMSToDeg(Lat_DMS, deg, N,E,S,W);
+      AssertEquals(
+        'No valid DMS string for latitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Latitude value mismatch for ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        Lat, deg);
+    end;
+end;
+
+procedure TmvTests_GeoMath.Test_StrDMSToDeg_Lon_UTF8;
+var
+  i: Integer;
+  deg: Double;
+  ok: Boolean;
+  testStr: String;
+  N, E, S, W: String;
+begin
+  N := 'ν';
+  E := 'ε';
+  S := 'σ';
+  W := 'ω';
+
+  for i := 0 to High(LatLon_TestData) do
+    with LatLon_TestData[i] do
+    begin
+      testStr := Lon_DMS;
+      testStr := Utf8StringReplace(testStr, 'N', N,[]);
+      testStr := UTF8StringReplace(testStr, 'E', E, []);
+      testStr := UTF8StringReplace(testStr, 'S', S, []);
+      testStr := Utf8StringReplace(testStr, 'W', W, []);
+
+      ok := TryStrDMSToDeg(testStr, deg, N,E,S,W);
+      AssertEquals(
+        'No valid DMS string for longitude of ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        true, ok);
+      AssertEquals(
+        'Longitude value mismatch for ' + Name + ' (Test index: ' + IntToStr(i) + ')',
+        Lon, deg);
+    end;
 end;
 
 procedure TMvTests_GeoMath.Test_SplitGPS;

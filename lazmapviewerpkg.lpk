@@ -4,13 +4,12 @@
     <Name Value="lazMapViewerPkg"/>
     <Type Value="RunAndDesignTime"/>
     <Author Value="Maciej Kaczkowski, ti_dic, Werner Pamler, Ekkehard Domning, Yuliyan Ivanov"/>
-    <ExamplesDirectory Value="examples"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
         <IncludeFiles Value="source"/>
-        <OtherUnitFiles Value="source;source/addons/plugins;source/addons/plugins/spreadmarkers;source/addons/plugins/grids;source/addons/plugins/scale;source/addons/plugins/greatcircle;source/addons/plugins/areaselection"/>
-        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="source;source/addons/plugins;source/addons/plugins/grids;source/addons/plugins/scale;source/addons/plugins/greatcircle;source/addons/plugins/areaselection;source/addons/plugins/markers"/>
+        <UnitOutputDirectory Value="lib/mapviewer/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Other>
         <CompilerMessages>
@@ -23,8 +22,8 @@
 
 FPC 3.2.0 or newer required."/>
     <License Value="Modified LGPL with linking exception, like FreePascal RTL/FCL and Lazarus LCL"/>
-    <Version Minor="2" Release="7"/>
-    <Files Count="35">
+    <Version Major="1" Release="3"/>
+    <Files Count="37">
       <Item1>
         <Filename Value="source/mvcache.pas"/>
         <UnitName Value="mvCache"/>
@@ -139,35 +138,48 @@ FPC 3.2.0 or newer required."/>
         <UnitName Value="mvPlugins"/>
       </Item28>
       <Item29>
-        <Filename Value="source/addons/plugins/spreadmarkers/mvspreadmarker_plugin.pas"/>
-        <UnitName Value="mvspreadmarker_plugin"/>
-      </Item29>
-      <Item30>
-        <Filename Value="source/addons/plugins/spreadmarkers/uinactivityalarmtimer.pas"/>
-        <UnitName Value="uInactivityAlarmTimer"/>
-      </Item30>
-      <Item31>
         <Filename Value="source/addons/plugins/grids/mvmapgridplugin.pas"/>
         <UnitName Value="mvMapGridPlugin"/>
-      </Item31>
-      <Item32>
+      </Item29>
+      <Item30>
         <Filename Value="source/addons/plugins/scale/mvmapscaleplugin.pas"/>
         <UnitName Value="mvMapScalePlugin"/>
-      </Item32>
-      <Item33>
+      </Item30>
+      <Item31>
         <Filename Value="source/mvengine_mapreg.inc"/>
         <Type Value="Include"/>
-      </Item33>
-      <Item34>
+      </Item31>
+      <Item32>
         <Filename Value="source/addons/plugins/greatcircle/mvgreatcirclepainterplugin.pas"/>
         <UnitName Value="mvGreatCirclePainterPlugin"/>
-      </Item34>
-      <Item35>
+      </Item32>
+      <Item33>
         <Filename Value="source/addons/plugins/areaselection/mvareaselectionplugin.pas"/>
         <UnitName Value="mvAreaSelectionPlugin"/>
+      </Item33>
+      <Item34>
+        <Filename Value="source/addons/plugins/markers/mvmarkerplugins.pas"/>
+        <UnitName Value="mvMarkerPlugins"/>
+      </Item34>
+      <Item35>
+        <Filename Value="source/addons/plugins/markers/uinactivityalarmtimer.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="uInactivityAlarmTimer"/>
       </Item35>
+      <Item36>
+        <Filename Value="source/addons/plugins/markers/mvspreadmarker_plugin.pas"/>
+        <UnitName Value="mvSpreadMarker_Plugin"/>
+      </Item36>
+      <Item37>
+        <Filename Value="source/mvstrconsts.pas"/>
+        <UnitName Value="mvStrConsts"/>
+      </Item37>
     </Files>
     <CompatibilityMode Value="True"/>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="IDEIntf"/>

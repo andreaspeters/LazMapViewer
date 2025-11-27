@@ -13,15 +13,13 @@ object Form1: TForm1
     Height = 511
     Top = 69
     Width = 686
-    Active = True
     Align = alClient
     Cyclic = True
-    DebugTiles = True
     DownloadEngine = MapView1.BuiltInDLE
     DrawingEngine = MapView1.BuiltInDE
     Layers = <>
     Font.Color = clBlack
-    MapProvider = 'Google Maps'
+    MapProvider = 'OpenStreetMap Standard'
     OnChange = MapView1Change
   end
   object StatusBar1: TStatusBar

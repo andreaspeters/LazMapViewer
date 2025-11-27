@@ -5,7 +5,7 @@
     (C) 2014 ti_dic@hotmail.com
     (C) 2019 Werner Pamler (user wp at Lazarus forum https://forum.lazarus.freepascal.org)
     (C) 2023 Yuliyan Ivanov (user alpine at Lazarus forum https://forum.lazarus.freepascal.org)
-    (C) 2024 Ekkehard Domning (edo-at-domis.de)
+    (C) 2024 Ekkehard Domning (edo at domis.de)
 
   License: modified LGPL with linking exception (like RTL, FCL and LCL)
 
@@ -17,7 +17,7 @@
 
 // "Deprecated" warnings:
 // - function names containing "LonLat" were copied and named to contain "LatLon"
-//   (will be removed in v1.0)
+//   (will be removed after v1.0)
 
 unit mvMapViewer;
 
@@ -29,42 +29,15 @@ uses
   Classes, SysUtils, Types, fgl, FPImage,
   LazFileUtils, GraphType,
   Controls, Graphics, IntfGraphics,
-  Forms, ImgList, LCLVersion,
-  mvTypes, mvGeoMath, mvGPSObj, mvDragObj, mvCache, mvExtraData,
+  Forms, ImgList, LCLVersion, Dialogs,
+  mvStrConsts, mvTypes, mvGeoMath, mvGPSObj, mvDragObj, mvCache, mvExtraData,
   mvEngine, mvMapProvider, mvDownloadEngine, mvDrawingEngine;
-
-Type
-
-  TDrawGpsPointEvent = procedure (Sender: TObject;
-    ADrawer: TMvCustomDrawingEngine; APoint: TGpsPoint) of object;
-
-  TDrawTileEvent = procedure (Sender: TObject;
-    ADrawer: TMvCustomDrawingEngine; ATileID: TTileID; ARect: TRect) of object;
-
-  TDrawMissingTileEvent = TDrawTileEvent;  // deprecated
-
-  TMapViewOption =
-  (
-    mvoEditorEnabled,       // Point/Track editor enabled
-    mvoMouseDragging,       // Allow dragging of the map with the mouse
-    mvoMouseZooming,        // Allow zooming into the map with the mouse
-    mvoLatLonInDMS,         // Use Degrees, Minutes and Seconds for Lat/Lon
-    mvoPluginCopyTiles      // Make an internal copy of the tile before passing to plugins
-  );
-
-  TMapViewOptions = set of TMapViewOption;
-
-  TCacheLocation = (clProfile, clTemp, clCustom);
-
-const
-  DefaultMapViewOptions = [mvoMouseDragging, mvoMouseZooming];
 
 type
   TMapItem = class;
   TMapView = class;
   TMapPoint = class;
   TMapLayer = class;
-  TGPSTileLayerBase = class;
   TMapLayers = class;
   TMapPointOfInterest = class;
   TMapPointsOfInterest = class;
@@ -77,6 +50,30 @@ type
   TMapEditMark = class;
   TMvCustomPluginManager = class;
 
+  TCacheLocation = (clProfile, clTemp, clCustom);
+
+  TDrawGpsPointEvent = procedure (Sender: TObject;
+    ADrawer: TMvCustomDrawingEngine; APoint: TGpsPoint) of object;
+
+  TDrawTileEvent = procedure (Sender: TObject;
+    ADrawer: TMvCustomDrawingEngine; ATileID: TTileID; ARect: TRect) of object;
+
+  TDrawMissingTileEvent = TDrawTileEvent;  // deprecated
+
+  TMapEditMarkDrawState = (emdsNormal, emdsActive, emdsSelected, emdsHot, emdsRubberband);
+
+  TMapViewOption = (
+    mvoEditorEnabled,       // Point/Track editor enabled
+    mvoMouseDragging,       // Allow dragging of the map with the mouse
+    mvoMouseZooming,        // Allow zooming into the map with the mouse
+    mvoLatLonInDMS          // Use Degrees, Minutes and Seconds for Lat/Lon
+  );
+  TMapViewOptions = set of TMapViewOption;
+
+const
+  DefaultMapViewOptions = [mvoMouseDragging, mvoMouseZooming];
+
+type
   TMapPointOfInterestDrawEvent = procedure(Sender: TObject;
     ADrawer: TMvCustomDrawingEngine; APoint: TMapPointOfInterest) of object;
 
@@ -85,6 +82,10 @@ type
 
   TMapAreaDrawEvent = procedure(Sender: TObject;
     ADrawer: TMvCustomDrawingEngine; AArea: TMapArea) of object;
+
+  TMapEditMarkDrawEvent = procedure (Sender: TObject;
+    ADrawer: TMvCustomDrawingEngine; APoint: TMapPoint; ARect: TRect;
+    AState: TMapEditMarkDrawState; var DefaultDraw: Boolean) of object;
 
   { TMapObjectList }
 
@@ -103,8 +104,8 @@ type
     FTag: PtrInt;
     FVisible: Boolean;
     function GetGPSObj: TGPSObj; virtual; abstract;
-    function GetView: TMapView; virtual;
     function GetLayer: TMapLayer; virtual;
+    function GetMapView: TMapView; virtual;
     procedure SetCaption(AValue: TCaption);
     procedure SetVisible(AValue: Boolean);
   protected
@@ -113,8 +114,8 @@ type
     procedure ItemChanged; virtual; abstract;
   public
     function HitTest(constref Area: TRealArea): TMapObjectList; virtual; abstract;
-    property View: TMapView read GetView;
     property Layer: TMapLayer read GetLayer;
+    property MapView: TMapView read GetMapView;
     property GPSObj: TGPSObj read GetGPSObj;
   published
     property Caption: TCaption read FCaption write SetCaption;
@@ -130,13 +131,13 @@ type
   private
     FBaseZ: Integer;
   protected
-    function GetView: TMapView; virtual;
     function GetLayer: TMapLayer; virtual;
+    function GetMapView: TMapView; virtual;
     procedure FixOrder(APrevIndex, AIndex: Integer); virtual;
     procedure Update(Item: TCollectionItem); override;
   public
-    property View: TMapView read GetView;
     property Layer: TMapLayer read GetLayer;
+    property MapView: TMapView read GetMapView;
     property BaseZ: Integer read FBaseZ write FBaseZ;
   end;
 
@@ -177,8 +178,8 @@ type
   private
     function GetAreas: TMapAreas;
     function GetGPSObj: TGPSObj; override;
-    function GetView: TMapView; override;
     function GetLayer: TMapLayer; override;
+    function GetMapView: TMapView; override;
     function GetMapProvider: String;
     function GetPointsOfInterest: TMapPointsOfInterest;
     function GetTracks: TMapTracks;
@@ -196,6 +197,7 @@ type
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
     function GetObjectsInArea(const Area: TRealArea; AClass: TMapItemClass = Nil): TGPSObjList;
+    function GetPointsInArea(const Area: TRealArea; APointTypes: TMvPointTypes): TGPSObjList;
     function HitTest(constref Area: TRealArea): TMapObjectList; override;
     function AddPointOfInterest(APoint: TRealPoint; ACaption: String = ''): TMapPointOfInterest;
     procedure AssignFromGPSList(AList: TGPSObjectList);
@@ -216,8 +218,8 @@ type
 
   TMapLayers = class(specialize TMapCollection<TMapLayer, TMapView>)
   protected
-    function GetView: TMapView; override;
     function GetLayer: TMapLayer; override;
+    function GetMapView: TMapView; override;
     procedure FixOrder(APrevIndex, AIndex: Integer); override;
   end;
 
@@ -229,7 +231,6 @@ type
     FOnChange: TNotifyEvent;
     function GetLatLonInDMS: Boolean;
   protected
-//    function GetOwner: TPersistent; override;
     procedure Update; virtual;
   public
     constructor Create(AOwner: TComponent);
@@ -368,12 +369,14 @@ type
     function GetImageAnchorX: Integer;
     function GetImageAnchorY: Integer;
     function GetImageIndex: Integer;
+    function GetTextDistance: Integer;
     function GetTextPositionHor: TTextPositionHor;
     function GetTextPositionVert: TTextPositionVert;
     procedure SetImageAnchorX(AValue: Integer);
     procedure SetImageAnchorY(AValue: Integer);
     procedure SetImageIndex(AValue: TImageIndex);
     procedure SetOnDrawPoint(AValue: TMapPointOfInterestDrawEvent);
+    procedure SetTextDistance(AValue: Integer);
     procedure SetTextPositionHor(AValue: TTextPositionHor);
     procedure SetTextPositionVert(AValue: TTextPositionVert);
   protected
@@ -388,6 +391,7 @@ type
     property ImageAnchorX: Integer read GetImageAnchorX write SetImageAnchorX default 50;
     property ImageAnchorY: Integer read GetImageAnchorY write SetImageAnchorY default 100;
     property ImageIndex: TImageIndex read GetImageIndex write SetImageIndex default -1;
+    property TextDistance: Integer read GetTextDistance write SetTextDistance default 5;
     property TextPositionHor: TTextPositionHor read GetTextPositionHor write SetTextPositionHor default tphCenter;
     property TextPositionVert: TTextPositionVert read GetTextPositionVert write SetTextPositionVert default tpvBelow;
     property OnDrawPoint: TMapPointOfInterestDrawEvent read FOnDrawPoint write SetOnDrawPoint;
@@ -426,6 +430,7 @@ type
   public
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
+    function AddPoint(APoint: TRealPoint; AElevation: Double = NO_ELEVATION; ADateTime: TDateTime = NO_DATE): TMapTrackPoint;
     procedure ItemChanged; override;
     function HitTest(constref Area: TRealArea): TMapObjectList; override;
   published
@@ -467,6 +472,7 @@ type
   public
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
+    function AddPoint(APoint: TRealPoint; AElevation: Double = NO_ELEVATION; ADateTime: TDateTime = NO_DATE): TMapAreaPoint;
     procedure ItemChanged; override;
     function HitTest(constref Area: TRealArea): TMapObjectList; override;
   published
@@ -486,7 +492,6 @@ type
   public
     destructor Destroy; override;
   end;
-
 
   // Additional (ooCustom) map observer operations
   TMapObserverCustomOperation = (mooSelectionCompleted, mooStartDrag, mooDrag,
@@ -513,15 +518,13 @@ type
       APoint: TGPSPoint): Boolean; virtual;
     function DrawMissingTile(AMapView: TMapView; ADrawingEngine: TMvCustomDrawingEngine;
       ATileID: TTileID; ARect: TRect): Boolean; virtual;
-    function TileAfterGetFromCache(AMapView: TMapView; ATileLayer: TGPSTileLayerBase;
-      AMapProvider: TMapProvider; ATileID: TTileID; ATileImg: TPictureCacheItem): Boolean; virtual;
     function GPSItemsModified(AMapView: TMapView; ModifiedList: TGPSObjectList;
       ActualObjs: TGPSObjList; Adding: Boolean): Boolean; virtual;
     function MouseDown(AMapView: TMapView; AButton: TMouseButton; AShift: TShiftState;
       X, Y: Integer): Boolean; virtual;
     function MouseEnter(AMapView: TMapView): Boolean; virtual;
     function MouseLeave(AMapView: TMapView): Boolean; virtual;
-    function MouseMove(AMapView: TMapView; AShift: TShiftState; X,Y: Integer): Boolean; virtual;
+    function MouseMove(AMapView: TMapView; {%H-}AShift: TShiftState; {%H-}X,{%H-}Y: Integer): Boolean; virtual;
     function MouseUp(AMapView: TMapView; AButton: TMouseButton; AShift: TShiftState;
       X, Y: Integer): Boolean; virtual;
     function MouseWheel(AMapView: TMapView; AShift: TShiftState; AWheelDelta: Integer;
@@ -529,12 +532,21 @@ type
     function Resize(AMapView: TMapView): Boolean; virtual;
     function ZoomChange(AMapView: TMapView): Boolean; virtual;
     function ZoomChanging(AMapView: TMapView; NewZoom: Integer; var Allow: Boolean): Boolean; virtual;
+
+    // LCLScaling
+    procedure AutoAdjustLayout(AMapView: TMapView; const AMode: TLayoutAdjustmentPolicy;
+      const AXProportion, AYProportion: Double); virtual;
   public
+
   end;
+
 
   { TMapView }
 
   TMapView = class(TCustomControl)
+    private
+      const
+        DEFAULT_POI_TEXT_BACKGROUND_OPACITY = 0.55;
     private
       FCacheLocation: TCacheLocation;
       FCachePath, FCacheFullPath: String;
@@ -553,13 +565,14 @@ type
       FOptions: TMapViewOptions;
       FPOIImage: TCustomBitmap;
       FPOITextBgColor: TColor;
+      FPOITextBgOpacity: Single;
       FDebugTiles: Boolean;
       FDefaultTrackColor: TColor;
       FDefaultTrackWidth: Integer;
-      FFont: TFont;
       FPOIImages: TCustomImageList;
       FPOIImagesWidth: Integer;
       FCacheOnDisk: Boolean;
+      FTransparentMap: Boolean;
       FZoomMax: Integer;
       FZoomMin: Integer;
       FOnCenterMove: TNotifyEvent;
@@ -571,13 +584,16 @@ type
       FOnEditIsDirty: TNotifyEvent;
       FOnEditSelectionCompleted: TNotifyEvent;
       FOnEditStartDrag: TNotifyEvent;
+      FOnTileSizeChange: TTileSizeChangeEvent;
       FOnZoomChange: TNotifyEvent;
       FOnZoomChanging: TZoomChangingEvent;
       FBeforeDrawObjectsEvent: TNotifyEvent;
       FAfterDrawObjectsEvent: TNotifyEvent;
+      FAfterDrawTileEvent: TDrawTileEvent;
       FAfterPaintEvent: TNotifyEvent;
-      FEditMark: TMapEditMark;
       FDragger: TDragObj;
+      FEditMark: TMapEditMark;
+      FEditMarkDrawEvent: TMapEditMarkDrawEvent;
       procedure CallAsyncInvalidate;
       procedure DoAsyncInvalidate({%H-}Data: PtrInt);
       procedure DrawObjects(const {%H-}TileId: TTileId; aLeft, aTop, aRight,aBottom: integer);
@@ -595,19 +611,16 @@ type
       function GetInactiveColor: TColor;
       function GetLayers: TMapLayers;
       function GetMapProvider: String;
-//      function GetOnCenterMove: TNotifyEvent;
-//      function GetOnCenterMoving: TCenterMovingEvent;
       function GetOnChange: TNotifyEvent;
-//      function GetOnZoomChange: TNotifyEvent;
-//      function GetOnZoomChanging: TZoomChangingEvent;
+      function GetTileSize: TMapTileSize;
       function GetUseThreads: boolean;
       function GetZoom: integer;
       function GetZoomToCursor: Boolean;
       function IsCacheMaxAgeStored: Boolean;
       function IsCacheMemMaxItemCountStored : Boolean;
       function IsCachePathStored: Boolean;
-      function IsFontStored: Boolean;
       function IsLayersStored: Boolean;
+      function IsPOITextBgOpacityStored: Boolean;
       procedure SetActive(AValue: boolean);
       procedure SetCacheLocation(AValue: TCacheLocation);
       procedure SetCacheMaxAge(AValue: Integer);
@@ -622,53 +635,51 @@ type
       procedure SetDownloadEngine(AValue: TMvCustomDownloadEngine);
       procedure SetDrawingEngine(AValue: TMvCustomDrawingEngine);
       procedure SetDrawPreviewTiles(AValue: Boolean);
-      procedure SetFont(AValue: TFont);
       procedure SetInactiveColor(AValue: TColor);
       procedure SetLayers(const ALayers: TMapLayers);
       procedure SetMapProvider(AValue: String);
-//      procedure SetOnCenterMove(AValue: TNotifyEvent);
-//      procedure SetOnCenterMoving(AValue: TCenterMovingEvent);
       procedure SetOnChange(AValue: TNotifyEvent);
-//      procedure SetOnZoomChange(AValue: TNotifyEvent);
-//      procedure SetOnZoomChanging(AValue: TZoomChangingEvent);
       procedure SetOptions(AValue: TMapViewOptions);
       procedure SetPluginManager(AValue: TMvCustomPluginManager);
       procedure SetPOIImage(const AValue: TCustomBitmap);
       procedure SetPOIImages(const AValue: TCustomImageList);
       procedure SetPOIImagesWidth(AValue: Integer);
       procedure SetPOITextBgColor(AValue: TColor);
-      procedure SetUseThreads(AValue: boolean);
+      procedure SetPOITextBgOpacity(AValue: Single);
+      procedure SetTileSize(AValue: TMapTileSize);
+      procedure SetTransparentMap(AValue: Boolean);
+      procedure SetUseThreads(AValue: Boolean);
       procedure SetZoom(AValue: integer);
       procedure SetZoomMax(AValue: Integer);
       procedure SetZoomMin(AValue: Integer);
       procedure SetZoomToCursor(AValue: Boolean);
-      procedure UpdateFont(Sender: TObject);
       procedure UpdateImage(Sender: TObject);
 
     protected
       AsyncInvalidate : boolean;
       procedure ActivateEngine;
-      procedure DblClick; override;
       procedure DoAfterDrawTile(ATileId: TTileId; ARect: TRect);
+      procedure DblClick; override;
       procedure DoCenterMove(Sender: TObject);
       procedure DoCenterMoving(Sender: TObject; var NewCenter: TRealPoint; var Allow: Boolean);
       procedure DoDrawMissingTile(ATileID: TTileID; ARect: TRect);
-      procedure DoDrawPoint(const Area: TRealArea; APt: TGPSPoint);
+      procedure DoDrawPoint(const {%H-}Area: TRealArea; APt: TGPSPoint);
       procedure DoDrawStretchedTile(const TileId: TTileID; X, Y: Integer; TileImg: TPictureCacheItem; const R: TRect);
       procedure DoDrawTile(const TileId: TTileId; X,Y: integer; TileImg: TPictureCacheItem);
-      procedure DoTileAfterGetFromCache(const AMapProvider: TMapProvider;
-                                        const ATileId: TTileId;
-                                        const ATileImg: TPictureCacheItem);
-      procedure DoDrawTileInfo(const {%H-}TileID: TTileID; X,Y: Integer);
+      procedure DoDrawTileInfo(const {%H-}TileID: TTileID; X,Y: Integer); deprecated 'Use plugin';
       procedure DoEraseBackground(const R: TRect);
       procedure DoTileDownloaded(const {%H-}TileId: TTileId);
+      procedure DoTileSizeChange(Sender: TObject; const ATileSize: TSize);
       function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
       procedure DoOnResize; override;
       procedure DoZoomChange(Sender: TObject);
       procedure DoZoomChanging(Sender: TObject; NewZoom: Integer; var Allow: Boolean);
       function FindObjsAtScreenPt(X, Y: Integer; ATolerance: Integer;
         AVisibleOnly: Boolean; AClass: TGPSObjClass = nil): TGPSObjArray;
+      procedure FontChanged(Sender: TObject); override;
+      procedure FontToDrawingEngine;
       function IsActive: Boolean; inline;
+      procedure Loaded; override;
       procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
         X, Y: Integer); override;
       procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
@@ -698,6 +709,10 @@ type
       procedure ChangeCachePath(AOldLoc: TCacheLocation; ANewPath: String);
       class function CacheDirectory(ALoc: TCacheLocation; ACustomPath: String): String;
 
+      // LCLScaling
+      procedure DoAutoAdjustLayout(const AMode: TLayoutAdjustmentPolicy;
+        const AXProportion, AYProportion: Double); override;
+
     public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
@@ -712,7 +727,7 @@ type
       procedure DrawTrack(const {%H-}Area: TRealArea; trk: TGPSTrack);
       procedure DrawArea(const {%H-}Area: TRealArea; ar: TGPSArea);
       procedure ClearBuffer;
-      procedure GetMapProviders(lstProviders: TStrings);
+      procedure GetMapProviders(lstProviders: TStrings); deprecated 'Use MapProvidersToSortedStrings (unit mvMapProvider)';  // deprecated in Sept 2025
       function GetPluginManager: TMvCustomPluginManager;
       function GetVisibleArea: TRealArea;
       function LatLonToScreen(aPt: TRealPoint): TPoint;
@@ -720,8 +735,14 @@ type
       function LonLatToScreen(aPt: TRealPoint): TPoint; deprecated 'Use LatLonToScreen';
       function ObjsAtScreenPt(X, Y: Integer; ATolerance: Integer = -1;
         AClass: TGPSObjClass = nil): TGPSObjArray;
+      function PointOfInterestClicked(X, Y: Integer; APointTypes: TMvPointTypes;
+        AExtendedClicks: TMvExtendedClicks; ATolerance: Integer = -1): TGPSPoint;
       function VisibleObjsAtScreenPt(X, Y: Integer; ATolerance: Integer = -1;
         AClass: TGPSObjClass = nil): TGPSObjArray;
+      function VisiblePointsAtScreenPt(X, Y: Integer; ATolerance: Integer = -1;
+        APointTypes: TMvPointTypes = ptAll): TGPSObjArray;
+      function VisiblePointsInArea(Area: TRealArea;
+        APointTypes: TMvPointTypes = ptAll): TGPSObjArray;
       procedure SaveToFile(AClass: TRasterImageClass; const AFileName: String);
       function SaveToImage(AClass: TRasterImageClass): TRasterImage;
       procedure SaveToStream(AClass: TRasterImageClass; AStream: TStream);
@@ -738,12 +759,17 @@ type
       procedure StartDragging(X, Y: Integer);
       procedure EndDragging(X, Y: Integer);
       procedure AbortDragging;
+      procedure RegisterMapProviders;
+
+      procedure ClearCache;
+      procedure DeleteCacheFiles;
 
       property Center: TRealPoint read GetCenter write SetCenter;
       property Engine: TMapViewerEngine read FEngine;
       property GPSItems: TGPSObjectList read GetGPSItems;
       property GPSLayer[L: Integer]: TGPSObjectList read GetGPSLayer;
       property EditMark: TMapEditMark read FEditMark;
+
     published
       property Active: boolean read FActive write SetActive default false;
       property Align;
@@ -764,17 +790,23 @@ type
       property DrawPreviewTiles: Boolean read GetDrawPreviewTiles write SetDrawPreviewTiles default true;
       property Options: TMapViewOptions read FOptions write SetOptions default DefaultMapViewOptions;
       property Layers: TMapLayers read GetLayers write SetLayers stored IsLayersStored;
-      property Font: TFont read FFont write SetFont stored IsFontStored;
+      property Font;
       property Height default 150;
       property InactiveColor: TColor read GetInactiveColor write SetInactiveColor default clWhite;
       property MapProvider: String read GetMapProvider write SetMapProvider;
       property MapCenter: TMapCenter read FCenter write FCenter;
+      property ParentFont;
       property PluginManager: TMvCustomPluginManager read FPluginManager write SetPluginManager;
       property POIImage: TCustomBitmap read FPOIImage write SetPOIImage;
       property POIImages: TCustomImageList read FPOIImages write SetPOIImages;
       property POIImagesWidth: Integer read FPOIImagesWidth write SetPOIImagesWidth default 0;
       property POITextBgColor: TColor read FPOITextBgColor write SetPOITextBgColor default clNone;
+      property POITextBgOpacity: Single read FPOITextBgOpacity write SetPOITextBgOpacity stored IsPOITextBgOpacityStored;
       property PopupMenu;
+      property TabOrder;
+      property TabStop default true;
+      property TileSize: TMapTileSize read GetTileSize write SetTileSize default mtsAuto;
+      property TransparentMap: Boolean read FTransparentMap write SetTransparentMap default false;
       property UseThreads: boolean read GetUseThreads write SetUseThreads default true;
       property Width default 150;
       property Zoom: integer read GetZoom write SetZoom default 1;
@@ -782,6 +814,7 @@ type
       property ZoomMin: Integer read FZoomMin write SetZoomMin default 1;
       property ZoomToCursor: Boolean read GetZoomToCursor write SetZoomToCursor default True;
       property OnAfterDrawObjects: TNotifyEvent read FAfterDrawObjectsEvent write FAfterDrawObjectsEvent;
+      property OnAfterDrawTile: TDrawTileEvent read FAfterDrawTileEvent write FAfterDrawTileEvent;
       property OnAfterPaint: TNotifyEvent read FAfterPaintEvent write FAfterPaintEvent;
       property OnBeforeDrawObjects: TNotifyEvent read FBeforeDrawObjectsEvent write FBeforeDrawObjectsEvent;
       property OnCenterMove: TNotifyEvent read FOnCenterMove write FOnCenterMove;
@@ -794,8 +827,13 @@ type
       property OnEditDrag: TNotifyEvent read FOnEditDrag write FOnEditDrag;
       property OnEditEndDrag: TNotifyEvent read FOnEditEndDrag write FOnEditEndDrag;
       property OnEditIsDirty: TNotifyEvent read FOnEditIsDirty write FOnEditIsDirty;
+      property OnDrawEditMark: TMapEditMarkDrawEvent read FEditMarkDrawEvent write FEditMarkDrawEvent;
+      property OnTileSizeChange: TTileSizeChangeEvent read FOnTileSizeChange write FOnTileSizeChange;
       property OnZoomChange: TNotifyEvent read FOnZoomChange write FOnZoomChange;
       property OnZoomChanging: TZoomChangingEvent read FOnZoomChanging write FOnZoomChanging;
+      property OnKeyDown;
+      property OnKeyPress;
+      property OnKeyUp;
       property OnMouseDown;
       property OnMouseEnter;
       property OnMouseLeave;
@@ -803,8 +841,8 @@ type
       property OnMouseUp;
       property OnMouseWheel;
       property OnResize;
-
   end;
+
 
   { TGPSTileLayerBase }
 
@@ -820,10 +858,6 @@ type
     function GetUseThreads: Boolean;
     procedure DoTileDownloaded(const TileId: TTileId);
     procedure DoDrawTile(const TileId: TTileId; X, Y: Integer; TileImg: TPictureCacheItem);
-    procedure DoTileAfterGetFromCache(const AMapProvider: TMapProvider;
-                                      const ATileId: TTileId;
-                                      const ATileImg: TPictureCacheItem);
-
     procedure SetDrawMode(AValue: TItemDrawMode);
     procedure SetMapProvider(AValue: String);
     procedure SetOpacity(AValue: Single);
@@ -888,6 +922,7 @@ type
     FOnEndDrag: TNotifyEvent;
     FOnSelectionCompleted: TNotifyEvent;
     FOnStartDrag: TNotifyEvent;
+    FHotPt: TMapPoint;
     FRealPt: TRealPoint;
     FSelection: TMapObjectList;
     FObservedColls: TMapObjectList;
@@ -905,18 +940,19 @@ type
     procedure SetCursorShape(AValue: TCursor);
     function GetHasSelection: Boolean;
 
-    procedure FPOObservedChanged(ASender: TObject;
+    procedure FPOObservedChanged({%H-}ASender: TObject;
       Operation: TFPObservedOperation; Data: Pointer);
     procedure ObserveItemColl(AItem: TObject);
 
     function AroundPt(X, Y: Integer; APt: TPoint): Boolean;
-    procedure SelectFromMarquee;
+    procedure SelectFromRubberband;
     procedure MarkDirty;
   protected
-    FList: TMapObjectList;
-    FMarquee: Boolean;
-    FMarqueeRect: TRect;
     FPt: TPoint;
+    FRubberband: Boolean;
+    FRubberbandRect: TRect;
+    FList: TMapObjectList;
+    procedure DoDraw(Sender: TObject; APoint: TMapPoint; ARect: TRect; AState: TMapEditMarkDrawState);
 
   public
     constructor Create(AMapView: TMapView);
@@ -1002,9 +1038,10 @@ implementation
 uses
   FileUtil, LazLoggerBase, Math,
   mvJobQueue,
-  mvDLEFPC,
   {$IFDEF MSWINDOWS}
   mvDLEWin,
+  {$ELSE}
+  mvDLEFPC,
   {$ENDIF}
   mvDE_IntfGraphics;
 
@@ -1152,11 +1189,10 @@ begin
   FPoints.Assign(AValue);
 end;
 
-procedure TMapArea.DrawArea(Sender: TObject; AGPSObj: TGPSObj; AArea: TRealArea
-  );
+procedure TMapArea.DrawArea(Sender: TObject; AGPSObj: TGPSObj; AArea: TRealArea);
 begin
   if Assigned(FOnDrawArea) then
-    FOnDrawArea(Sender, (Collection as TMapAreas).GetView.DrawingEngine, Self);
+    FOnDrawArea(Sender, (Collection as TMapAreas).GetMapView.DrawingEngine, Self);
 end;
 
 constructor TMapArea.Create(ACollection: TCollection);
@@ -1178,6 +1214,15 @@ begin
   if Assigned(FArea) then
     Layer.ComboLayer.Delete(FArea);
   inherited Destroy;
+end;
+
+function TMapArea.AddPoint(APoint: TRealPoint; AElevation: Double = NO_ELEVATION;
+  ADateTime: TDateTime = NO_DATE): TMapAreaPoint;
+begin
+  Result := FPoints.Add as TMapAreaPoint;
+  Result.RealPoint := APoint;
+  Result.Elevation := AElevation;
+  Result.DateTime := ADateTime;
 end;
 
 procedure TMapArea.ItemChanged;
@@ -1319,16 +1364,17 @@ end;
 
 { TMapCollectionBase }
 
-function TMapCollectionBase.GetView: TMapView;
-begin
-  if Assigned(Layer)
-    then Result := Layer.View
-    else Result := Nil;
-end;
-
 function TMapCollectionBase.GetLayer: TMapLayer;
 begin
   Result := Nil;
+end;
+
+function TMapCollectionBase.GetMapView: TMapView;
+begin
+  if Assigned(Layer) then
+    Result := Layer.MapView
+  else
+    Result := Nil;
 end;
 
 procedure TMapCollectionBase.FixOrder(APrevIndex, AIndex: Integer);
@@ -1349,8 +1395,8 @@ end;
 procedure TMapCollectionBase.Update(Item: TCollectionItem);
 begin
   inherited Update(Item);
-  if Assigned(View) then
-    View.Invalidate;
+  if Assigned(MapView) then
+    MapView.Invalidate;
 end;
 
 { TMapTrackPoints }
@@ -1453,7 +1499,7 @@ procedure TMapTrack.DrawTrack(Sender: TObject; AGPSObj: TGPSObj;
   AArea: TRealArea);
 begin
   if Assigned(FOnDrawTrack) then
-    FOnDrawTrack(Sender, (Collection as TMapTracks).GetView.DrawingEngine, Self);
+    FOnDrawTrack(Sender, (Collection as TMapTracks).GetMapView.DrawingEngine, Self);
 end;
 
 constructor TMapTrack.Create(ACollection: TCollection);
@@ -1476,6 +1522,15 @@ begin
   if Assigned(FTrack) then
     Layer.ComboLayer.Delete(FTrack);
   inherited Destroy;
+end;
+
+function TMapTrack.AddPoint(APoint: TRealPoint; AElevation: Double = NO_ELEVATION;
+  ADateTime: TDateTime = NO_DATE): TMapTrackPoint;
+begin
+  Result := FPoints.Add as TMapTrackPoint;
+  Result.RealPoint := APoint;
+  Result.Elevation := AElevation;
+  Result.DateTime := ADateTime;
 end;
 
 procedure TMapTrack.ItemChanged;
@@ -1509,9 +1564,9 @@ end;
 
 { TMapItem }
 
-function TMapItem.GetView: TMapView;
+function TMapItem.GetMapView: TMapView;
 begin
-  Result := Layer.View;
+  Result := Layer.MapView;
 end;
 
 function TMapItem.GetLayer: TMapLayer;
@@ -1541,7 +1596,7 @@ begin
     then Result := FCaption
     else Result := ClassName;
   if not FVisible
-    then Result := Result + ' (Invisible)';
+    then Result := Format('%s (%s)', [Result, mvRS_Invisible]);
 end;
 
 procedure TMapItem.SetIndex(Value: Integer);
@@ -1693,12 +1748,12 @@ end;
 
 function TMapPoint.GetLatLonInDMS: Boolean;
 begin
-  Result := Assigned(View) and (mvoLatLonInDMS in View.Options);
+  Result := Assigned(MapView) and (mvoLatLonInDMS in MapView.Options);
 end;
 
 function TMapPoint.GetToScreen: TPoint;
 begin
-  Result := View.LatLonToScreen(GetRealPoint);
+  Result := MapView.LatLonToScreen(GetRealPoint);
 end;
 
 procedure TMapPoint.SetLatitude(AValue: Double);
@@ -1717,7 +1772,7 @@ end;
 
 procedure TMapPoint.SetRealPoint(AValue: TRealPoint);
 begin
-  if (FPoint.Lat = AValue.Lat) and (FPoint.Lon = AValue.Lon) then exit;
+  if FPoint.RealPoint.Equal(AValue) then exit;
   FPoint.Lat := AValue.Lat;
   FPoint.Lon := AValue.Lon;
   ItemChanged;
@@ -1743,8 +1798,8 @@ begin
   if not Visible then
     Exit;
   BB := Self.GPSObj.BoundingBox;
-  if Area.ContainsPoint(BB.TopLeft) and Area.ContainsPoint(BB.BottomRight)
-    then Result := TMapObjectList.Create(Self);
+  if Area.ContainsPoint(BB.TopLeft) and Area.ContainsPoint(BB.BottomRight) then
+    Result := TMapObjectList.Create(Self);
 end;
 
 function TMapPoint.CreatePoint: TGPSPoint;
@@ -1760,8 +1815,8 @@ constructor TMapPoint.Create(ACollection: TCollection);
 begin
   inherited Create(ACollection);
   FPoint := CreatePoint;
-  FPoint.Lat := View.Center.Lat;
-  FPoint.Lon := View.Center.Lon;
+  FPoint.Lat := MapView.Center.Lat;
+  FPoint.Lon := MapView.Center.Lon;
   FVisible := True;
 end;
 
@@ -1801,6 +1856,11 @@ end;
 function TMapPointOfInterest.GetImageIndex: Integer;
 begin
   Result := TGPSPointOfInterest(FPoint).ImageIndex;
+end;
+
+function TMapPointOfInterest.GetTextDistance: Integer;
+begin
+  Result := TGPSPointOfInterest(FPoint).TextDistance;
 end;
 
 function TMapPointOfInterest.GetTextPositionHor: TTextPositionHor;
@@ -1845,6 +1905,13 @@ begin
   ItemChanged;
 end;
 
+procedure TMapPointOfInterest.SetTextDistance(AValue: Integer);
+begin
+  if TGPSPointOfInterest(FPoint).TextDistance = AValue then Exit;
+  TGPSPointOfInterest(FPoint).TextDistance := AValue;
+  ItemChanged;
+end;
+
 procedure TMapPointOfInterest.SetTextPositionHor(AValue: TTextPositionHor);
 begin
   if TGPSPointOfInterest(FPoint).TextPositionHor = AValue then Exit;
@@ -1863,7 +1930,7 @@ procedure TMapPointOfInterest.DrawPoint(Sender: TObject; AGPSObj: TGPSObj;
   AArea: TRealArea);
 begin
   if Assigned(FOnDrawPoint) then
-    FOnDrawPoint(Sender, View.DrawingEngine, Self);
+    FOnDrawPoint(Sender, MapView.DrawingEngine, Self);
 end;
 
 procedure TMapPointOfInterest.ItemChanged;
@@ -1898,6 +1965,7 @@ begin
     TMapPointOfInterest(Dest).ImageAnchorX := Self.ImageAnchorX;
     TMapPointOfInterest(Dest).ImageAnchorY := Self.ImageAnchorY;
     TMapPointOfInterest(Dest).ImageIndex := Self.ImageIndex;
+    TMapPointOfInterest(Dest).TextDistance := Self.TextDistance;
     TMapPointOfInterest(Dest).TextPositionHor := Self.TextPositionHor;
     TMapPointOfInterest(Dest).TextPositionVert := Self.TextPositionVert;
   end;
@@ -1935,7 +2003,7 @@ procedure TMapRealPoint.SetLatitude(AValue: Double);
 begin
   if FLatitude = AValue then Exit;
   if (AValue < -90) or (AValue > 90) then
-    raise EMapViewerLatLonException.Create('Latitudes allowed only between +/-90°.');
+    raise EMapViewerLatLonException.Create(mvRS_LatitudesOnlyAllowedBetweenPlusMinus90Deg);
   FLatitude := AValue;
   Update;
 end;
@@ -1944,7 +2012,7 @@ procedure TMapRealPoint.SetLongitude(AValue: Double);
 begin
   if FLongitude = AValue then Exit;
   if (AValue <-180) or (AValue > 180) then
-    raise EMapViewerLatLonException.Create('Longitudes allowed only between +/-180°');
+    raise EMapViewerLatLonException.Create(mvRS_LongitudesOnlyAllowedBetweenPlusMinus180Deg);
   FLongitude := AValue;
   Update;
 end;
@@ -1953,9 +2021,9 @@ procedure TMapRealPoint.SetRealPt(AValue: TRealPoint);
 begin
   if (FLatitude = AValue.Lat) and (FLongitude = AValue.Lon) then Exit;
   if (AValue.Lat < -90) or (AValue.Lat > 90) then
-    raise EMapViewerLatLonException.Create('Latitudes allowed only between +/-90°.');
+    raise EMapViewerLatLonException.Create(mvRS_LatitudesOnlyAllowedBetweenPlusMinus90Deg);
   if (AValue.Lon <-180) or (AValue.Lon > 180) then
-    raise EMapViewerLatLonException.Create('Longitudes allowed only between +/-180°');
+    raise EMapViewerLatLonException.Create(mvRS_LongitudesOnlyAllowedBetweenPlusMinus180Deg);
   FLatitude := AValue.Lat;
   FLongitude := AValue.Lon;
   Update;
@@ -1979,9 +2047,9 @@ begin
   if FArea.Equal(AValue) then
     exit;
   if not AValue.LatInRange then
-    raise EMapViewerLatLonException.Create('Latitudes allowed only between +/-90°.');
+    raise EMapViewerLatLonException.Create(mvRS_LatitudesOnlyAllowedBetweenPlusMinus90Deg);
   if not AValue.LonInRange then
-    raise EMapViewerLatLonException.Create('Longitudes allowed only between +/-180°');
+    raise EMapViewerLatLonException.Create(mvRS_LongitudesOnlyAllowedBetweenPlusMinus180Deg);
   FArea := AValue;
   Update;
 end;
@@ -1990,9 +2058,9 @@ procedure TMapRealArea.SetCoord(AIndex: Integer; AValue: Double);
 begin
   if GetCoord(AIndex) = AValue then Exit;
   if (AIndex in [0, 2]) and not Math.InRange(AValue, -180.0, +180.0) then
-    raise EMapViewerLatLonException.Create('Longitudes allowed only between +/-180°.');
+    raise EMapViewerLatLonException.Create(mvRS_LongitudesOnlyAllowedBetweenPlusMinus180Deg);
   if (AIndex in [1, 3]) and not Math.InRange(AValue, -90.0, +90.0) then
-    raise EMapViewerLatLonException.Create('Latitudes allowed only between +/-90°.');
+    raise EMapViewerLatLonException.Create(mvRS_LatitudesOnlyAllowedBetweenPlusMinus90Deg);
 
   case AIndex of
     0: FArea.TopLeft.Lon := AValue;
@@ -2046,13 +2114,6 @@ begin
   Result := FComboLayer;
 end;
 
-function TMapLayer.GetView: TMapView;
-begin
-  if (Collection is TMapLayers)
-    then Result := (Collection as TMapLayers).View
-    else Result := Nil;
-end;
-
 function TMapLayer.GetLayer: TMapLayer;
 begin
   Result := Self;
@@ -2061,6 +2122,14 @@ end;
 function TMapLayer.GetMapProvider: String;
 begin
   Result := ComboLayer.TileLayer.MapProvider
+end;
+
+function TMapLayer.GetMapView: TMapView;
+begin
+  if (Collection is TMapLayers) then
+    Result := (Collection as TMapLayers).MapView
+  else
+    Result := Nil;
 end;
 
 function TMapLayer.GetUseThreads: Boolean;
@@ -2087,16 +2156,17 @@ var
 begin
   if FMapProvider = AValue then
     Exit;
-  // Check compat. of provider projection type against the base provider.
-  if Assigned(View) then
+
+  // Check compatibility of provider projection type against the base provider.
+  if Assigned(MapView) then
   begin
-    P := View.Engine.MapProviderByName(AValue);
-    if Assigned(P) and (View.Engine.MapProjectionType <> P.ProjectionType) then
+    P := MapProviderByName(AValue);
+    if Assigned(P) and (MapView.Engine.MapProjectionType <> P.ProjectionType) then
     begin
-      WriteStr(LPS, View.Engine.MapProjectionType);
+      WriteStr(LPS, MapView.Engine.MapProjectionType);
       WriteStr(MPS, P.ProjectionType);
       raise EArgumentException.CreateFmt(
-        '%s has different projection type (%s) from the base map (%s).',
+        mvRS_DifferentProjectionTypeFromBaseMap,
         [AValue, LPS, MPS]);
     end;
   end;
@@ -2157,7 +2227,7 @@ begin
   FAreas := TMapAreas.Create(Self, BASE_Z_AREA);
   FTracks := TMapTracks.Create(Self, BASE_Z_TRACK);
   FComboLayer := TGPSComboLayer.Create;
-  View.GPSItems.Add(FComboLayer, _TILELAYERS_ID_, Self.Index + BASE_Z_LAYER);
+  MapView.GPSItems.Add(FComboLayer, _TILELAYERS_ID_, Self.Index + BASE_Z_LAYER);
 end;
 
 destructor TMapLayer.Destroy;
@@ -2166,7 +2236,7 @@ begin
   FAreas.Free;
   FTracks.Free;
   if Assigned(FComboLayer) then
-    View.GPSItems.Delete(FComboLayer);
+    MapView.GPSItems.Delete(FComboLayer);
   inherited Destroy;
 end;
 
@@ -2217,6 +2287,52 @@ begin
         objArea := obj.BoundingBox;
         if (not Assigned(AClass) or (P is AClass)) and HasIntersectArea(Area, objArea) then
           Result.Add(obj);
+      end;
+    end;
+
+  if Result.Count = 0 then
+    FreeAndNil(Result);
+end;
+
+function TMapLayer.GetPointsInArea(const Area: TRealArea;
+  APointTypes: TMvPointTypes): TGPSObjList;
+var
+  i, j: integer;
+  P: TMapPoint;
+  mapArea: TMapArea;
+  mapTrack: TMapTrack;
+begin
+  Result := TGPSObjList.Create(false);
+
+  if (ptMapPointOfInterest in APointTypes) then
+    for i := 0 to Pred(PointsOfInterest.Count) do
+    begin
+      P := PointsOfInterest[i];
+      if Area.ContainsPoint(P.RealPoint) then
+        Result.Add(P.GpsObj);
+    end;
+
+  if (ptMapAreaPoint in APointTypes) then
+    for j := 0 to Pred(Areas.Count) do
+    begin
+      mapArea := Areas[j];
+      for i := 0 to Pred(mapArea.Points.Count) do
+      begin
+        P := mapArea.Points[i];
+        if Area.ContainsPoint(P.RealPoint) then
+          Result.Add(P.GpsObj);
+      end;
+    end;
+
+  if (ptMapTrackPoint in APointTypes) then
+    for j := 0 to Pred(Tracks.Count) do
+    begin
+      mapTrack := Tracks[j];
+      for i := 0 to Pred(mapTrack.Points.Count) do
+      begin
+        P := mapTrack.Points[i];
+        if Area.ContainsPoint(P.RealPoint) then
+          Result.Add(P.GpsObj);
       end;
     end;
 
@@ -2326,7 +2442,7 @@ end;
 
 { TMapLayers }
 
-function TMapLayers.GetView: TMapView;
+function TMapLayers.GetMapView: TMapView;
 begin
   Result := MCOwner;
 end;
@@ -2348,7 +2464,7 @@ begin
     B := Pred(Count);
   end;
   for I := T to B do
-    View.GPSItems.ChangeZOrder(TMapItem(Items[I]).GPSObj, I + FBaseZ);
+    MapView.GPSItems.ChangeZOrder(TMapItem(Items[I]).GPSObj, I + FBaseZ);
 end;
 
 { TDrawObjJob }
@@ -2432,7 +2548,7 @@ begin
   if AValue and (MapProvider = '') then
     // Raising an exception won't let the component to be loaded
     if not (csLoading in ComponentState) then
-      raise Exception.Create('MapProvider is not selected.');
+      raise Exception.Create(mvRS_MapProviderNotSelected);
   FActive := AValue;
   if FActive then
     ActivateEngine
@@ -2526,7 +2642,7 @@ end;
 
 function TMapView.GetInactiveColor: TColor;
 begin
-  Result := FPColorToTColor(Engine.BkColor);
+  Result := inherited Color;
 end;
 
 function TMapView.GetLayers: TMapLayers;
@@ -2570,6 +2686,11 @@ begin
 end;
 }
 
+function TMapView.GetTileSize: TMapTileSize;
+begin
+  Result := Engine.TileSize;
+end;
+
 function TMapView.GetUseThreads: boolean;
 begin
   Result := Engine.UseThreads;
@@ -2600,15 +2721,32 @@ begin
   Result := not SameText(CachePath, 'cache/');
 end;
 
-function TMapView.IsFontStored: Boolean;
-begin
-  Result := SameText(FFont.Name, 'default') and (FFont.Size = 0) and
-    (FFont.Style = []) and (FFont.Color = clBlack);
-end;
-
 function TMapView.IsLayersStored: Boolean;
 begin
   Result := True; 
+end;
+
+function TMapView.IsPOITextBgOpacityStored: Boolean;
+begin
+  Result := FPOITextBgOpacity <> DEFAULT_POI_TEXT_BACKGROUND_OPACITY;
+end;
+
+procedure TMapView.ClearCache;
+begin
+  Engine.ClearCache;
+end;
+
+procedure TMapView.DeleteCacheFiles;
+var
+  i: Integer;
+  layer: TMapLayer;
+begin
+  Engine.DeleteCacheFiles(Engine.MapProviderByName(MapProvider));
+  for i := 0 to Layers.Count-1 do
+  begin
+    layer := Layers[i];
+    Engine.DeleteCacheFiles(Engine.MapProviderByName(layer.MapProvider));
+  end;
 end;
 
 procedure TMapView.SetCacheOnDisk(AValue: boolean);
@@ -2692,24 +2830,21 @@ begin
     FDrawingEngine.CreateBuffer(ClientWidth, ClientHeight);
     FEngine.CacheItemClass := FDrawingEngine.GetCacheItemClass;
   end;
-  UpdateFont(nil);
+  FontToDrawingEngine;
+  Invalidate;
 end;
 
 procedure TMapView.SetDrawPreviewTiles(AValue: Boolean);
 begin
   Engine.DrawPreviewTiles := AValue;
-end;
-
-procedure TMapView.SetFont(AValue: TFont);
-begin
-  FFont.Assign(AValue);
-  UpdateFont(nil);
+  Invalidate;
 end;
 
 procedure TMapView.SetInactiveColor(AValue: TColor);
 begin
-  Engine.BkColor := TColorToFPColor(AValue);
-  if not IsActive then
+  Color := AValue;
+  Engine.BkColor := TColorToFPColor(ColorToRGB(AValue));
+  if (not IsActive) or FTransparentMap then
     Invalidate;
 end;
 
@@ -2728,15 +2863,13 @@ procedure TMapView.SetMapProvider(AValue: String);
 var
   msg: String;
 begin
-  //if AValue = '' then
-  //  raise EArgumentException.Create('Empty map provider is not allowed.');
-  if (AValue <> '') and not Engine.ValidProvider(AValue) then
+  if (AValue <> '') and not MapProviderRegistered(AValue) then
   begin
     Active := false;
-    msg := Format('Map provider "%s" is not registered.', [AValue]);
+    msg := Format(mvRS_MapProviderNotRegistered, [AValue]);
     if AValue = 'OpenStreetMap Mapnik' then
-      msg := msg + LineEnding + 'Use "OpenStreetMap Standard" instead.';
-    Application.MessageBox(PChar(msg), PChar('Error'));
+      msg := msg + LineEnding + mvRS_UseOpenStreetMapStandardInstead;
+    MessageDlg(msg, mtError,[mbOK], 0);
     exit;
   end;
 
@@ -2777,10 +2910,14 @@ procedure TMapView.SetOptions(AValue: TMapViewOptions);
 begin
   if FOptions = AValue then Exit;
   FOptions := AValue;
-  Engine.CreateTempTileCopy:= (mvoPluginCopyTiles in FOptions);
   if Engine.InDrag and not (mvoMouseDragging in FOptions) then
   begin
     Engine.DragObj.AbortDrag;
+    Invalidate;
+  end;
+  if not (mvoEditorEnabled in FOptions) then
+  begin
+    FEditMark.Visible := false;
     Invalidate;
   end;
 end;
@@ -2851,6 +2988,28 @@ begin
   Invalidate;
 end;
 
+procedure TMapView.SetPOITextBgOpacity(AValue: Single);
+begin
+  if FPOITextBgOpacity = AValue then
+    exit;
+  FPOITextBgOpacity := AValue;
+  Invalidate;
+end;
+
+procedure TMapView.SetTileSize(AValue: TMapTileSize);
+begin
+  FEngine.TileSize := AValue;
+  Invalidate;
+end;
+
+procedure TMapView.SetTransparentMap(AValue: Boolean);
+begin
+  if FTransparentMap = AValue then
+    exit;
+  FTransparentMap := AValue;
+  Invalidate;
+end;
+
 procedure TMapView.SetUseThreads(AValue: boolean);
 begin
   Engine.UseThreads := aValue;
@@ -2905,12 +3064,27 @@ begin
   end;
 end;
 
+procedure TMapView.Loaded;
+begin
+  inherited;
+  if TileSize = mtsAuto then
+  begin
+    FEngine.PixelsPerInch := Font.PixelsPerInch;
+    FEngine.UseAutoTiles;
+  end;
+end;
+
 procedure TMapView.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 var
   savedOnMouseDown: TMouseEvent;
   lHandled : Boolean;
 begin
+  { Automatically focus the MapView when clicked (for all widgetsets).
+    See: https://lazarus.lazarus.freepascal.narkive.com/zufFYkTm/intercepting-keyboard-events}
+  if not (csNoFocus in ControlStyle) then
+    SetFocus;
+
   { The inherited method calls the user's OnMouseDown at its end. But we
     always want the plugin methods to be executed before the user event.
     The following code makes sure that this happens. }
@@ -3083,9 +3257,9 @@ end;
 
 procedure TMapView.Paint;
 const
-  FREE_DRAG = 0; //(TILE_SIZE * TILE_SIZE) div 4;
+  FREE_DRAG = 0; //(TILE_SIZE * TILE_SIZE) div 4;   // -- wp: activating this leaves ugly artefacts at the border tiles
 
-  procedure DrawCenter;
+  procedure DrawCenter;  deprecated 'Use plugin';
   var
     C: TPoint;
   begin
@@ -3103,27 +3277,33 @@ const
     Canvas.FillRect(0, 0, ClientWidth, ClientHeight);
   end;
 
-  procedure FullRedraw;
+  procedure ObjectsDraw;
   var
     W: Integer;
   begin
-    Engine.Redraw;
     W := ClientWidth;
     if Cyclic then
-      W := Min(1 shl Zoom * TileSize.CX, W);
+      W := Min(1 shl Zoom * mvTypes.TileSize.CX, W);
 
     GetPluginManager.BeforeDrawObjects(Self);
     if Assigned(FBeforeDrawObjectsEvent) then
       FBeforeDrawObjectsEvent(Self);
 
-    DrawObjects(Default(TTileId), 0, 0, W - 1, ClientHeight);
+    DrawObjects(Default(TTileID), 0, 0, W - 1, ClientHeight);
 
     GetPluginManager.AfterDrawObjects(Self);
     if Assigned(FAfterDrawObjectsEvent) then
       FAfterDrawObjectsEvent(Self);
+  end;
+
+  procedure FullRedraw;
+  begin
+    Engine.Redraw;
+    ObjectsDraw;
 
     DrawingEngine.PaintToCanvas(Canvas);
-    if DebugTiles then
+
+    if DebugTiles then     // DebugTiles is deprecated
       DrawCenter;
 
     GetPluginManager.AfterPaint(Self);
@@ -3141,7 +3321,7 @@ const
     begin
       DrawingEngine.PaintToCanvas(Canvas);
       DrawingEngine.PaintToCanvas(Canvas, O);
-      if DebugTiles then
+      if DebugTiles then         // DebugTiles is deprecated
         DrawCenter;
     end
     else
@@ -3281,8 +3461,8 @@ begin
     begin
       L := Max(0, Engine.MapLeft);
       T := Max(0, Engine.MapTop);
-      WSx := mvGeoMath.ZoomFactor(Zoom) * TileSize.CX;
-      WSy := mvGeoMath.ZoomFactor(Zoom) * TileSize.CY;
+      WSx := mvGeoMath.ZoomFactor(Zoom) * mvTypes.TileSize.CX;
+      WSy := mvGeoMath.ZoomFactor(Zoom) * mvTypes.TileSize.CY;
       ClipRect := Rect(L, T, Min(Engine.MapLeft + WSx, ClientWidth),
         Min(Engine.MapTop + WSy, ClientHeight));
     end;
@@ -3350,7 +3530,7 @@ begin
 
   if Cyclic then
   begin
-    WS := mvGeoMath.ZoomFactor(Zoom) * TileSize.CX;
+    WS := mvGeoMath.ZoomFactor(Zoom) * mvTypes.TileSize.CX;
     if (WS < ClientWidth) then
     begin
       {TODO Draw multiple copies of the area}
@@ -3406,49 +3586,72 @@ var
   txtPosVert: TTextPositionVert = tpvBelow;
   savedOpacity: Single;
   savedPen: TMvPen;
+  savedBrush: TMvBrush;
+  R: TScaledImageListResolution;
 
   procedure DrawOne(P: TPoint);
   const
     SYMBOL_SIZE = 5;
     TXT_DISTANCE = 5;
+  var
+    x, y, dist: Integer;
+    R: TRect;
   begin
+    DrawingEngine.Opacity := 1.0;
+
     // Draw as bitmap from ImageList...
     if Assigned(bmp) then
-      DrawingEngine.DrawBitmap(P.X - round(wBmp * imgAnchorX), P.Y - round(hBmp * imgAnchorY), bmp, true)
-    else
+    begin
+      x := P.X - round(wBmp * imgAnchorX);
+      y := P.Y - round(hBmp * imgAnchorY);
+      R := Rect(x, y, x+wBmp, y+hBmp);
+      DrawingEngine.DrawBitmap(x, y, bmp, true);
+    end else
     // ... or draw as global POI bitmap image ...
     if Assigned(FPOIImage) and not (FPOIImage.Empty) then
-      DrawingEngine.DrawBitmap(P.X - FPOIImage.Width div 2, P.Y - FPOIImage.Height, FPOIImage, true)
-    else
+    begin
+      x := P.X - FPOIImage.Width div 2;
+      y := P.Y - FPOIImage.Height;
+      R := Rect(x, y, x + FPOIImage.Width, FPOIImage.Height);
+      DrawingEngine.DrawBitmap(x, y, FPOIImage, true);
+    end else
     // ... or as cross
     begin
+      R := Rect(P.X, P.Y, P.X, P.Y);
       DrawingEngine.Line(P.X, P.Y - SYMBOL_SIZE, P.X, P.Y + SYMBOL_SIZE);
       DrawingEngine.Line(P.X - SYMBOL_SIZE, P.Y, P.X + SYMBOL_SIZE, P.Y);
-      P.Y := P.Y + 5;  // distance to text
     end;
+    if APt is TGPSPointOfInterest then
+      TGPSPointOfInterest(APt).ImageRect := R;
+    if APt is TGPSPoint then
+      dist := TGPSPoint(APt).TextDistance
+    else
+      dist := Scale96ToFont(TXT_DISTANCE);
+    InflateRect(R, dist, dist);    // grow by distance to text
 
     // Draw the point text
+    DrawingEngine.Opacity := FPOITextBgOpacity;
+    DrawingEngine.BrushColor := FPOITextBgColor;
     if FPOITextBgColor = clNone then
       DrawingEngine.BrushStyle := bsClear
     else
-    begin
       DrawingEngine.BrushStyle := bsSolid;
-      DrawingEngine.BrushColor := FPOITextBgColor;
-    end;
-    
+
     // Text is at the left/centered/right of the GPS point...
     case txtPosHor of
-      tphLeft: P.X := P.X - txtExtent.CX;
+      tphLeft: P.X := R.Left - txtExtent.CX;
       tphCenter: P.X := P.X - txtExtent.CX div 2;
-      tphRight: ;
+      tphRight: P.X := R.Right;
     end;
     // ... and above/centered/below the GPS point
     case txtPosVert of
-      tpvAbove: P.Y := P.Y - txtExtent.CY - TXT_DISTANCE;
+      tpvAbove: P.Y := R.Top - txtExtent.CY;
       tpvCenter: P.Y := P.Y - txtExtent.CY div 2;
-      tpvBelow: P.Y := P.Y + TXT_DISTANCE;
+      tpvBelow: P.Y := R.Bottom + TXT_DISTANCE;
     end;
     DrawingEngine.TextOut(P.X, P.Y, txt);
+    if APt is TGPSPointOfInterest then
+      TGPSPointOfInterest(APt).CaptionRect := Rect(P.X, P.Y, P.X + txtExtent.CX, P.Y + txtExtent.CY);
   end;
 
 begin
@@ -3471,22 +3674,21 @@ begin
 
   savedOpacity := DrawingEngine.Opacity;
   savedPen := DrawingEngine.GetPen;
+  savedBrush := DrawingEngine.GetBrush;
   bmp := nil;
   try
-    DrawingEngine.Opacity := 1.0;
-
     // Prepare point image as symbol from image list ...
     if Assigned(FPOIImages) and (imgIndex <> -1) and (imgIndex < FPOIImages.Count) then
     begin
       bmp := TBitmap.Create;
-      FPOIImages.GetBitmap(imgIndex, bmp);
       {$IF LCL_FullVersion >= 2000000}
-      wBmp := FPOIImages.WidthForPPI[FPOIImagesWidth, Font.PixelsPerInch];
-      hBmp := FPOIImages.HeightForPPI[FPOIImagesWidth, Font.PixelsPerInch];
+      R := FPOIImages.ResolutionForPPI[FPOIImagesWidth, Font.PixelsPerInch, GetCanvasScaleFactor];
+      R.GetBitmap(imgIndex, bmp);
       {$ELSE}
-      wBmp := FPOIImages.Width;
-      hBmp := FPOIImages.Height;
+      FPOIImages.GetBitmap(imgIndex, bmp);
       {$IFEND}
+      wBmp := bmp.Width;
+      hBmp := bmp.Height;
     end else
     begin
       // Otherwise prepare default point
@@ -3501,11 +3703,14 @@ begin
       DrawingEngine.PenColor := ptColor;
     end;
 
+    // Prepare text font
+    FontToDrawingEngine;
+
     // Prepare point text
     txt := APt.Name;
-    if FPOITextBgColor <> clNone then
+    if (txt <> '') and (FPOITextBgColor <> clNone) then
       txt := ' ' + txt + ' ';  // add some margin
-    txtExtent := DrawingEngine.TextExtent(txt);
+    txtExtent := DrawingEngine.TextExtent(txt, DrawingEngine.FontOrientation <> 0);
 
     // Draw point, in case of cyclic points multiple times.
     pt := Engine.LatLonToScreen(APt.RealPoint);
@@ -3521,6 +3726,7 @@ begin
     bmp.Free;
     DrawingEngine.Opacity := savedOpacity;
     DrawingEngine.SetPen(savedPen);
+    DrawingEngine.SetBrush(savedBrush);
   end;
 end;
 
@@ -3587,6 +3793,8 @@ end;
 procedure TMapView.DoAfterDrawTile(ATileID: TTileID; ARect: TRect);
 begin
   GetPluginManager.AfterDrawTile(Self, DrawingEngine, ATileID, ARect);
+  if Assigned(FAfterDrawTileEvent) then
+    FAfterDrawTileEvent(Self, DrawingEngine, ATileID, ARect);
 
   // FDebugTiles is deprecated - DoDrawTileInfo will be removed.
   if FDebugTiles then
@@ -3619,10 +3827,13 @@ procedure TMapView.DoDrawStretchedTile(const TileId: TTileID; X, Y: Integer;
 var
   tileRect: TRect;
 begin
-  tileRect := Rect(X, Y, X + TileSize.CX, Y + TileSize.CY);
+  tileRect := Rect(X, Y, X + mvTypes.TileSize.CX, Y + mvTypes.TileSize.CY);
   if Assigned(TileImg) then
-    DrawingEngine.DrawScaledCacheItem(tileRect, R, TileImg)
-  else
+  begin
+    if FTransparentMap then
+      DoDrawMissingTile(TileID, tileRect);
+    DrawingEngine.DrawScaledCacheItem(tileRect, R, TileImg);
+  end else
     DoDrawMissingTile(TileID, tileRect);
 
   DoAfterDrawTile(TileID, tileRect);
@@ -3632,26 +3843,24 @@ procedure TMapView.DoDrawTile(const TileId: TTileId; X, Y: integer;
   TileImg: TPictureCacheItem);
 var
   tileRect: TRect;
+  drawMode: TItemDrawMode = idmDraw;
 begin
-  tileRect := Rect(X, Y, X + TileSize.CX, Y + TileSize.CY);
+  tileRect := Rect(X, Y, X + mvTypes.TileSize.CX, Y + mvTypes.TileSize.CY);
   if Assigned(TileImg) then
-    DrawingEngine.DrawCacheItem(X, Y, TileImg)
-  else
+  begin
+    if FTransparentMap then
+    begin
+      DoDrawMissingTile(TileID, tileRect);
+      drawMode := idmUseSourceAlpha;
+    end;
+    DrawingEngine.DrawCacheItem(X, Y, TileImg, drawMode);
+  end else
     DoDrawMissingTile(TileID, tileRect);
 
   DoAfterDrawTile(TileID, tileRect);
 
   if FDebugTiles then
     DoDrawTileInfo(TileID, X, Y);
-end;
-
-procedure TMapView.DoTileAfterGetFromCache(const AMapProvider: TMapProvider;
-  const ATileId: TTileId; const ATileImg: TPictureCacheItem);
-var
-  lHandled: Boolean;
-begin
-  lHandled := GetPluginManager.TileAfterGetFromCache(Self, Nil,
-                                                     AMapProvider, ATileID, ATileImg);
 end;
 
 procedure TMapView.DoDrawMissingTile(ATileID: TTileID; ARect: TRect);
@@ -3665,15 +3874,17 @@ begin
     DrawingEngine.FillPixels(ARect.Left, ARect.Top, ARect.Right, ARect.Bottom, InactiveColor);
 end;
 
-
 procedure TMapView.DoDrawTileInfo(const TileID: TTileID; X, Y: Integer);
+var
+  tile_size: TSize;
 begin
+  tile_size := mvTypes.TileSize;
   DrawingEngine.PenColor := clGray;
   DrawingEngine.PenWidth := 1;
-  DrawingEngine.Line(X, Y, X, Y + TileSize.CY);
-  DrawingEngine.Line(X, Y, X + TileSize.CX, Y);
-  DrawingEngine.Line(X + TileSize.CX, Y, X + TileSize.CX, Y + TileSize.CY);
-  DrawingEngine.Line(X, Y + TileSize.CY, X + TileSize.CX, Y + TileSize.CY);
+  DrawingEngine.Line(X, Y, X, Y + tile_size.CY);
+  DrawingEngine.Line(X, Y, X + tile_size.CX, Y);
+  DrawingEngine.Line(X + tile_size.CX, Y, X + tile_size.CX, Y + tile_size.CY);
+  DrawingEngine.Line(X, Y + tile_size.CY, X + tile_size.CX, Y + tile_size.CY);
 end;
 
 procedure TMapView.DoEraseBackground(const R: TRect);
@@ -3687,6 +3898,12 @@ begin
   CallAsyncInvalidate;
 end;
 
+procedure TMapView.DoTileSizeChange(Sender: TObject; const ATileSize: TSize);
+begin
+  if Assigned(FOnTileSizeChange) then
+    FOnTileSizeChange(Self, ATileSize);
+end;
+
 function TMapView.IsActive: Boolean;
 begin
   Result := FActive
@@ -3697,11 +3914,13 @@ var
   I: Integer;
 begin
   inherited Create(AOwner);
-  ControlStyle := ControlStyle + [csAcceptsControls];
+  ControlStyle := ControlStyle + [csAcceptsControls] - [csNoFocus];
+  TabStop := true;
 
   Width := 150;
   Height := 150;
 
+  RegisterMapProviders;
   FLayers := CreateLayers;
 
   FActive := false;
@@ -3733,15 +3952,16 @@ begin
   FEngine.OnCenterMoving := @DoCenterMoving;
   FEngine.OnDrawTile := @DoDrawTile;
   FEngine.OnDrawStretchedTile := @DoDrawStretchedTile;
-  FEngine.OnTileAfterGetFromCache := @DoTileAfterGetFromCache;
   FEngine.OnEraseBackground := @DoEraseBackground;
   FEngine.OnTileDownloaded := @DoTileDownloaded;
+  FEngine.OnTileSizeChange := @DoTileSizeChange;
   FEngine.OnZoomChange := @DoZoomChange;
   FEngine.OnZoomChanging := @DoZoomChanging;
   FEngine.DrawPreviewTiles := True;
   FEngine.DrawTitleInGuiThread := false;
   FEngine.DownloadEngine := FBuiltinDownloadEngine;
   FEngine.ZoomToCursor := True;
+  FEngine.PixelsPerInch := Font.PixelsPerInch;
 
   FBuiltinDrawingEngine := TMvIntfGraphicsDrawingEngine.Create(self);
   FEngine.CacheItemClass := FBuiltinDrawingEngine.GetCacheItemClass;
@@ -3751,20 +3971,16 @@ begin
   FBuiltinPluginManager := TMvCustomPluginManager.Create(Self);
   FBuiltinPluginManager.Name := 'BuiltinPM';
 
-  FFont := TFont.Create;
-  FFont.Name := 'default';
-  FFont.Size := 0;
-  FFont.Style := [];
-  FFont.Color := clBlack;
-  FFont.OnChange := @UpdateFont;
-
   FPOIImage := TPortableNetworkGraphic.Create; //TBitmap.Create;
   FPOIImage.OnChange := @UpdateImage;
   FPOITextBgColor := clNone;
+  FPOITextBgOpacity := DEFAULT_POI_TEXT_BACKGROUND_OPACITY;
 
   FCenter := TMapCenter.Create(Self);
   FCenter.Longitude := 0.0;
   FCenter.Latitude := 0.0;
+
+  InactiveColor := clWhite;
 
   UseThreads := true;
 
@@ -3782,7 +3998,6 @@ var
 begin
   Active := False;
   Engine.Jobqueue.RemoveAsyncCalls(Self);
-  FFont.Free;
   FreeAndNil(FPOIImage);
   FLayers.Free;
   for I := 0 to High(FGPSItems) do
@@ -3819,8 +4034,8 @@ begin
   // the reflection of the changing in the GPSItems while drawing
   for i := 0 to High(FGPSItems) do
   begin
-    FGPSItems[i].EndUpdate;
     FGPSItems[i].OnModified := FSavedOnModifiedEvents[i];
+    FGPSItems[i].EndUpdate;
   end;
   SetLength(FSavedOnModifiedEvents, 0);
 end;
@@ -3831,7 +4046,7 @@ var
   WorldSize: Int64;
 begin
   Result := APoint;
-  WorldSize := mvGeoMath.ZoomFactor(Zoom) * TileSize.CX;
+  WorldSize := mvGeoMath.ZoomFactor(Zoom) * mvTypes.TileSize.CX;
   if Eastwards then
   begin
     while Result.X < ARefX do
@@ -3860,7 +4075,7 @@ begin
   end
   else
   begin
-    WorldSize := mvGeoMath.ZoomFactor(Zoom) * TileSize.CX;
+    WorldSize := mvGeoMath.ZoomFactor(Zoom) * mvTypes.TileSize.CX;
     SetLength(Result, 1{APoint} + (1{Round} + ClientWidth div WorldSize));
     Result[0] := APoint;
     I := 1; R := APoint.X + WorldSize; L := APoint.X - WorldSize;
@@ -3941,18 +4156,8 @@ begin
 end;
 
 procedure TMapView.GetMapProviders(lstProviders: TStrings);
-var
-  L: TStringList;
 begin
-  L := TStringList.Create;
-  try
-    Engine.GetMapProviders(L);
-    L.Sort;
-    lstProviders.Assign(L);
-  finally
-    L.Free;
-  end;
-//  Engine.GetMapProviders(lstProviders);
+  mvMapProvider.MapProvidersToSortedStrings(lstProviders);
 end;
 
 { Returns the builtin plugin manager when no external plugin manager is
@@ -3983,7 +4188,7 @@ var
   objsCount: Integer;
 begin
   Result := nil;
-  
+
   // Define area of +/-ATolerance pixels around the screen point
   rArea.TopLeft := ScreenToLatLon(Point(X-ATolerance, Y-ATolerance));
   rArea.BottomRight := ScreenToLatLon(Point(X+ATolerance, Y+ATolerance));
@@ -4019,12 +4224,180 @@ begin
   Result := FindObjsAtScreenPt(X, Y, ATolerance, false, AClass);
 end;
 
+{ Special marker click procedure for points-of-interest which also allows to
+  click on the caption and on the icon image. }
+function TMapView.PointOfInterestClicked(X, Y: Integer;
+  APointTypes: TMvPointTypes; AExtendedClicks: TMvExtendedClicks;
+  ATolerance: Integer = -1): TGPSPoint;
+
+  function CaptionClicked(APoint: TGPSPointOfInterest; ClickPt: TPoint): Boolean;
+  begin
+    Result := APoint.CaptionRect.Contains(ClickPt);
+  end;
+
+  function ImageClicked(APoint: TGPSPointOfInterest; ClickPt: TPoint): Boolean;
+  var
+    img: TLazIntfImage = nil;
+    raw: TRawImage;
+    R: TRect;
+    clr: TFPColor;
+    Res: TScaledImageListResolution;
+  begin
+    Result := APoint.ImageRect.Contains(ClickPt);
+    if not Result then
+      exit;
+
+    // Accept click only when it is on a non-fully-transparent pixel (Alpha > 0)
+    if Assigned(FPOIImages) and (APoint.ImageIndex <> -1) and (APoint.ImageIndex < FPOIImages.Count) then
+    begin
+      {$IF LCL_FullVersion >= 2000000}
+      Res := FPOIImages.ResolutionForPPI[FPOIImagesWidth, Font.PixelsPerInch, GetCanvasScaleFactor];
+      Res.Resolution.GetRawImage(APoint.ImageIndex, raw);
+      {$ELSE}
+      FPOIImages.GetRawImage(APoint.ImageIndex, raw);
+      {$IFEND}
+      img := TLazIntfImage.Create(raw, false);
+    end else
+    if Assigned(FPOIImage) and not (FPOIImage.Empty) then
+      img := FPOIImage.CreateIntfImage;
+
+    if img <> nil then
+    begin
+      // Determine position of clicked point inside the POI image.
+      ClickPt.X := ClickPt.X - APoint.ImageRect.Left;
+      ClickPt.Y := ClickPt.Y - APoint.ImageRect.Top;
+      clr := img.Colors[ClickPt.X, ClickPt.Y];
+      if clr.Alpha = 0 then
+        Result := false;
+    end;
+
+    img.Free;
+  end;
+
+  function PointClicked(APoint: TGPSPointOfInterest; ClickPt: TPoint): Boolean;
+  var
+    scrPt: TPoint;
+    R: TRect;
+  begin
+    scrPt := LatLonToScreen(APoint.RealPoint);
+    if (ATolerance > -1) then
+    begin
+      R := Rect(ClickPt.X - ATolerance, ClickPt.Y - ATolerance, ClickPt.X + ATolerance, ClickPt.Y + ATolerance);
+      if R.Contains(scrPt) then
+        exit(true);
+    end;
+    if (ATolerance = -1) and (ClickPt.X = scrPt.X) and (ClickPt.Y = scrPt.Y) then
+      exit(true);
+    Result := false;
+  end;
+
+var
+  pts: TPointArray;
+  area: TRealArea;
+  i, j: Integer;
+  gpsArr: TGPSObjArray;
+  poi: TGPSPointOfInterest;
+begin
+  Result := nil;
+
+  pts := CyclicPointsOf(Point(X, Y));
+  area := GetVisibleArea;
+  gpsArr := VisiblePointsInArea(area, APointTypes * [ptGPSPointOfInterest, ptMapPointOfInterest]);
+
+  for i := High(gpsArr) downto Low(gpsArr) do
+  begin
+    poi := TGPSPointOfInterest(gpsArr[i]);
+    for j := Low(pts) to High(pts) do
+      if ((ecCaption in AExtendedClicks) and CaptionClicked(poi, pts[j])) or
+         ((ecImage in AExtendedClicks) and ImageClicked(poi, pts[j])) or
+         PointClicked(poi, pts[j]) then
+      begin
+        Result := TGPSPoint(poi);
+        exit;
+      end;
+  end;
+end;
+
 function TMapView.VisibleObjsAtScreenPt(X, Y: Integer; ATolerance: Integer = -1;
   AClass: TGPSObjClass = nil): TGPSObjArray;
 begin
   if ATolerance = -1 then
     ATolerance := POINT_DELTA;
   Result := FindObjsAtScreenPt(X, Y, ATolerance, true, AClass);
+end;
+
+function TMapView.VisiblePointsAtScreenPt(X, Y: Integer; ATolerance: Integer = -1;
+  APointTypes: TMvPointTypes = ptAll): TGPSObjArray;
+var
+  area: TRealArea;
+begin
+  if ATolerance = -1 then
+    ATolerance := POINT_DELTA;
+
+  // Define area of +/- ATolerance pixels around the screen point
+  area.TopLeft := ScreenToLatLon(Point(X - ATolerance, Y - ATolerance));
+  area.BottomRight := ScreenToLatLon(Point(X + ATolerance, Y + ATolerance));
+
+  Result := VisiblePointsInArea(area, APointTypes);
+end;
+
+function TMapView.VisiblePointsInArea(Area: TRealArea;
+  APointTypes: TMvPointTypes = ptAll): TGPSObjArray;
+const
+  BLOCK_SIZE = 100;
+var
+  i, j, nObj: Integer;
+  gpsList: TGPSObjList;
+  obj: TGPSObj;
+begin
+  Result := nil;
+
+  nObj := 0;
+  if ([ptGPSPointOfInterest, ptGPSTrackPoint, ptGPSAreaPoint] * APointTypes <> []) then
+    for j := 0 to 9 do
+    begin
+      gpsList := FGPSItems[j].GetPointsInArea(Area, APointTypes);
+      try
+        if Assigned(gpsList) then
+          for i := 0 to gpsList.Count-1 do
+          begin
+            obj := gpsList[i];
+            if obj.Visible then
+            begin
+              if nObj mod BLOCK_SIZE = 0 then
+                SetLength(Result, Length(Result) + BLOCK_SIZE);
+              Result[nObj] := obj;
+              inc(nObj);
+            end;
+          end;
+      finally
+        gpsList.Free;
+      end;
+    end;
+
+  if [ptMapPointOfInterest, ptMapTrackPoint, ptMapAreaPoint] * APointTypes <> [] then
+    for j := 0 to Layers.Count-1 do
+    begin
+      gpsList := Layers[j].GetPointsInArea(Area, APointTypes);
+      try
+        if Assigned(gpsList) then
+          for i := 0 to gpsList.Count-1 do
+          begin
+            obj := gpsList[i];
+            if obj.Visible then
+            begin
+              if nObj mod BLOCK_SIZE = 0 then
+                SetLength(Result, Length(Result) + BLOCK_SIZE);
+              Result[nObj] := obj;
+              inc(nObj);
+            end;
+          end;
+      finally
+        gpsList.Free;
+      end;
+    end;
+
+  SetLength(Result, nObj);
 end;
 
 procedure TMapView.CenterOnArea(const aArea: TRealArea);
@@ -4070,7 +4443,7 @@ begin
   Result.BottomRight := Engine.ScreenToLatLon(Point(Width, Height));
   if Cyclic then
   begin
-    mapWidth := mvGeoMath.ZoomFactor(Engine.Zoom) * TileSize.CX;
+    mapWidth := mvGeoMath.ZoomFactor(Engine.Zoom) * mvTypes.TileSize.CX;
     if Width >= mapWidth then
     begin
       Result.TopLeft.Lon := -180;
@@ -4084,16 +4457,23 @@ begin
   DrawingEngine.CreateBuffer(ClientWidth, ClientHeight);       // ???
 end;
 
-procedure TMapView.UpdateFont(Sender: TObject);
+procedure TMapView.FontChanged(Sender: TObject);
+begin
+  inherited;
+  FontToDrawingEngine;
+  Invalidate;
+end;
+
+procedure TMapView.FontToDrawingEngine;
 var
   fd: TFontData;
 begin
-  fd := GetFontData(FFont.Handle);
+  fd := GetFontData(Font.Handle);
   DrawingEngine.FontName := fd.Name;
-  DrawingEngine.FontSize := abs(round(fd.Height / FFont.PixelsPerInch * 72));
-  DrawingEngine.FontStyle := FFont.Style;
-  DrawingEngine.FontColor := ColorToRGB(FFont.Color);
-  Invalidate;
+  DrawingEngine.FontSize := abs(round(fd.Height / Font.PixelsPerInch * 72));
+  DrawingEngine.FontStyle := Font.Style;
+  DrawingEngine.FontColor := ColorToRGB(Font.Color);
+  DrawingEngine.FontOrientation := Font.Orientation * 0.1;
 end;
 
 procedure TMapView.UpdateImage(Sender: TObject);
@@ -4221,6 +4601,27 @@ begin
   end;
 end;
 
+procedure TMapView.DoAutoAdjustLayout(const AMode: TLayoutAdjustmentPolicy;
+  const AXProportion, AYProportion: Double);
+begin
+  inherited;
+
+  // Switch tile size depending on resolution
+  FEngine.PixelsPerInch := Font.PixelsPerInch;
+  if TileSize = mtsAuto then
+    FEngine.UseAutoTiles;
+
+  // Just a place-holder for calling AutoAdjustLayout in plugins -- not implemented yet.
+  GetPluginManager.AutoAdjustLayout(Self, AMode, AXProportion, AYProportion);
+end;
+
+procedure TMapView.RegisterMapProviders;
+var
+  HERE1, HERE2: String;
+begin
+  {$I mvengine_mapreg.inc}
+end;
+
 
 { TGPSTileLayerBase }
 
@@ -4265,16 +4666,6 @@ begin
   DrawTile(TileId, X, Y, TileImg);
 end;
 
-procedure TGPSTileLayerBase.DoTileAfterGetFromCache(
-  const AMapProvider: TMapProvider; const ATileId: TTileId;
-  const ATileImg: TPictureCacheItem);
-var
-  lHandled: Boolean;
-begin
-  lHandled := FParentView.GetPluginManager.TileAfterGetFromCache(FParentView, Self,
-                                                     AMapProvider, ATileID, ATileImg);
-end;
-
 procedure TGPSTileLayerBase.SetDrawMode(AValue: TItemDrawMode);
 begin
   if FDrawMode = AValue then Exit;
@@ -4285,7 +4676,7 @@ end;
 
 procedure TGPSTileLayerBase.TileDownloaded(const TileId: TTileId);
 begin
-  ; // Intentionally empty
+  ; // Intentionally left empty
 end;
 
 procedure TGPSTileLayerBase.SetMapProvider(AValue: String);
@@ -4316,7 +4707,6 @@ begin
   FMapProvider := FEngine.MapProvider;
   FEngine.OnTileDownloaded := @DoTileDownloaded;
   FEngine.OnDrawTile := @DoDrawTile;
-  FEngine.OnTileAfterGetFromCache := @DoTileAfterGetFromCache;
 end;
 
 destructor TGPSTileLayerBase.Destroy;
@@ -4540,14 +4930,14 @@ begin
     InRange(Y, APt.Y - 5, APt.Y + 5);
 end;
 
-procedure TMapEditMark.SelectFromMarquee;
+procedure TMapEditMark.SelectFromRubberband;
 var
   Hits: TMapObjectList;
   RA: TRealArea;
   O: TObject;
 begin
-  RA.TopLeft := FMapView.ScreenToLatLon(FMarqueeRect.TopLeft);
-  RA.BottomRight := FMapView.ScreenToLatLon(FMarqueeRect.BottomRight);
+  RA.TopLeft := FMapView.ScreenToLatLon(FRubberbandRect.TopLeft);
+  RA.BottomRight := FMapView.ScreenToLatLon(FRubberbandRect.BottomRight);
   Hits := FMapView.Layers.HitTest(RA);
   if Assigned(Hits) then
     try
@@ -4625,7 +5015,31 @@ begin
   Area.Init(FRealPt, FRealPt);
 end;
 
+procedure TMapEditmark.DoDraw(Sender: TObject; APoint: TMapPoint; ARect: TRect; AState: TMapEditMarkDrawState);
+var
+  defaultDraw: Boolean;
+  view: TMapView;
+  DE: TMvCustomDrawingEngine;
+begin
+  view := Sender as TMapView;
+  DE := view.DrawingEngine;
+
+  defaultDraw := True;
+  if Assigned(view.OnDrawEditMark) then
+    view.OnDrawEditMark(view, DE, APoint, ARect, AState, defaultDraw);
+
+  if defaultDraw then
+  begin
+    if AState = emdsNormal then
+      DE.Ellipse(ARect.Left, ARect.Top, ARect.Right, ARect.Bottom)
+    else
+      DE.Rectangle(ARect.Left, ARect.Top, ARect.Right, ARect.Bottom);
+  end;
+end;
+
 procedure TMapEditMark.Draw(AView: TObject; Area: TRealArea);
+const
+  MARK_SIZE = 5;
 var
   View: TMapView;
   DE: TMvCustomDrawingEngine;
@@ -4633,17 +5047,23 @@ var
   Ar: TMapArea;
   TrkPoint: TMapPoint;
   I: Integer;
+  MarkSize: Integer;
 
-  procedure MarkMP(P: TMapPoint);
+  // Draw editor point
+  procedure DrawMark(P: TMapPoint; ASize: Integer; AState: TMapEditMarkDrawState);
+  var
+    R: TRect;
   begin
     with View.LatLonToScreen(P.Latitude, P.Longitude) do
-      DE.Ellipse(X - 4, Y - 4, X + 4, Y + 4);
+      R := Rect(X - ASize, Y - ASize, X + ASize, Y + ASize);
+    DoDraw(AView, P, R, AState);
   end;
 
 begin
   View := TMapView(AView);
   DE := View.DrawingEngine;
   FPt := View.LatLonToScreen(RealPt);
+  MarkSize := View.Scale96ToFont(MARK_SIZE);
 
   DE.PenStyle := psSolid;
   DE.PenColor := clRed;
@@ -4652,8 +5072,9 @@ begin
   DE.BrushStyle := bsSolid;
   DE.Opacity := 1.0;
 
-  if Assigned(FList) then
-    DE.Rectangle(FPt.X - 5, FPt.Y - 5, FPt.X + 5, FPt.Y + 5);
+  // Mouse-over
+  if Assigned(FList) and Assigned(FHotPt) then
+    DrawMark(FHotPt, MarkSize, emdsHot);
 
   if HasSelection then
   begin
@@ -4662,35 +5083,34 @@ begin
 
     for Trk in FSelection.Tracks do
       for I := 0 to Pred(Trk.Points.Count) do
-        MarkMP(Trk.Points[I]);
+        DrawMark(Trk.Points[I], MarkSize-1, emdsNormal);
 
     for Ar in FSelection.Areas do
       for I := 0 to Pred(Ar.Points.Count) do
-        MarkMP(Ar.Points[I]);
+        DrawMark(Ar.Points[I], MarkSize-1, emdsNormal);
 
     DE.PenWidth := 2;
     DE.BrushColor := clBlack;
     DE.BrushStyle := bsSolid;
 
+    // Points in current selection
     for TrkPoint in FSelection.Points.Skip(1) do
-      with View.LatLonToScreen(TrkPoint.Latitude, TrkPoint.Longitude) do
-        DE.Rectangle(X - 5, Y - 5, X + 5, Y + 5);
+      DrawMark(TrkPoint, MarkSize, emdsSelected);
 
+    // Current point
     DE.BrushColor := clLime;
     TrkPoint := (FSelection[0] as TMapPoint);
-    with View.LatLonToScreen(TrkPoint.Latitude, TrkPoint.Longitude) do
-      DE.Rectangle(X - 5, Y - 5, X + 5, Y + 5);
+    DrawMark(TrkPoint, MarkSize, emdsActive);
   end;
 
-  if FMarquee then
+  // Rubberband
+  if FRubberband then
   begin
     DE.PenStyle := psSolid;
     DE.PenWidth := 1;
     DE.PenColor := clGray;
     DE.BrushStyle := bsClear;
-
-    with FMarqueeRect do
-      DE.Rectangle(Left, Top, Right, Bottom);
+    DoDraw(AView, nil, FRubberbandRect, emdsRubberband);
   end;
 end;
 
@@ -4703,12 +5123,14 @@ begin
       Exit;
     Lat := TMapPoint(AObjs[0]).Latitude;
     Lon := TMapPoint(AObjs[0]).Longitude;
+    FHotPt := TMapPoint(AObjs[0]);
     FList.Free;
     FList := TMapObjectList.Create(AObjs);
     FMapView.Invalidate;
   end
   else if Assigned(FList) then
   begin
+    FHotPt := nil;
     FreeAndNil(FList);
     FMapView.Invalidate;
   end;
@@ -4799,10 +5221,10 @@ begin
     Inc(I);
   end;
   SetLength(FOrigins, I); // why bother?
-  FMarquee := not AroundPt(Sender.StartX, Sender.StartY, FPt);
-  if FMarquee then
+  FRubberband := not AroundPt(Sender.StartX, Sender.StartY, FPt);
+  if FRubberband then
   begin
-    FMarqueeRect := Rect(Sender.StartX, Sender.StartY, Sender.EndX, Sender.EndY);
+    FRubberbandRect := Rect(Sender.StartX, Sender.StartY, Sender.EndX, Sender.EndY);
     Self.RealPt := FMapView.Center; // keep it in view
     FMapView.Invalidate;
   end;
@@ -4814,7 +5236,7 @@ end;
 procedure TMapEditMark.DoDrag(Sender: TDragObj);
 var
   I: Integer = 0;
-  RPt: TRealPoint;
+  RptStart, RPtEnd: TRealPoint;
   MapPoint: TMapPoint;
 begin
   if not FDragStarted then
@@ -4827,20 +5249,21 @@ begin
       Exit;
     end;
   end;
-  if FMarquee then
+  if FRubberband then
   begin
-    FMarqueeRect := Rect(Sender.StartX, Sender.StartY, Sender.EndX, Sender.EndY);
-    FMarqueeRect.NormalizeRect;
+    FRubberbandRect := Rect(Sender.StartX, Sender.StartY, Sender.EndX, Sender.EndY);
+    FRubberbandRect.NormalizeRect;
     FMapView.Invalidate;
     Exit;
   end;
   for MapPoint in FSelection.Points do
   begin
     MarkDirty;
-    Rpt := FMapView.ScreenToLatLon(FMapView.LatLonToScreen(FOrigins[I]) +
-      Point(Sender.OfsX, Sender.OfsY));
-    MapPoint.Longitude := RPt.Lon;
-    MapPoint.Latitude := RPt.Lat;
+    // Apply positions of drag start and end points from pixel space to real world space
+    RPtStart := FMapView.ScreenToLatLon(Sender.StartPt);
+    RPtEnd := FMapView.ScreenToLatLon(Sender.EndPt);
+    MapPoint.Longitude := FOrigins[I].Lon + (RPtEnd.Lon - RPtStart.Lon);
+    MapPoint.Latitude := FOrigins[I].Lat + (RPtEnd.Lat - RPtStart.Lat);
     Inc(I);
   end;
   //FMapView.Invalidate; // No need to
@@ -4850,10 +5273,10 @@ end;
 
 procedure TMapEditMark.DoEndDrag(Sender: TDragObj);
 begin
-  if FMarquee then
+  if FRubberband then
   begin
-    SelectFromMarquee;
-    FMarquee := False;
+    SelectFromRubberband;
+    FRubberband := False;
   end;
   SetLength(FOrigins, 0);
   FDragStarted := False;
@@ -4937,6 +5360,13 @@ begin
   Result := False;
 end;
 
+procedure TMvCustomPluginManager.AutoAdjustLayout(AMapView: TMapView;
+  const AMode: TLayoutAdjustmentPolicy; const AXProportion, AYProportion: Double);
+begin
+  Unused(AMapView, AMode);
+  Unused(AXProportion, AYProportion);
+end;
+
 function TMvCustomPluginManager.BeforeDrawObjects(AMapView: TMapView): Boolean;
 begin
   Unused(AMapView);
@@ -4969,15 +5399,6 @@ begin
   Unused(AMapView, ADrawingEngine);
   Unused(ATileID, ARect);
   Result := false;
-end;
-
-function TMvCustomPluginManager.TileAfterGetFromCache(AMapView: TMapView;
-  ATileLayer: TGPSTileLayerBase; AMapProvider: TMapProvider; ATileID: TTileID;
-  ATileImg: TPictureCacheItem): Boolean;
-begin
-  Unused(AMapView, ATileLayer);
-  Unused(AMapProvider,ATileID, ATileImg);
-  Result := False;
 end;
 
 function TMvCustomPluginManager.GPSItemsModified(AMapView: TMapView;

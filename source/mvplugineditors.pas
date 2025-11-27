@@ -121,7 +121,7 @@ implementation
 {$R *.lfm}
 
 uses
-  mvPluginCommon;
+  mvStrConsts, mvPluginCommon;
 
 { TMvComponentListPropertyEditor }
 
@@ -152,9 +152,9 @@ var
 begin
   c := GetChildrenCount;
   if c = 1 then
-    Result := '1 item'
+    Result := mvRS_OneItem
   else
-    Result := IntToStr(c) + ' items';
+    Result := Format(mvRS_Items, [c]);
 end;
 
 
@@ -258,10 +258,10 @@ begin
   tbDelete.ImageIndex := IDEImages.LoadImage('laz_delete');
   tbMoveDown.ImageIndex := IDEImages.LoadImage('arrow_down');
   tbMoveUp.ImageIndex := IDEImages.LoadImage('arrow_up');
-  tbAdd.Caption := 'Add';
-  tbDelete.Caption := 'Delete';
-  tbMoveUp.Caption := 'Up';
-  tbMoveDown.Caption := 'Down';
+  tbAdd.Caption := mvRS_AddPlugin;
+  tbDelete.Caption := mvRS_DeletePlugin;
+  tbMoveUp.Caption := mvRS_PluginUp;
+  tbMoveDown.Caption := mvRS_PluginDown;
 end;
 
 procedure TMvComponentListEditorForm.FormDestroy(Sender: TObject);
@@ -439,7 +439,7 @@ end;
 function TMvPluginManagerComponentEditor.GetVerb(Index: Integer): string;
 begin
   if Index = 0 then
-    Result := 'Edit plugin'
+    Result := mvRS_EditPlugin
   else
     Result := '';
 end;
@@ -473,7 +473,7 @@ end;
 
 procedure TMvPluginManagerEditorForm.BuildCaption;
 begin
-  Caption := 'Edit plugin - ' + Parent.Name;
+  Caption := mvRS_EditPlugin + ' - ' + Parent.Name;
 end;
 
 function TMvPluginManagerEditorForm.ChildClass: TComponentClass;

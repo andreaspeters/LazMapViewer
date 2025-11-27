@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
   ComCtrls, Menus, Spin,
   mvMapViewer, mvTypes, mvGPSObj, mvPluginCommon,
-  mvGeoMath, mvPlugins, mvGreatCirclePainterPlugin;
+  mvGeoMath, mvPlugins, mvMarkerPlugins, mvGreatCirclePainterPlugin;
 
 type
 

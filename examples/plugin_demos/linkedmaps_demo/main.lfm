@@ -93,7 +93,7 @@ object MainForm: TMainForm
     Align = alBottom
     Alignment = taCenter
     BorderSpacing.Around = 8
-    Caption = 'Zoom or move one map, and the other map will follow.'
+    Caption = 'Zoom or drag one map, and the other map will follow.'
   end
   object PluginManager: TMvPluginManager
     Left = 424

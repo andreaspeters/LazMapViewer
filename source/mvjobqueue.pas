@@ -16,7 +16,9 @@ unit mvJobQueue;
 interface
 
 uses
-  Classes, SysUtils,syncobjs,contnrs,forms;
+  Classes, SysUtils, syncobjs, contnrs,
+  Forms,
+  mvStrConsts;
 
 const
   ALL_TASK_COMPLETED = -1;
@@ -704,7 +706,7 @@ begin
       if OneFound then
       begin
         if (TimeOut > 200) then
-          raise Exception.Create('TimeOut');
+          raise Exception.Create(mvRS_TimeOut);
         if mThread then
           Application.ProcessMessages;
         Sleep(100);
@@ -724,7 +726,7 @@ var
   procedure CheckTimeOut;
   begin
     if TimeOut > 200 then
-      raise Exception.Create('TimeOut');
+      raise Exception.Create(mvRS_TimeOut);
     if mThread then
       Application.ProcessMessages;
     Sleep(100);

@@ -16,7 +16,8 @@ unit mvDrawingEngine;
 interface
 
 uses
-  Classes, SysUtils, Graphics, GraphMath, Types, IntfGraphics, mvCache;
+  Classes, SysUtils, Graphics, GraphMath, Types, IntfGraphics,
+  mvCache;
 
 type
 
@@ -24,11 +25,17 @@ type
   TLineDrawProc = procedure(X1, Y1, X2, Y2: Integer) of Object;
   TPointArray = array of TPoint;
 
+  TMvBrush = record
+    Style: TBrushStyle;
+    Color: TColor;
+  end;
+
   TMvFont = record
     FontName: String;
     Size: Integer;
     Style: TFontStyles;
     Color: TColor;
+    Orientation: Single;
   end;
 
   TMvPen = record
@@ -37,14 +44,24 @@ type
     Color: TColor;
   end;
 
+  TMvState = record
+    Brush: TMvBrush;
+    Font: TMvFont;
+    Pen: TMvPen;
+    Opacity: single;
+  end;
+
   { TMvCustomDrawingEngine }
 
   TMvCustomDrawingEngine = class(TComponent)
+  private
+    FStateStack: array of TMvState;
   protected
     function GetBrushColor: TColor; virtual; abstract;
     function GetBrushStyle: TBrushStyle; virtual; abstract;
     function GetFontColor: TColor; virtual; abstract;
     function GetFontName: String; virtual; abstract;
+    function GetFontOrientation: Single; virtual; abstract;
     function GetFontSize: Integer; virtual; abstract;
     function GetFontStyle: TFontStyles; virtual; abstract;
     function GetPenColor: TColor; virtual; abstract;
@@ -57,6 +74,7 @@ type
     procedure SetBrushStyle(AValue: TBrushStyle); virtual; abstract;
     procedure SetFontColor(AValue: TColor); virtual; abstract;
     procedure SetFontName(AValue: String); virtual; abstract;
+    procedure SetFontOrientation(AValue: Single); virtual; abstract;
     procedure SetFontSize(AValue: Integer); virtual; abstract;
     procedure SetFontStyle(AValue: TFontStyles); virtual; abstract;
     procedure SetPenColor(AValue: TColor); virtual; abstract;
@@ -74,6 +92,7 @@ type
     procedure Ellipse(X1, Y1, X2, Y2: Integer); virtual; abstract;
     procedure FillPixels(X1, Y1, X2, Y2: Integer; AColor: TColor); virtual; abstract;
     procedure FillRect(X1, Y1, X2, Y2: Integer); virtual; abstract;
+    function GetBrush: TMvBrush;
     function GetFont: TMvFont;
     function GetPen: TMvPen;
     procedure Line(X1, Y1, X2, Y2: Integer); virtual; abstract;
@@ -85,19 +104,26 @@ type
     procedure PaintToCanvas(ACanvas: TCanvas; Origin: TPoint); overload; virtual; abstract;
     procedure Rectangle(X1, Y1, X2, Y2: Integer); virtual; abstract;
     function SaveToImage(AClass: TRasterImageClass): TRasterImage; virtual; abstract;
+    procedure SetBrush(ABrush: TMvBrush);
+    procedure SetBrush(ABrushStyle: TBrushStyle; ABrushColor: TColor);
     procedure SetFont(AFont: TMvFont);
-    procedure SetFont(AFontName: String; AFontSize: Integer; AFontStyle: TFontStyles; AFontColor: TColor);
+    procedure SetFont(AFontName: String; AFontSize: Integer;
+        AFontStyle: TFontStyles; AFontColor: TColor; AFontOrientation: Single = 0.0);
     procedure SetPen(APen: TMvPen);
     procedure SetPen(APenStyle: TPenStyle; APenWidth: Integer; APenColor: TColor);
-    function TextExtent(const AText: String): TSize; virtual; abstract;
+    function TextExtent(const AText: String; ARotated: Boolean = false): TSize; virtual; abstract;
     function TextHeight(const AText: String): Integer;
     procedure TextOut(X, Y: Integer; const AText: String); virtual; abstract;
     function TextWidth(const AText: String): Integer;
+
+    procedure StoreState;
+    procedure RestoreState;
 
     property BrushColor: TColor read GetBrushColor write SetBrushColor;
     property BrushStyle: TBrushStyle read GetBrushStyle write SetBrushStyle;
     property FontColor: TColor read GetFontColor write SetFontColor;
     property FontName: String read GetFontName write SetFontName;
+    property FontOrientation: Single read GetFontOrientation write SetFontOrientation;
     property FontSize: Integer read GetFontSize write SetFontSize;
     property FontStyle: TFontStyles read GetFontStyle write SetFontStyle;
     property PenColor: TColor read GetPenColor write SetPenColor;
@@ -132,10 +158,21 @@ function ClipPolyToRect(constref ARect: TRect; var APoly: TPointArray;
 // Polyline bounds
 procedure PolyBounds(APoly: array of TPoint; out ABounds: TRect);
 
+// Measures the size of the given text and returns the vertices of the corners
+// of the rectangle enclosing the text. Text rotation is supported.
+// BUT: in case of rotated text, word-wrapping is not allowed.
+function MeasureTextSize(ACanvas: TCanvas; AText: String;
+  out ACorners: TPointArray): TSize;
+
+// Draws the given text into a bitmap. Rotated text is supported.
+// No multi-lined text in case of text rotation!
+procedure DrawTextInBitmap(ABitmap: TBitmap; AText: String; ABkColor: TColor);
+
+
 implementation
 
 uses
-  Math, LCLType, FPImage, fgl;
+  Math, LCLType, LCLVersion, FPImage, fgl;
 
 type
   TMvPointList = specialize TFPGList<TPoint>;
@@ -427,6 +464,125 @@ begin
     Result := L.Y - R.Y;
 end;
 
+{$IF LCL_FullVersion < 3000000}
+function RotatePoint(const APoint: TPoint; AAngle: Double): TPoint;
+var
+  sa, ca: Double;
+begin
+  SinCos(AAngle, sa, ca);
+  Result.X := Round( ca * APoint.X + sa * APoint.Y);
+  Result.Y := Round(-sa * APoint.X + ca * APoint.Y);
+end;
+{$IFEND}
+
+{ Measures the size of the given text and returns the vertices of the corners
+  of the rectangle enclosing the text. Text rotation is supported.
+  BUT: in case of rotated text, word-wrapping is not allowed. }
+function MeasureTextSize(ACanvas: TCanvas; AText: String;
+  out ACorners: TPointArray): TSize;
+
+  procedure GetMinMax(x: Integer; var min, max: Integer);
+  begin
+    if x < min then min := x;
+    if x > max then max := x;
+  end;
+
+var
+  savedOrientation: Integer;
+  R: TRect;
+  P: TPoint;
+  C: TPoint;
+  ext: TSize;
+  angle: Double;
+  rotated: Boolean;
+  tm: TLCLTextMetric;
+  i: Integer;
+begin
+  ACorners := nil;
+  rotated := ACanvas.Font.Orientation <> 0;
+
+  // Get unrotated text size
+  if not rotated then
+    ext := ACanvas.TextExtent(AText)
+  else
+  begin
+    savedOrientation := ACanvas.Font.Orientation;
+    ACanvas.Font.Orientation := 0;
+    ext := ACanvas.TextExtent(AText);
+    ACanvas.Font.Orientation := savedOrientation;
+  end;
+
+  // Center of the rectangle enclosing the text. It will be the rotation center
+  C := Point(ext.CX div 2, ext.CY div 2);
+
+  // Corners of the rectangle enclosing the text, unrotated here
+  SetLength(ACorners, 4);
+  P := Point(0, 0);
+  if rotated then
+  begin
+    ACanvas.GetTextMetrics(tm);
+    P.Y := P.Y - tm.Descender;
+  end;
+  ACorners[0] := P;
+  ACorners[1] := Point(ext.CX, P.Y);
+  ACorners[2] := Point(ext.CX, ext.CY);
+  ACorners[3] := Point(0, ext.CY);
+
+  if rotated then
+  begin
+    // Rotates the corners of the enclosing rectangle
+    angle := ACanvas.Font.Orientation / 1800 * pi;
+    for i := 0 to 3 do
+      ACorners[i] := RotatePoint(ACorners[i], angle);
+
+    R := Rect(MaxInt, MaxInt, -MaxInt, -MaxInt);
+    for i := 0 to 3 do
+    begin
+      GetMinMax(ACorners[i].X, R.Left, R.Right);
+      GetMinMax(ACorners[i].Y, R.Top, R.Bottom);
+    end;
+    for i := 0 to 3 do
+      ACorners[i] := ACorners[i] - R.TopLeft;
+    Result := Size(R.Right - R.Left, R.Bottom - R.Top);
+  end else
+    Result := Size(ext.CX, ext.CY);
+end;
+
+{ Draws the given text into a bitmap. Rotated text is supported.
+  No multi-lined text in case of text rotation! }
+procedure DrawTextInBitmap(ABitmap: TBitmap; AText: String; ABkColor: TColor);
+var
+  ext: TSize;
+  corners: TPointArray = nil;
+  rotated: Boolean;
+begin
+  rotated := ABitmap.Canvas.Font.Orientation <> 0;
+
+  ext := MeasureTextSize(ABitmap.Canvas, AText, corners);
+  ABitmap.SetSize(ext.CX, ext.CY);
+
+  // Prepare transparent background
+  ABitmap.Canvas.Brush.Color := clWhite;
+  ABitmap.Canvas.FillRect(0, 0, ext.CX, ext.CY);
+
+  // Draw text background
+  if ABitmap.Canvas.Brush.Color <> clNone then
+  begin
+    ABitmap.Canvas.Brush.Color := ABkColor;
+    ABitmap.Canvas.Pen.Style := psClear;
+    if rotated then
+      ABitmap.Canvas.PolyLine(corners)
+    else
+      ABitmap.Canvas.FillRect(Rect(0, 0, ext.CX, ext.CY));
+  end;
+
+  // Draw text
+  ABitmap.Canvas.TextOut(corners[0].X, corners[0].Y, AText);
+end;
+
+
+{ TMvCustomDrawingEngine }
+
 class procedure TMvCustomDrawingEngine.DoScanFill(APoly: array of TPoint;
   ALineDrawProc: TLineDrawProc);
 var
@@ -591,12 +747,19 @@ begin
   end;
 end;
 
+function TMvCustomDrawingEngine.GetBrush: TMvBrush;
+begin
+  Result.Style := BrushStyle;
+  Result.Color := BrushColor;
+end;
+
 function TMvCustomDrawingEngine.GetFont: TMvFont;
 begin
   Result.FontName := FontName;
   Result.Size := FontSize;
   Result.Style := FontStyle;
   Result.Color := FontColor;
+  Result.Orientation := FontOrientation;
 end;
 
 function TMvCustomDrawingEngine.GetPen: TMvPen;
@@ -611,18 +774,64 @@ begin
   PaintToCanvas(ACanvas, Point(0, 0));
 end;
 
+procedure TMvCustomDrawingEngine.RestoreState;
+var
+  n: integer;
+begin
+  n := Length(FStateStack);
+  if n > 0 then
+  begin
+    with FStateStack[n-1] do
+    begin
+      SetPen(Pen);
+      SetBrush(Brush);
+      SetFont(Font);
+      SetOpacity(Opacity);
+    end;
+    SetLength(FStateStack, n-1);
+  end;
+end;
+
+procedure TMvCustomDrawingEngine.StoreState;
+var
+  n: Integer;
+begin
+  n := Length(FStateStack);
+  SetLength(FStateStack, n+1);
+  with FStateStack[n] do
+  begin
+    Pen := GetPen;
+    Brush := GetBrush;
+    Font := GetFont;
+    Opacity := GetOpacity;
+  end;
+end;
+
+procedure TMvCustomDrawingEngine.SetBrush(ABrush: TMvBrush);
+begin
+  SetBrush(ABrush.Style, ABrush.Color);
+end;
+
+procedure TMvCustomDrawingEngine.SetBrush(ABrushStyle: TBrushStyle;
+  ABrushColor: TColor);
+begin
+  BrushStyle := ABrushStyle;   // Set it BEFORE the color!
+  BrushColor := ABrushColor;
+end;
+
 procedure TMvCustomDrawingEngine.SetFont(AFont: TMvFont);
 begin
-  SetFont(AFont.FontName, AFont.Size, AFont.Style, AFont.Color);
+  SetFont(AFont.FontName, AFont.Size, AFont.Style, AFont.Color, AFont.Orientation);
 end;
 
 procedure TMvCustomDrawingEngine.SetFont(AFontName: String; AFontSize: Integer;
-  AFontStyle: TFontStyles; AFontColor: TColor);
+  AFontStyle: TFontStyles; AFontColor: TColor; AFontOrientation: Single = 0.0);
 begin
   FontName := AFontName;
   FontSize := AFontSize;
   FontStyle := AFontStyle;
   FontColor := AFontColor;
+  FontOrientation := AFontOrientation;
 end;
 
 procedure TMvCustomDrawingEngine.SetPen(APen: TMvPen);

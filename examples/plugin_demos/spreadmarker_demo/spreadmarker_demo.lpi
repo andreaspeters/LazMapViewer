@@ -106,6 +106,7 @@
       <Unit>
         <Filename Value="spreadmarker_demo.lpr"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="spreadmarkerdemo"/>
       </Unit>
       <Unit>
         <Filename Value="main.pas"/>

@@ -12,60 +12,69 @@ inherited CfgFrame_with_addons: TCfgFrame_with_addons
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = cbDownloadEngine
     AnchorSideRight.Control = Owner
-    Top = 154
+    Top = 198
     BorderSpacing.Top = 6
   end
   inherited cbZoomToCursor: TCheckBox
     AnchorSideLeft.Control = Owner
-    Top = 347
+    Top = 391
   end
   inherited cbUseThreads: TCheckBox
-    Top = 370
+    Top = 414
   end
   inherited cbDoubleBuffer: TCheckBox
-    Top = 393
+    Top = 437
   end
   inherited cbDebugTiles: TCheckBox
-    Top = 416
+    Top = 460
   end
   inherited cbCyclicView: TCheckBox
-    Top = 347
+    Top = 391
   end
   inherited cbPreviewTiles: TCheckBox
-    Top = 370
+    Top = 414
   end
   inherited clbBackColor: TColorButton
-    Top = 388
+    Top = 483
   end
   inherited Bevel1: TBevel
-    Top = 441
+    AnchorSideRight.Control = Owner
+    Top = 519
   end
   inherited rgPOIMode: TRadioGroup
     AnchorSideRight.Control = Owner
-    Top = 449
+    Top = 527
   end
   inherited btnPOITextFont: TButton
-    Top = 585
+    Top = 663
   end
   inherited LblPOITextBgColor: TLabel
-    Top = 593
+    Top = 671
   end
   inherited cbPOITextBgColor: TColorBox
-    Top = 590
+    Top = 668
   end
-  object Label1: TLabel[17]
+  inherited cbMapScale: TCheckBox
+    Top = 437
+    TabOrder = 14
+  end
+  inherited cbMapGrid: TCheckBox
+    Top = 460
+    TabOrder = 15
+  end
+  object Label1: TLabel[22]
     AnchorSideLeft.Control = cbDrawingEngine
-    AnchorSideTop.Control = cmbProviders
+    AnchorSideTop.Control = infoTileSize
     AnchorSideTop.Side = asrBottom
     Left = 6
     Height = 15
-    Top = 56
+    Top = 100
     Width = 86
     BorderSpacing.Top = 8
     Caption = 'Drawing engine:'
     ParentColor = False
   end
-  object cbDrawingEngine: TComboBox[18]
+  object cbDrawingEngine: TComboBox[23]
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Label1
     AnchorSideTop.Side = asrBottom
@@ -73,7 +82,7 @@ inherited CfgFrame_with_addons: TCfgFrame_with_addons
     AnchorSideRight.Side = asrBottom
     Left = 6
     Height = 23
-    Top = 73
+    Top = 117
     Width = 275
     Anchors = [akTop, akLeft, akRight]
     BorderSpacing.Left = 6
@@ -91,19 +100,19 @@ inherited CfgFrame_with_addons: TCfgFrame_with_addons
     Text = 'default'
     OnChange = cbDrawingEngineChange
   end
-  object Label2: TLabel[19]
+  object Label2: TLabel[24]
     AnchorSideLeft.Control = cbDownloadEngine
     AnchorSideTop.Control = cbDrawingEngine
     AnchorSideTop.Side = asrBottom
     Left = 6
     Height = 15
-    Top = 104
+    Top = 148
     Width = 96
     BorderSpacing.Top = 8
     Caption = 'Download engine:'
     ParentColor = False
   end
-  object cbDownloadEngine: TComboBox[20]
+  object cbDownloadEngine: TComboBox[25]
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Label2
     AnchorSideTop.Side = asrBottom
@@ -111,7 +120,7 @@ inherited CfgFrame_with_addons: TCfgFrame_with_addons
     AnchorSideRight.Side = asrBottom
     Left = 6
     Height = 23
-    Top = 121
+    Top = 165
     Width = 275
     Anchors = [akTop, akLeft, akRight]
     BorderSpacing.Left = 6
@@ -131,9 +140,13 @@ inherited CfgFrame_with_addons: TCfgFrame_with_addons
     Text = 'default'
     OnChange = cbDownloadEngineChange
   end
-  inherited OpenPictureDialog: TOpenPictureDialog[21]
+  inherited OpenPictureDialog: TOpenPictureDialog[26]
   end
-  inherited FontDialog: TFontDialog[22]
+  inherited FontDialog: TFontDialog[27]
     Top = 616
+  end
+  inherited PluginManager: TMvPluginManager[28]
+  end
+  inherited ImageList: TImageList[29]
   end
 end

@@ -45,7 +45,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, Types, Math, Graphics, Contnrs,
-  mvPluginCommon, mvPlugins, mvMapViewer, mvTypes, mvGeoMath, mvDrawingEngine;
+  mvPluginCommon, mvPlugins, mvMapViewer, mvStrConsts, mvTypes, mvGeoMath, mvDrawingEngine;
 
 type
   { class TMouseHitItem
@@ -132,8 +132,8 @@ type
     procedure AfterPaint(AMapView: TMapView; var Handled: Boolean); override;
     procedure MouseMove(AMapView: TMapView; AShift: TShiftState; X,Y: Integer;
       var Handled: Boolean); override;
-    procedure MouseUp(AMapView: TMapView; Button: TMouseButton; Shift: TShiftState;
-      X,Y: Integer; var Handled: Boolean); override;
+    procedure MouseUp(AMapView: TMapView; Button: TMouseButton; {%H-}Shift: TShiftState;
+      {%H-}X,{%H-}Y: Integer; var Handled: Boolean); override;
     procedure MouseDown(AMapView: TMapView; Button: TMouseButton; Shift: TShiftState;
       X,Y: Integer; var Handled: Boolean); override;
     procedure CenterMove(AMapView: TMapView; var Handled: Boolean); override;
@@ -327,6 +327,7 @@ end;
 
 destructor TAreaSelectionPlugin.Destroy;
 begin
+  FreeAndNil(FSelectedArea);
   FreeAndNil(FMouseHitItems);
   inherited;
 end;
@@ -624,7 +625,6 @@ procedure TAreaSelectionPlugin.AfterPaint(AMapView: TMapView; var Handled: Boole
 
   procedure PaintCaption(ARect : TRect);
   var
-    oldFont : TFont;
     sz : TSize;
     dx,dy : Integer;
     w, h : Integer;
@@ -1100,7 +1100,7 @@ begin
 end;
 
 initialization
-  RegisterPluginClass(TAreaSelectionPlugin, 'Area selection');
+  RegisterPluginClass(TAreaSelectionPlugin, @mvRS_AreaSelectionPlugin);
 
 end.
 

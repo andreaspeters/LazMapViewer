@@ -1,0 +1,949 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <icons>
+    <icon filename="marker01.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker01_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker01_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker01_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker02.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>photo</keyword>
+        <keyword>picture</keyword>
+        <keyword>scenic</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker02_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>photo</keyword>
+        <keyword>picture</keyword>
+        <keyword>scenic</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker02_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>photo</keyword>
+        <keyword>picture</keyword>
+        <keyword>scenic</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker02_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>photo</keyword>
+        <keyword>picture</keyword>
+        <keyword>scenic</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker03.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>clinic</keyword>
+        <keyword>doctor</keyword>
+        <keyword>hospital</keyword>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker03_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>clinic</keyword>
+        <keyword>doctor</keyword>
+        <keyword>hospital</keyword>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker03_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>clinic</keyword>
+        <keyword>doctor</keyword>
+        <keyword>hospital</keyword>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker03_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>clinic</keyword>
+        <keyword>doctor</keyword>
+        <keyword>hospital</keyword>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker04.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>generic</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker04_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>generic</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker04_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>generic</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker04_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>generic</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker05.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker05_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker05_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker05_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker06.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>restaurant</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker06_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>restaurant</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker06_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>restaurant</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker06_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>restaurant</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker07.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>fuel</keyword>
+        <keyword>gas</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker07_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>fuel</keyword>
+        <keyword>gas</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker07_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>fuel</keyword>
+        <keyword>gas</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker07_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>fuel</keyword>
+        <keyword>gas</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker08.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>railway</keyword>
+        <keyword>subway</keyword>
+        <keyword>train</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker08_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>railway</keyword>
+        <keyword>subway</keyword>
+        <keyword>train</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker08_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>railway</keyword>
+        <keyword>subway</keyword>
+        <keyword>train</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker08_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>railway</keyword>
+        <keyword>subway</keyword>
+        <keyword>train</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker09.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker09_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker09_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker09_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>bank</keyword>
+        <keyword>map</keyword>
+        <keyword>money</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker10.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shop</keyword>
+        <keyword>super-market</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker10_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shop</keyword>
+        <keyword>super-market</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker10_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shop</keyword>
+        <keyword>super-market</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker10_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shop</keyword>
+        <keyword>super-market</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker11.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>airport</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>plane</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker11_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>airport</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>plane</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker11_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>airport</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>plane</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker11_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>airport</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>plane</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker12.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>hostel</keyword>
+        <keyword>hotel</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker12_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>hostel</keyword>
+        <keyword>hotel</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker12_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>hostel</keyword>
+        <keyword>hotel</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker12_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>hostel</keyword>
+        <keyword>hotel</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker13.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>parking</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker13_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>parking</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker13_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>parking</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker13_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>car</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>parking</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker14.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shopping</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker14_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shopping</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker14_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shopping</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker14_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>mall</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>shopping</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker15.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>school</keyword>
+        <keyword>university</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker15_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>school</keyword>
+        <keyword>university</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker15_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>school</keyword>
+        <keyword>university</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker15_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>school</keyword>
+        <keyword>university</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker16.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker16_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker16_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker16_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>map</keyword>
+        <keyword>medical</keyword>
+        <keyword>orange</keyword>
+        <keyword>pharmacy</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker17.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>bar</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker17_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>bar</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker17_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>bar</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker17_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>bar</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker18.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>mail</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>post</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker18_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>mail</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>post</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker18_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>mail</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>post</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker18_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>mail</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>post</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker19.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker19_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker19_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker19_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>library</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker20.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>auto</keyword>
+        <keyword>car</keyword>
+        <keyword>freeway</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>street</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker20_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>auto</keyword>
+        <keyword>car</keyword>
+        <keyword>freeway</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>street</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker20_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>auto</keyword>
+        <keyword>car</keyword>
+        <keyword>freeway</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>street</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker20_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>auto</keyword>
+        <keyword>car</keyword>
+        <keyword>freeway</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>street</keyword>
+        <keyword>transportation</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker21.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>hiking</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker21_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>hiking</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker21_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>hiking</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker21_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>hiking</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker22.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>cinema</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker22_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>cinema</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker22_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>cinema</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker22_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>cinema</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>theater</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker23.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>bicycle</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker23_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>bicycle</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker23_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>bicycle</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker23_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>bicycle</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>trail</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker24.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>destination</keyword>
+        <keyword>end</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker24_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>destination</keyword>
+        <keyword>end</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker24_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>destination</keyword>
+        <keyword>end</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker24_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>destination</keyword>
+        <keyword>end</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker25.png" width="32" height="32" style="classic">
+      <keywords>
+        <keyword>begin</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>start</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker25_150.png" width="48" height="48" style="classic">
+      <keywords>
+        <keyword>begin</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>start</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker25_200.png" width="64" height="64" style="classic">
+      <keywords>
+        <keyword>begin</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>start</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+    <icon filename="marker25_300.png" width="96" height="96" style="classic">
+      <keywords>
+        <keyword>begin</keyword>
+        <keyword>map</keyword>
+        <keyword>orange</keyword>
+        <keyword>route</keyword>
+        <keyword>start</keyword>
+        <keyword>way-point</keyword>
+      </keywords>
+    </icon>
+  </icons>
+</metadata>

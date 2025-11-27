@@ -16,9 +16,9 @@ unit mvDE_IntfGraphics;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Types, LclVersion,
+  Classes, SysUtils, Graphics, GraphMath, Types, LclVersion,
   FPImage, FPCanvas, IntfGraphics, LazCanvas,
-  mvDrawingEngine, mvCache;
+  mvStrConsts, mvDrawingEngine, mvCache;
 
 type
 
@@ -32,46 +32,47 @@ type
     function GetImageObject: TObject; override;
     procedure StretchImageIfNeeded(var AImage: TLazIntfImage; ANewWidth, ANewHeight: Integer);
   public
-    constructor Create(ASource : TPictureCacheItem); override;
     constructor Create(AStream: TStream); override;
     destructor Destroy; override;
     property Image: TLazIntfImage read GetImage;
   end;
 
-
   { TMvIntfGraphicsDrawingEngine }
 
   TMvIntfGraphicsDrawingEngine = class(TMvCustomDrawingEngine)
   private
-    FBuffer: TLazIntfImage;
-    FCanvas: TFPCustomCanvas;
     FFontName: String;
     FFontColor: TColor;
     FFontSize: Integer;
     FFontStyle: TFontStyles;
+    FFontOrientation: Integer;
     FOpacity: Single;
+  protected
+    FBuffer: TLazIntfImage;
+    FCanvas: TFPCustomCanvas;
+    procedure AddAlphaToColors;
     procedure CreateLazIntfImageAndCanvas(out ABuffer: TLazIntfImage;
       out ACanvas: TFPCustomCanvas; AWidth, AHeight: Integer);
-    procedure AddAlphaToColors;
-  protected
     procedure DrawBitmapOT(X, Y: Integer; ABitmap: TCustomBitmap; AOpaqueColor, ATransparentColor: TColor);
     function GetBrushColor: TColor; override;
     function GetBrushStyle: TBrushStyle; override;
     function GetFontColor: TColor; override;
     function GetFontName: String; override;
+    function GetFontOrientation: Single; override;
     function GetFontSize: Integer; override;
     function GetFontStyle: TFontStyles; override;
+    function GetOpacity: Single; override;
     function GetPenColor: TColor; override;
     function GetPenStyle: TPenStyle; override;
     function GetPenWidth: Integer; override;
-    function GetOpacity: Single; override;
-    procedure SetOpacity(AValue: Single); override;
     procedure SetBrushColor(AValue: TColor); override;
     procedure SetBrushStyle(AValue: TBrushStyle); override;
     procedure SetFontColor(AValue: TColor); override;
     procedure SetFontName(AValue: String); override;
+    procedure SetFontOrientation(AValue: Single); override;
     procedure SetFontSize(AValue: Integer); override;
     procedure SetFontStyle(AValue: TFontStyles); override;
+    procedure SetOpacity(AValue: Single); override;
     procedure SetPenColor(AValue: TColor); override;
     procedure SetPenStyle(AValue: TPenStyle); override;
     procedure SetPenWidth(AValue: Integer); override;
@@ -95,7 +96,7 @@ type
     procedure PaintToCanvas(ACanvas: TCanvas; Origin: TPoint); override;
     procedure Rectangle(X1, Y1, X2, Y2: Integer); override;
     function SaveToImage(AClass: TRasterImageClass): TRasterImage; override;
-    function TextExtent(const AText: String): TSize; override;
+    function TextExtent(const AText: String; ARotated: Boolean = false): TSize; override;
     procedure TextOut(X, Y: Integer; const AText: String); override;
     function GetCacheItemClass: TPictureCacheItemClass; override;
   end;
@@ -177,16 +178,6 @@ end;
 
 { TLazIntfImageCacheItem }
 
-function TLazIntfImageCacheItem.GetImage: TLazIntfImage;
-begin
-  Result := FImage;
-end;
-
-function TLazIntfImageCacheItem.GetImageObject: TObject;
-begin
-  Result := FImage;
-end;
-
 constructor TLazIntfImageCacheItem.Create(AStream: TStream);
 var
   reader: TFPCustomImageReader;
@@ -195,7 +186,7 @@ begin
   FImage := Nil;
   Reader := GetImageReader(AStream);
   if not Assigned(Reader) then
-    raise EInvalidGraphic.Create('PNG/JPG expected.');
+    raise EInvalidGraphic.Create(mvRS_PngJpegExpected);
   try
     rawImg.Init;
     rawImg.Description.Init_BPP32_B8G8R8A8_BIO_TTB(0, 0);
@@ -216,6 +207,16 @@ destructor TLazIntfImageCacheItem.Destroy;
 begin
   FImage.Free;
   inherited Destroy;
+end;
+
+function TLazIntfImageCacheItem.GetImage: TLazIntfImage;
+begin
+  Result := FImage;
+end;
+
+function TLazIntfImageCacheItem.GetImageObject: TObject;
+begin
+  Result := FImage;
 end;
 
 { Scales the image to the new size if the original size is different.
@@ -246,19 +247,14 @@ begin
   end;
 end;
 
-constructor TLazIntfImageCacheItem.Create(ASource: TPictureCacheItem);
-var
-  src : TLazIntfImageCacheItem absolute ASource;
-begin
-  inherited;
-  if not (ASource is TLazIntfImageCacheItem) then
-    raise EMvCacheException.Create('Passed APictureCacheItem is not of type TLazIntfImageCacheItem!');
-  FImage := TLazIntfImage.CreateCompatible(src.FImage,src.FImage.Width,src.FImage.Height);
-  FImage.Assign(src.FImage);
-end;
-
 
 {  TMvIntfGraphicsDrawingengine  }
+
+constructor TMvIntfGraphicsDrawingEngine.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FOpacity := 1.0;
+end;
 
 destructor TMvIntfGraphicsDrawingEngine.Destroy;
 begin
@@ -323,24 +319,24 @@ end;
 procedure TMvIntfGraphicsDrawingEngine.DrawBitmap(X, Y: Integer;
   ABitmap: TCustomBitmap; UseAlphaChannel: Boolean);
 var
-  intfImg: TLazIntfImage;
+  img: TLazIntfImage;
   i, j, iX, jY: Integer;
   cimg, cbuf: TFPColor;
 begin
-  intfImg := ABitmap.CreateIntfImage;
+  img := ABitmap.CreateIntfImage;
   try
     if UseAlphaChannel then
     begin
-      for j := 0 to intfImg.Height - 1 do
+      for j := 0 to img.Height - 1 do
       begin
         jY := j + Y;
         if InRange(jY, 0, FBuffer.Height - 1) then
-          for i := 0 to intfImg.Width - 1 do
+          for i := 0 to img.Width - 1 do
           begin
             iX := i + X;
             if InRange(iX, 0, FBuffer.Width-1) then
             begin
-              cimg := intfImg.Colors[i, j];
+              cimg := img.Colors[i, j];
               cbuf := FBuffer.Colors[iX, jY];
               FBuffer.Colors[iX, jY] := AlphaBlend(cbuf, cimg);
             end;
@@ -348,20 +344,20 @@ begin
       end;
     end else
     begin
-      for j := 0 to intfImg.Height - 1 do
+      for j := 0 to img.Height - 1 do
       begin
         jY := j + Y;
         if InRange(jY, 0, FBuffer.Height - 1) then
-          for i := 0 to intfImg.Width - 1 do
+          for i := 0 to img.Width - 1 do
           begin
             ix := i + X;
             if InRange(iX, 0, FBuffer.Width-1) then
-              FBuffer.Colors[iX, jY] := intfImg.Colors[i, j];
+              FBuffer.Colors[iX, jY] := img.Colors[i, j];
           end;
       end;
     end;
   finally
-    intfimg.Free;
+    img.Free;
   end;
 end;
 
@@ -545,12 +541,17 @@ end;
 
 function TMvIntfGraphicsDrawingEngine.GetFontColor: TColor;
 begin
-  Result := FFontColor
+  Result := ColorToRGB(FFontColor);
 end;
 
 function TMvIntfGraphicsDrawingEngine.GetFontName: String;
 begin
   Result := FFontName;
+end;
+
+function TMvIntfGraphicsDrawingEngine.GetFontOrientation: Single;
+begin
+  Result := FFontOrientation * 0.1;
 end;
 
 function TMvIntfGraphicsDrawingEngine.GetFontSize: Integer;
@@ -693,7 +694,9 @@ procedure TMvIntfGraphicsDrawingEngine.SetBrushColor(AValue: TColor);
 begin
   if FCanvas <> nil then
   begin
-    FCanvas.Brush.FPColor := TColorToFPColor(AValue);
+    FCanvas.Brush.FPColor := TColorToFPColor(ColorToRGB(AValue));
+    if AValue = clNone then
+      FCanvas.Brush.Style := bsClear;
     AddAlphaToColors;
   end;
 end;
@@ -712,6 +715,11 @@ end;
 procedure TMvIntfGraphicsDrawingEngine.SetFontName(AValue: String);
 begin
   FFontName := AValue;
+end;
+
+procedure TMvIntfGraphicsDrawingEngine.SetFontOrientation(AValue: Single);
+begin
+  FFontOrientation := round(AValue * 10);
 end;
 
 procedure TMvIntfGraphicsDrawingEngine.SetFontSize(AValue: Integer);
@@ -739,65 +747,111 @@ begin
     FCanvas.Pen.Width := AValue;
 end;
 
-constructor TMvIntfGraphicsDrawingEngine.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FOpacity := 1.0;
-end;
-
-function TMvIntfGraphicsDrawingEngine.TextExtent(const AText: String): TSize;
+{ Returns the size of the given text.
+  NOTE: Text rotation is taken into account if the Rotated argument is true. }
+function TMvIntfGraphicsDrawingEngine.TextExtent(const AText: String;
+  ARotated: Boolean = false): TSize;
 var
   bmp: TBitmap;
+  pts: TPointArray;
   R: TRect;
 begin
   bmp := TBitmap.Create;
   try
-    bmp.SetSize(1, 1);
     bmp.Canvas.Font.Name := FFontName;
     bmp.Canvas.Font.Size := FFontSize;
     bmp.Canvas.Font.Style := FFontStyle;
-    R := Rect(0, 0, DEFAULT_POI_TEXT_WIDTH, MaxInt);
-    DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, DT_WORDBREAK + DT_CALCRECT);
-    Result := Size(R.Width, R.Height);
+    bmp.Canvas.Font.Orientation := FFontOrientation;
+    if (FFontOrientation = 0) or (not ARotated) then
+    begin
+      R := Rect(0, 0, 10000, 10000);
+      DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, DT_CALCRECT or DT_WORDBREAK);
+      Result := TSize(R.BottomRight);
+    end else
+      Result := MeasureTextSize(bmp.Canvas, AText, pts);
   finally
     bmp.Free;
   end;
 end;
 
+{ IntfGraphics has poor font support. We work around this issue by drawing the
+  text by LCL routines on an auxiliary bitmap which finally is painted onto
+  the LazIntfImage. }
 procedure TMvIntfGraphicsDrawingEngine.TextOut(X, Y: Integer; const AText: String);
 var
+  i: Integer;
   bmp: TBitmap;
+  rotated: Boolean;
+  sz: TSize;
   R: TRect;
+  maskClr: TColor;
+  corners: TPointArray = nil;
+  anchor: TPoint;
   txtFlags: Integer = DT_CENTER + DT_WORDBREAK;
+  savedBrush: TMvBrush;
+  savedPen: TMvPen;
 begin
   if (FCanvas = nil) or (AText = '') then
     exit;
 
   bmp := TBitmap.Create;
   try
-//    bmp.PixelFormat := pf32Bit;     // causes a crash on XUbuntu
     bmp.Canvas.Font.Name := FFontName;
     bmp.Canvas.Font.Size := FFontSize;
     bmp.Canvas.Font.Style := FFontStyle;
     bmp.Canvas.Font.Color := FFontColor;
-    R := Rect(0, 0, 10000, 10000);
-    DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, DT_CALCRECT + DT_WORDBREAK);
-    bmp.SetSize(R.Right - R.Left, R.Bottom - R.Top);
-    if GetBrushStyle <> bsClear then begin
-      bmp.Canvas.Brush.Color := GetBrushColor;
-      bmp.Canvas.FillRect(0, 0, bmp.Width, bmp.Height);
-      DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, txtFlags);
-      DrawBitmap(X, Y, bmp, false);
+    bmp.Canvas.Font.Orientation := round(FontOrientation * 10.0);
+    rotated := FontOrientation <> 0;
+
+    // Measure the size of the (rotated) text rectangle
+    if rotated then begin
+      sz := MeasureTextSize(bmp.Canvas, AText, corners);
+      anchor := corners[0];
+      for i := Low(corners) to High(corners) do
+        corners[i] := corners[i] + Point(X, Y);
     end else
     begin
-      if FFontColor = clWhite then
-        bmp.Canvas.Brush.Color := clBlack
-      else
-        bmp.Canvas.Brush.Color := clWhite;
-      bmp.Canvas.FillRect(R);
-      DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, txtFlags);
-      DrawBitmapOT(X, Y, bmp, FFontColor, bmp.Canvas.Brush.Color);
+      R := Rect(0, 0, 10000, 10000);
+      DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, DT_CALCRECT + DT_WORDBREAK);
+      sz := TSize(R.BottomRight);
+      anchor := Point(0, 0);
     end;
+
+    // Set size of bitmap
+    bmp.SetSize(sz.CX, sz.CY);
+
+    // Mask transparent regions
+    if FFontColor = clWhite then
+      maskClr := clBlack
+    else
+      maskClr := clWhite;
+    bmp.Canvas.Brush.Color := maskClr;
+    bmp.Canvas.FillRect(0, 0, bmp.Width, bmp.Height);
+
+    // Draw background of text
+    if (GetBrushStyle <> bsClear) and (Opacity > 0) then
+    begin
+      savedBrush := GetBrush;
+      savedPen := GetPen;
+      BrushStyle := bsSolid;
+      PenStyle := psClear;
+      if not rotated then
+        FillRect(X, Y, X + sz.CX, Y + sz.CY)
+      else
+        Polygon(corners);
+      SetBrush(savedBrush);
+      SetPen(savedPen);
+    end;
+
+    // Draw text
+    bmp.Canvas.Brush.Style := bsClear;
+    if rotated then
+      bmp.Canvas.TextOut(anchor.X, anchor.Y, AText)
+    else
+      DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, txtFlags);
+
+    // Draw the bitmap in the buffer making pixels with maskClr transparent.
+    DrawBitmapOT(X, Y, bmp, FFontColor, maskClr);
   finally
     bmp.Free;
   end;

@@ -26,6 +26,11 @@
           <Mode Name="default"/>
         </BuildModes>
       </Target>
+      <Target FileName="examples\fulldemo\mapviewer_demo_with_addons.lpi">
+        <BuildModes>
+          <Mode Name="default"/>
+        </BuildModes>
+      </Target>
       <Target FileName="examples\gpstilelayer_demo\GPSTileLayer_Demo.lpi">
         <BuildModes>
           <Mode Name="Default"/>
@@ -47,6 +52,11 @@
         </BuildModes>
       </Target>
       <Target FileName="unittests\mapviewer_tests.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\areaselection_demo\areaselection_demo.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>
@@ -74,6 +84,21 @@
         </BuildModes>
       </Target>
       <Target FileName="examples\plugin_demos\linkedmaps_demo\linkedmaps_demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\markerclick_demo\MarkerClick_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\markereditor_demo\MarkerEditor_Demo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="examples\plugin_demos\markerhint_demo\MarkerHint_Demo.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>

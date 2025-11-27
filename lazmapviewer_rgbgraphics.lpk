@@ -10,12 +10,12 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <OtherUnitFiles Value="source\addons\rgbgraphics_drawingengine"/>
-        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+        <UnitOutputDirectory Value="lib\rgbgraphics\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Description Value="Add-on to LazMapViewer: Contains the drawing engine based on the RGBGraphics package."/>
-    <License Value="modified LGPL with linking exception, like FreePascal RTL/FCL and Lazarus LCL"/>
-    <Version Minor="2" Release="7"/>
+    <Description Value="Add-on to LazMapViewer: Contains a drawing engine based on the LazRGBGraphics package."/>
+    <License Value="Modified LGPL with linking exception, like FreePascal RTL/FCL and Lazarus LCL"/>
+    <Version Major="1" Release="3"/>
     <Files Count="1">
       <Item1>
         <Filename Value="source\addons\rgbgraphics_drawingengine\mvde_rgbgraphics.pas"/>

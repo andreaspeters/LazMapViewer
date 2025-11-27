@@ -5,8 +5,10 @@ unit mvMapViewerPathEditForm;
 interface
 
 uses
-  Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  ExtCtrls, Buttons, ActnList, mvMapViewer, mvGpsObj, mvTypes, Types;
+  Classes, SysUtils, DateUtils, Math,
+  Forms, Controls, LCLType, Graphics, Dialogs, StdCtrls, ComCtrls,
+  ExtCtrls, Buttons, ActnList, EditBtn,
+  mvStrConsts, mvMapViewer, mvGpsObj, mvTypes, Types;
 
 type
 
@@ -24,18 +26,24 @@ type
     actZoomOut: TAction;
     actZoomIn: TAction;
     alEditActions: TActionList;
-    Bevel: TBevel;
-    cbLon: TEdit;
+    cmbImageIndex: TComboBox;
+    edDateTime: TEdit;
+    edLongitude: TEdit;
+    edElevation: TEdit;
     cbSelectedLayer: TComboBox;
     cbSelectedPt: TEdit;
-    cbLat: TEdit;
+    edLatitude: TEdit;
     edCaption: TEdit;
     ilImages: TImageList;
+    lblImageIndex: TLabel;
+    lblDateTime: TLabel;
+    lblMeters: TLabel;
     lblInfoText: TLabel;
     lblInfoTitle: TLabel;
     lblCaption: TLabel;
-    lblLat: TLabel;
-    lblLon: TLabel;
+    lblLatitude: TLabel;
+    lblLongitude: TLabel;
+    lblElevation: TLabel;
     lblSelectedLayer: TLabel;
     lblSelectedPt: TLabel;
     pnlSel: TPanel;
@@ -60,13 +68,20 @@ type
     procedure actSelectExecute(Sender: TObject);
     procedure actZoomInExecute(Sender: TObject);
     procedure actZoomOutExecute(Sender: TObject);
-    procedure cbLatLonEditingDone(Sender: TObject);
-    procedure cbLatEnter(Sender: TObject);
-    procedure cbLatLonExit(Sender: TObject);
-    procedure cbLonEnter(Sender: TObject);
     procedure cbSelectedLayerDropDown(Sender: TObject);
     procedure cbSelectedLayerSelect(Sender: TObject);
+    procedure cmbImageIndexCloseUp(Sender: TObject);
+    procedure cmbImageIndexDrawItem(Control: TWinControl; Index: Integer;
+      ARect: TRect; State: TOwnerDrawState);
     procedure edCaptionEditingDone(Sender: TObject);
+    procedure edDateTimeEditingDone(Sender: TObject);
+    procedure edDateTimeEnter(Sender: TObject);
+    procedure edEditExit(Sender: TObject);
+    procedure edElevationEditingDone(Sender: TObject);
+    procedure edLatLonEditingDone(Sender: TObject);
+    procedure edElevationEnter(Sender: TObject);
+    procedure edLatitudeEnter(Sender: TObject);
+    procedure edLongitudeEnter(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
@@ -101,8 +116,10 @@ type
     procedure UnselectPersistent({%H-}APersistent: TPersistent); virtual;
     procedure ObjectModified({%H-}AObject: TObject; {%H-}PropName: ShortString = ''); virtual;
     procedure SelectInOI(AView: TMapView; {%H-}ForceUpdate: Boolean); virtual;
+    procedure SetStrings;
     property InternalSelect: Boolean read FInternalSelect write FInternalSelect;
   public
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property MapView: TMapView read FMapView write SetMapView;
     property MapLayer: TMapLayer read FMapLayer write SetMapLayer;
@@ -119,11 +136,15 @@ uses
 
 const
   EditModeHints: array[TMapViewerPathEditMode] of String = (
-    'Select/drag mode|Click point to select. CTRL-click to add to selection.',  // pemSelect
-    'POI mode|Click to add point.',                                             // pemAddPOI
-    'Track mode|Click to add point, CTRL-click to add last point.',             // pemAddTrack
-    'Area mode|Click to add point, CTRL-click to add last point.'               // pemAddArea
+    mvRS_SelectDragMode,    // pemSelect
+    mvRS_POIMode,           // pemAddPOI
+    mvRS_TrackMode,         // pemAddTrack
+    mvRS_AreaMode           // pemAddArea
   );
+
+  ELEVATION_FORMAT = '0';            // no decimal places
+  DATETIME_FORMAT = 'ddddd t';       // short date & short time format
+  IMG_MARGIN = 2;
 
 type
   TPersistentAccess = class(TPersistent);
@@ -140,6 +161,21 @@ begin
 end;
 
 { TMapViewerPathEditForm }
+
+constructor TMapViewerPathEditForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  lblInfoTitle.Caption := '';
+  lblInfoText.Caption := '';
+  SetStrings;
+end;
+
+destructor TMapViewerPathEditForm.Destroy;
+begin
+  EditMode := pemSelect;
+  MapView := nil;
+  inherited Destroy;
+end;
 
 procedure TMapViewerPathEditForm.actSelectExecute(Sender: TObject);
 begin
@@ -239,6 +275,7 @@ var
   PtId: Integer;
   PtCol: TCollection;
   P: TPersistent;
+  msg: String;
 begin
   Pt := MapView.EditMark.CurrentPoint;
   PtCol := Pt.Collection;
@@ -249,8 +286,8 @@ begin
   then
     Exit; // Not enough points left
 
-  if MessageDlg('Confirm deletion', 'Are you sure you want to delete ''' +
-    Pt.DisplayName + '''?', mtConfirmation, mbYesNo, 0 ) <> mrYes then
+  msg := Format(mvRS_AreYouSureYouWantToDelete, [Pt.DisplayName]);
+  if MessageDlg(mvRS_ConfirmDeletion, msg, mtConfirmation, mbYesNo, 0 ) <> mrYes then
     Exit;
 
   // Exclude from the selection
@@ -290,15 +327,13 @@ end;
   would be lost. --> We ask whether the track/area should be used or discarded. }
 procedure TMapViewerPathEditForm.AddTempPolylineOrRevert(ANewEditMode: TMapViewerPathEditMode);
 const
-  TRACK_AREA: array[boolean] of String = ('track', 'area');
+  TRACK_AREA: array[boolean] of String = (mvRS_Track, mvRS_Area);
 var
   msg: String;
 begin
-  msg := Format(
-    'Click on "OK" to add the new %s.' + LineEnding +
-    'Click on "Cancel" to discard it.', [
-    TRACK_AREA[FEditMode = pemAddArea]
-  ]);
+  msg := Format(mvRS_ClickToAddNew, [TRACK_AREA[FEditMode = pemAddArea]]) +
+    LineEnding +
+    mvRS_ClickToDiscardIt;
   if MessageDlg(msg, mtConfirmation, [mbOK, mbCancel], 0) = mrOK then
   begin
     case FEditMode of
@@ -315,48 +350,6 @@ begin
   end;
 end;
 
-procedure TMapViewerPathEditForm.cbLatLonEditingDone(Sender: TObject);
-var
-  E: TEdit;
-  Deg: Double;
-  R: Boolean;
-  P: TMapPoint;
-  IsLat: Boolean;
-begin
-  E := Sender as TEdit;
-  if not E.Modified then
-    Exit;
-  R := TryStrDMSToDeg(E.Text, Deg);
-  if not R then
-    raise EArgumentException.Create('Invalid value.');
-  // Assignment
-  IsLat := Sender = cbLat;
-  for P in MapView.EditMark.Selection.Points do
-  begin
-    if IsLat
-      then P.Latitude := Deg
-      else P.Longitude := Deg;
-    ObjectModified(P, '');
-  end;
-end;
-
-procedure TMapViewerPathEditForm.cbLatEnter(Sender: TObject);
-begin
-  cbLat.Caption := LatToStr(MapView.EditMark.CurrentPoint.Latitude,
-    mvoLatLonInDMS in MapView.Options);
-end;
-
-procedure TMapViewerPathEditForm.cbLatLonExit(Sender: TObject);
-begin
-  UpdateControls;
-end;
-
-procedure TMapViewerPathEditForm.cbLonEnter(Sender: TObject);
-begin
-  cbLon.Caption := LonToStr(MapView.EditMark.CurrentPoint.Longitude,
-    mvoLatLonInDMS in MapView.Options);
-end;
-
 procedure TMapViewerPathEditForm.cbSelectedLayerDropDown(Sender: TObject);
 begin
   UpdateLayerItems;
@@ -368,6 +361,52 @@ begin
     then MapLayer := Nil
     else MapLayer := MapView.Layers[Pred(cbSelectedLayer.ItemIndex)];
   UpdateControls;
+end;
+
+procedure TMapViewerPathEditForm.cmbImageIndexCloseUp(Sender: TObject);
+var
+  cmb: TComboBox;
+  P: TMapPoint;
+begin
+  cmb := Sender as TComboBox;
+  for P in MapView.EditMark.Selection.Points do
+  begin
+    if (P is TMapPointOfInterest) then
+    begin
+      if cmb.ItemIndex = -1 then
+        TMapPointOfInterest(P).ImageIndex := -1
+      else
+        TMapPointOfInterest(P).ImageIndex := cmb.ItemIndex - 1;
+      ObjectModified(P, '');
+    end;
+  end;
+end;
+
+procedure TMapViewerPathEditForm.cmbImageIndexDrawItem(Control: TWinControl;
+  Index: Integer; ARect: TRect; State: TOwnerDrawState);
+var
+  cmb: TCombobox;
+  h: Integer;
+begin
+  cmb := Control as TComboBox;
+  cmb.Canvas.Font.Assign(cmb.Font);
+  h := cmb.Canvas.TextHeight('Tgj');
+  if (odFocused in State) then
+  begin
+    cmb.Canvas.Brush.Color := clHighlight;
+    cmb.Canvas.Font.Color := clHighlightText;
+  end else
+  begin
+    cmb.Canvas.Brush.Color := clWindow;
+    cmb.Canvas.Font.Color := clWindowText;
+  end;
+  if not (odBackgroundPainted in State) then
+    cmb.Canvas.FillRect(ARect);
+  InflateRect(ARect, -IMG_MARGIN, -IMG_MARGIN);
+  if Index <= 0 then
+    cmb.Canvas.TextOut(ARect.Left, (ARect.Top + ARect.Bottom - h) div 2, mvRS_None)
+  else
+    FMapView.POIImages.Draw(cmb.Canvas, ARect.Left, ARect.Top, Index - 1);
 end;
 
 procedure TMapViewerPathEditForm.edCaptionEditingDone(Sender: TObject);
@@ -388,6 +427,126 @@ begin
   end;
 end;
 
+procedure TMapViewerPathEditForm.edDateTimeEditingDone(Sender: TObject);
+var
+  E: TEdit;
+  dateVal: TDate = NO_DATE;
+  timeVal: TTime = 0.0;
+  dt: TDateTime;
+  P: TMapPoint;
+  sa: TStringArray;
+begin
+  E := Sender as TEdit;
+  if not E.Modified then
+    exit;
+
+  if E.Text = '' then
+    dt := NO_DATE
+  else
+  begin
+    sa := String(E.Text).Split(' ');
+    if sa[0] <> '' then
+    begin
+      if not TryStrToDate(sa[0], dateVal) then
+        dateVal := NO_DATE
+    end;
+    if (Length(sa) > 1) and (sa[1] <> '') then
+    begin
+      if not TryStrToTime(sa[1], timeVal) then
+        timeVal := 0.0;
+    end;
+    if dateVal <> NO_DATE then
+      dt := dateVal + timeVal
+    else
+      dt := NO_DATE;
+  end;
+
+  for P in MapView.EditMark.Selection.Points do
+  begin
+    P.DateTime := dt;
+    ObjectModified(P, '');
+  end;
+end;
+
+procedure TMapViewerPathEditForm.edDateTimeEnter(Sender: TObject);
+begin
+  if MapView.EditMark.CurrentPoint.DateTime = NO_DATE then
+    edDateTime.Text := ''
+  else
+    edDateTime.Text := FormatDateTime(DATETIME_FORMAT, MapView.EditMark.CurrentPoint.DateTime);
+end;
+
+procedure TMapViewerPathEditForm.edElevationEditingDone(Sender: TObject);
+var
+  E: TEdit;
+  elev: Double;
+  P: TMapPoint;
+begin
+  E := Sender as TEdit;
+  if not E.Modified then
+    exit;
+  if E.Text = '' then
+    elev := NO_ELEVATION
+  else
+  if not TryStrToFloat(E.Text, elev) then
+    raise EArgumentException.Create(mvRS_InvalidValue);
+  for P in MapView.EditMark.Selection.Points do
+  begin
+    P.Elevation := elev;
+    ObjectModified(P, '');
+  end;
+end;
+
+procedure TMapViewerPathEditForm.edElevationEnter(Sender: TObject);
+begin
+  if MapView.EditMark.CurrentPoint.Elevation = NO_ELEVATION then
+    edElevation.Text := ''
+  else
+    edElevation.Text := FormatFloat(ELEVATION_FORMAT, MapView.EditMark.CurrentPoint.Elevation);
+end;
+
+procedure TMapViewerPathEditForm.edLatitudeEnter(Sender: TObject);
+begin
+  edLatitude.Text := LatToStr(MapView.EditMark.CurrentPoint.Latitude,
+    mvoLatLonInDMS in MapView.Options);
+end;
+
+procedure TMapViewerPathEditForm.edLatLonEditingDone(Sender: TObject);
+var
+  E: TEdit;
+  Deg: Double;
+  R: Boolean;
+  P: TMapPoint;
+  IsLat: Boolean;
+begin
+  E := Sender as TEdit;
+  if not E.Modified then
+    Exit;
+  R := TryStrDMSToDeg(E.Text, Deg);
+  if not R then
+    raise EArgumentException.Create(mvRS_InvalidValue);
+  // Assignment
+  IsLat := Sender = edLatitude;
+  for P in MapView.EditMark.Selection.Points do
+  begin
+    if IsLat
+      then P.Latitude := Deg
+      else P.Longitude := Deg;
+    ObjectModified(P, '');
+  end;
+end;
+
+procedure TMapViewerPathEditForm.edEditExit(Sender: TObject);
+begin
+  UpdateControls;
+end;
+
+procedure TMapViewerPathEditForm.edLongitudeEnter(Sender: TObject);
+begin
+  edLongitude.Caption := LonToStr(MapView.EditMark.CurrentPoint.Longitude,
+    mvoLatLonInDMS in MapView.Options);
+end;
+
 procedure TMapViewerPathEditForm.FormActivate(Sender: TObject);
 var
   w: Integer;
@@ -395,9 +554,18 @@ begin
   if not FActivated then
   begin
     AutoSize := false;
-    w := MaxValue([lblSelectedPt.Width, lblLat.Width, lblLon.Width, lblCaption.Width]);
+    w := MaxValue([lblSelectedPt.Width, lblLatitude.Width, lblLongitude.Width,
+      lblElevation.Width, lblDateTime.Width, lblCaption.Width, lblImageIndex.Width]);
     cbSelectedPt.Left := w + lblSelectedPt.BorderSpacing.Left + lblSelectedPt.BorderSpacing.Right;
     cbSelectedLayer.Left := cbSelectedPt.Left + pnlSel.Left;
+    inc(w, 8+6);
+    lblSelectedPt.Constraints.MinWidth := w;
+    lblLatitude.Constraints.MinWidth := w;
+    lblLongitude.Constraints.MinWidth := w;
+    lblElevation.Constraints.MinWidth := w;
+    lblDateTime.Constraints.MinWidth := w;
+    lblCaption.Constraints.MinWidth := w;
+    lblImageIndex.Constraints.MinWidth := w;
     AutoSize := true;
     FActivated := true;
   end;
@@ -422,7 +590,7 @@ var
   L: TCollectionItem;
 begin
   cbSelectedLayer.Items.Clear;
-  cbSelectedLayer.Items.Add('(none)'); // At 0
+  cbSelectedLayer.Items.Add(mvRS_None); // At 0
   if Assigned(MapView) then
     for L in MapView.Layers do
       cbSelectedLayer.Items.Add(MapItemCaption(TMapLayer(L)));
@@ -689,7 +857,7 @@ var
       MapLayer := Nil;
       Exit;
     end;
-    V := (ASender as TMapLayers).View;
+    V := (ASender as TMapLayers).MapView;
     if (Operation = ooDeleteItem) and (Data = Pointer(FMapLayer)) then
     begin
       V.EditMark.ClearSelection;
@@ -771,26 +939,51 @@ begin
   UpdateControls;
 end;
 
-destructor TMapViewerPathEditForm.Destroy;
+procedure TMapViewerPathEditForm.SetStrings;
 begin
-  EditMode := pemSelect;
-  MapView := Nil;
-  inherited Destroy;
+  actSelect.Caption := mvRS_Select;
+  actSelect.Hint := mvRS_SelectTool_Hint;
+  actNewPOI.Caption := mvRS_NewPOI;
+  actNewPOI.Hint := mvRS_NewPOI_Hint;
+  actNewTrack.Caption := mvRS_NewTrack;
+  actNewTrack.Hint := mvRS_NewTrack_Hint;
+  actNewArea.Caption := mvRS_NewArea;
+  actNewArea.Hint := mvRS_NewArea_Hint;
+  actNewTP.Caption := mvRS_InsertNewPoint;
+  actNewTP.Hint := mvRS_InsertNewPoint_Hint;
+  actDelTP.Caption := mvRS_DeletePoint;
+  actDelTP.Hint := mvRS_DeletePoint_Hint;
+  actZoomIn.Caption := mvRS_ZoomIn;
+  actZoomIn.Hint := mvRS_ZoomIn_Hint;
+  actZoomOut.Caption := mvRS_ZoomOut;
+  actZoomOut.Hint := mvRS_ZoomOut_Hint;
+
+  lblSelectedLayer.Caption := mvRS_Layer;
+  lblSelectedPt.Caption := mvRS_Selection;
+  lblLatitude.Caption := mvRS_Latitude;
+  lblLongitude.Caption := mvRS_Longitude;
+  lblElevation.Caption := mvRS_Elevation;
+  lblDateTime.Caption := mvRS_DateTime;
+  lblCaption.Caption := mvRS_Caption;
+  lblImageIndex.Caption := mvRS_Image;
 end;
 
 procedure TMapViewerPathEditForm.UpdateControls;
 var
-  P, P0: TMapPoint;
+  P: TMapPoint;
+  P0: TMapPoint = nil;
   PtTxt: String;
+  i: Integer;
   PtCnt: Integer = 0;
-  HaveView, HaveLayer, HaveSel, HavePt: Boolean;
-  VaryingLat, VaryingLon: Boolean;
+  HaveView, HaveLayer, HaveSel, HavePt, HaveImg: Boolean;
+  VaryingLat, VaryingLon, VaryingElev, VaryingDateTime: Boolean;
   Erasable: Boolean = False;
 begin
   HaveView := Assigned(MapView);
   HaveSel := HaveView and MapView.EditMark.HasSelection;
   HavePt := HaveSel and (MapView.EditMark.Selection[0] is TMapPoint);
   HaveLayer := Assigned(MapLayer);
+  HaveImg := HavePt and Assigned(MapView.POIImages) and (MapView.POIImages.Count > 0);
 
   if not HaveLayer then
   begin
@@ -803,21 +996,22 @@ begin
 
   if HaveView
     then Caption := MapView.Name + ': ' + TMapView.ClassName
-    else Caption := TMapView.ClassName + ' (Not selected)';
+    else Caption := TMapView.ClassName + ' ' + mvRS_NotSelected;
 
   // Update layer name
   if HaveLayer
     then cbSelectedLayer.Text := MapItemCaption(MapLayer)
-    else cbSelectedLayer.Text := '(none)';
+    else cbSelectedLayer.Text := mvRS_None;
   cbSelectedLayer.Hint := cbSelectedLayer.Text;
 
   // Update currently selected point
-  PtTxt := '(none)';
+  PtTxt := mvRS_None;
   if HavePt then
   begin
     for P in MapView.EditMark.Selection.Points do
       Inc(PtCnt);
     P0 := TMapPoint(MapView.EditMark.Selection[0]);
+    haveImg := HaveImg and (P0 is TMapPointOfInterest);
 
     VaryingLat := False;
     for P in MapView.EditMark.Selection.Points.Skip(1) do
@@ -835,22 +1029,60 @@ begin
         Break;
       end;
 
+    VaryingElev := False;
+    for P in MapView.EditMark.Selection.Points.Skip(1) do
+      if P.Elevation <> P0.Elevation then
+      begin
+        VaryingElev := True;
+        Break;
+      end;
+
+    VaryingDateTime := False;
+    for P in MapView.EditMark.Selection.Points.Skip(1) do
+      if P.DateTime <> P0.DateTime then
+      begin
+        VaryingDateTime := True;
+        Break;
+      end;
+
     if VaryingLat
-      then cbLat.Caption := '(varying)'
-      else cbLat.Caption := LatToStr(P0.Latitude, mvoLatLonInDMS in MapView.Options);
+      then edLatitude.Text := mvRS_Varying
+      else edLatitude.Text := LatToStr(P0.Latitude, mvoLatLonInDMS in MapView.Options);
 
     if VaryingLon
-      then cbLon.Caption := '(varying)'
-      else cbLon.Caption := LonToStr(P0.Longitude, mvoLatLonInDMS in MapView.Options);
+      then edLongitude.Text := mvRS_Varying
+      else edLongitude.Text := LonToStr(P0.Longitude, mvoLatLonInDMS in MapView.Options);
+
+    if VaryingElev
+      then edElevation.Text := mvRS_Varying
+      else if P0.Elevation = NO_ELEVATION
+        then edElevation.Text := ''
+        else edElevation.Text := FormatFloat(ELEVATION_FORMAT, P0.Elevation);
+
+    if VaryingDateTime
+      then edDateTime.Text := mvRS_Varying
+      else if P0.DateTime = NO_DATE
+        then edDateTime.Text := ''
+        else edDateTime.Text := FormatDateTime(DATETIME_FORMAT, P0.DateTime);
 
     edCaption.Text := P0.Caption;
+
+    if HaveImg then
+    begin
+      cmbImageIndex.ItemHeight := MapView.POIImages.Height + 2 * IMG_MARGIN;
+      cmbImageIndex.Items.Clear;
+      for i := 0 to MapView.POIImages.Count do  // missing -1 intentional!
+        cmbImageIndex.Items.Add(IntToStr(i));
+      cmbImageIndex.ItemIndex := TMapPointOfInterest(P0).ImageIndex + 1;
+    end else
+      cmbImageIndex.Items.Clear;
 
     FPointCnt := PtCnt;
     if PtCnt > 0 then
     begin
       PtTxt := MapItemCaption(P);
       if PtCnt > 1 then
-        PtTxt := PtTxt + Format(' +%d more', [PtCnt - 1]);
+        PtTxt := PtTxt + ' +' + Format(mvRS_More, [PtCnt - 1]);
     end;
 
     if P0.Collection is TMapTrackPoints then
@@ -863,20 +1095,31 @@ begin
   else
   begin
     FPointCnt := 0;
-    cbLat.Caption := '';
-    cbLon.Caption := '';
+    edLatitude.Text := '';
+    edLongitude.Text := '';
+    edElevation.Text := '';
     edCaption.Text := '';
+    edDateTime.Text := '';
+    cmbImageIndex.ItemIndex := -1;
+    cmbImageIndex.Items.Clear;
   end;
 
   cbSelectedPt.Text := PtTxt;
   cbSelectedPt.Hint := PtTxt;
 
-  cbLat.Enabled := HavePt;
-  lblLat.Enabled := HavePt;
-  cbLon.Enabled := HavePt;
-  lblLon.Enabled := HavePt;
+  edLatitude.Enabled := HavePt;
+  lblLatitude.Enabled := HavePt;
+  edLongitude.Enabled := HavePt;
+  lblLongitude.Enabled := HavePt;
+  edElevation.Enabled := HavePt;
+  lblElevation.Enabled := HavePt;
+  lblMeters.Enabled := HavePt;
+  edDateTime.Enabled := HavePt;
+  lblDateTime.Enabled := HavePt;
   edCaption.Enabled := HavePt and (P0 is TMapPointOfInterest);
   lblCaption.Enabled := edCaption.Enabled;
+  cmbImageIndex.Enabled := HaveImg;
+  lblImageIndex.Enabled := HaveImg;
 
   // Update actions
   actZoomIn.Enabled := HaveView and (MapView.Zoom < MapView.ZoomMax);

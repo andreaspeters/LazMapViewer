@@ -1,4 +1,67 @@
-{ TMapScalePlugin - draws a length scale corresponding to the current zoom level }
+{-------------------------------------------------------------------------------
+                              mvMapScalePlugin.pas
+
+License: modified LGPL with linking exception (like RTL, FCL and LCL)
+
+See the file COPYING.modifiedLGPL.txt, included in the Lazarus distribution,
+for details about the license.
+
+See also: https://wiki.lazarus.freepascal.org/FPC_modified_LGPL
+--------------------------------------------------------------------------------
+
+TMapScalePlugin
+---------------
+
+The TMapScalePlugin draws a scale bar in the map to indicate the current
+zoom magnification. The scale bar is labeled by its length in real-world units.
+
+Note that due to the projection of the earth onto a plane the magnficiation
+factor depends on the latitude. In particular at low zoom levels, the
+magnification can vary between the top and bottom of the displayed map.
+
+Properties
+----------
+
+AlignSet: TScaleAlignSet
+  a set of alignment values (alLeft, alTop, alRight, alBottom) determining the
+  map edge at which the scale bar is positioned.
+  Including both alLeft and alTop centers the bar horizontally,
+  including alTop and alBottom centers it vertically.
+
+Imperial: Boolean
+   Allows to switch between metric (km, m) and imperial (miles, feet) length
+   units
+
+SpaceX: Integer
+  Distance of the scale bar from  the left or right side of the map
+
+SpaceY: Integer
+  Distance of the scale bar from the top or bottom side of the map
+
+WidthMax: Integer
+  Determines the maximum width of the scale bar. The width, however, usually
+  is reduced so that the length label has a "nice" value.
+
+ZoomMin: Integer
+  Mininum zoom level at which or above which the scale bar is displayed. When
+  the current zoom level is smaller than this limit the bar is hidden because
+  the magnfication varies noticeably across the latitudes shown in the map
+  due to the map projection
+
+BackgroundColor: TColor
+  Background color of the scale bar. The background is transparent for the
+  color clNone, or when the BackgroundOpacity is 0
+
+BackgroundOpacity: single
+  Determines the transparency of the background of the scale bar.
+  The value can range between 0 (fully transparent) and 1 (fully opaque).
+
+Font: TFont
+  Determines the font used for the length label of the scale bar
+
+Pen: TPen
+  Determines the color, width and style of the scale bar line
+-------------------------------------------------------------------------------}
 
 unit mvMapScalePlugin;
 
@@ -9,7 +72,7 @@ interface
 uses
   Classes, SysUtils, Math,
   Graphics, Controls, Types,
-  mvMapViewer, mvGeoMath, mvPluginCommon;
+  mvMapViewer, mvStrConsts, mvTypes, mvGeoMath, mvPluginCommon;
 
 type
   { TMapScalePlugin }
@@ -85,8 +148,9 @@ var
   OldPenStyle: TPenStyle;
   Capt: String;
   Extent: TSize;
-  W, H, HalfHeight, SpcX, SpcY: Integer;
-  MaxW: Integer;
+  W, H, HalfHeight, SpcX, SpcY, MaxW: Integer;
+  P1, P2: TPoint;
+  RP1, RP2: TRealPoint;
 begin
   if AMapView.Zoom < FZoomMin then
     exit;
@@ -94,10 +158,18 @@ begin
   SpcX := FSpaceX;
   SpcY := FSpaceY;
   MaxW := Min(WidthMax, AMapView.ClientWidth);
-  HalfHeight := AMapView.Height div 2;
+  HalfHeight := AMapView.Height div 2;    // --> measure distance in screen center
 
-  with AMapView.Engine.ScreenRectToRealArea(Rect(0, HalfHeight, MaxW, HalfHeight)) do
-    Dist := mvGeoMath.CalcGeoDistance(TopLeft.Lat, TopLeft.Lon, TopLeft.Lat, BottomRight.Lon, duMeters);
+  P1 := Point(0, HalfHeight);
+  P2 := Point(MaxW, HalfHeight);
+  if (AMapView.Engine.MapLeft > 0) and (not AMapView.Cyclic) then
+  begin
+    inc(P1.X, AMapView.Engine.MapLeft);
+    inc(P2.X, AMapView.Engine.MapLeft);
+  end;
+  RP1 := AMapView.ScreenToLatLon(P1);
+  RP2 := AMapView.ScreenToLatLon(P2);
+  Dist := mvGeoMath.CalcGeoDistance(RP1.Lat, RP1.Lon, RP2.Lat, RP2.Lon, duMeters);
 
   if Imperial then
   begin
@@ -247,7 +319,7 @@ begin
 end;
 
 initialization
-  RegisterPluginClass(TMapScalePlugin, 'Map scale');
+  RegisterPluginClass(TMapScalePlugin, @mvRS_MapScalePlugin);
 
 end.
 

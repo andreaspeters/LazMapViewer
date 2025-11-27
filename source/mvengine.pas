@@ -20,7 +20,7 @@ unit mvEngine;
 interface
 
 uses
-  Classes, SysUtils, IntfGraphics, Controls, Math, GraphType, FPImage,
+  Classes, SysUtils, IntfGraphics, Controls, Math, GraphType, FPImage, Types,
   mvGeoMath, mvTypes, mvJobQueue, mvMapProvider, mvDownloadEngine, mvCache, mvDragObj;
 
 type
@@ -30,16 +30,14 @@ type
   TDrawStretchedTileEvent = procedure (const TileId: TTileId; X,Y: Integer;
     TileImg: TPictureCacheItem; const R: TRect) of object;
 
-  TTileAfterGetFromCacheEvent = procedure (const AMapProvider: TMapProvider;
-                                           const ATileId: TTileId;
-                                           const ATileImg: TPictureCacheItem) of object;
-
   TEraseBackgroundEvent = procedure (const R: TRect) of Object;
 
   TTileDownloadedEvent = procedure (const TileId: TTileId) of object;
 
   TCenterMovingEvent = procedure (Sender: TObject; var NewCenter: TRealPoint; var Allow: Boolean) of object;
   TZoomChangingEvent = procedure (Sender: TObject; NewZoom: Integer; var Allow: Boolean) of object;
+
+  TTileSizeChangeEvent = procedure (Sender: TObject; const ATileSize: TSize) of object;
 
   TTileIdArray = Array of TTileId;
 
@@ -78,16 +76,17 @@ type
       FOnDrawStretchedTile: TDrawStretchedTileEvent;
       FOnEraseBackground: TEraseBackgroundEvent;
       FOnTileDownloaded: TTileDownloadedEvent;
+      FOnTileSizeChange: TTileSizeChangeEvent;
       FOnZoomChange: TNotifyEvent;
       FOnZoomChanging: TZoomChangingEvent;
-      FCreateTempTileCopy : Boolean;
-      FTileAfterGetFromCacheEvent : TTileAfterGetFromCacheEvent;
       FZoomMax: Integer;
       FZoomMin: Integer;
-      lstProvider : TStringList;
+//      FProviderList: TStringList;
       Queue : TJobQueue;
       MapWin : TMapWindow;
       FZoomToCursor: Boolean;
+      FTileSize: TMapTileSize;
+      FPixelsPerInch: Integer;
       function GetCacheItemClass: TPictureCacheItemClass;
       function GetCacheMaxAge: Integer;
       function GetCacheOnDisk: Boolean;
@@ -116,6 +115,7 @@ type
       procedure SetDownloadEngine(AValue: TMvCustomDownloadEngine);
       procedure SetHeight(AValue: integer);
       procedure SetMapProvider(AValue: String);
+      procedure SetTileSize(AValue: TMapTileSize);
       procedure SetUseThreads(AValue: Boolean);
       procedure SetWidth(AValue: integer);
       procedure SetZoom(AValue: Integer); overload;
@@ -128,8 +128,8 @@ type
       procedure CalculateWin(var AWin: TMapWindow);
       function DegreesToPixelsEPSG3395(const AWin: TMapWindow; APt: TRealPoint): TPoint;
       function DegreesToPixelsEPSG3857(const AWin: TMapWindow; APt: TRealPoint): TPoint;
-      procedure Redraw(const aWin: TMapWindow; const paintOnly: Boolean = False);
-      function CalculateVisibleTiles(const aWin: TMapWindow; out Area: TArea): Boolean;
+      procedure Redraw(const aWin: TMapWindow; const PaintOnly: Boolean = False);
+      function CalculateVisibleTiles(const aWin: TMapWindow; out AFullyCovered: Boolean): TArea;
       function IsCurrentWin(const aWin: TMapWindow) : boolean;
     protected
       procedure AdjustZoomCenter(var AWin: TMapWindow);
@@ -138,7 +138,7 @@ type
       procedure evDownload(Data: TObject; Job: TJob);
       procedure TileDownloaded(Data: PtrInt);
       procedure EraseBackground(const R: TRect);
-      procedure DrawTileFromCache(constref ATile: TTileId; constref AWin: TMapWindow);
+      procedure DrawTileFromCache(constref ATile: TTileId; constref AWin: TMapWindow; out FoundInCache: Boolean);
       procedure DrawStretchedTile(const TileId: TTileID; X, Y: Integer; TileImg: TPictureCacheItem; const R: TRect);
       Procedure DrawTile(const TileId: TTileId; X,Y: integer; TileImg: TPictureCacheItem);
       Procedure DoDrag(Sender: TDragObj);
@@ -153,13 +153,15 @@ type
       function AddMapProvider(OpeName: String; ProjectionType: TProjectionType; Url: String;
         MinZoom, MaxZoom, NbSvr: integer; GetSvrStr: TGetSvrStr = nil;
         GetXStr: TGetValStr = nil; GetYStr: TGetValStr = nil;
-        GetZStr: TGetValStr = nil): TMapProvider;
+        GetZStr: TGetValStr = nil; GetRetinaStr: TGetRetinaStr = nil): TMapProvider;  deprecated 'Use RegisterMapProvider in mvMapProvider';   // deprecated in Sept 2025
+      function CalcVisibleArea(AZoom: Integer; AZoomToCursor: Boolean): TRealArea;
       procedure CancelCurrentDrawing;
       procedure ClearCache;
-      procedure ClearMapProviders;
+      procedure ClearMapProviders; deprecated 'Use ClearMapProviders in mvMapProvider'; // deprecated in Sept 2025
       function CrossesDateline: Boolean;
-      procedure GetMapProviders(AList: TStrings);
-      function MapProviderByName(AName: String): TMapProvider;
+      procedure DeleteCacheFiles(AMapProvider: TMapProvider);
+      procedure GetMapProviders(AList: TStrings); deprecated 'Use MapProvidersToSortedStrings in mvMapProvider'; // deprecated in Sept 2025
+      function MapProviderByName(AName: String): TMapProvider; deprecated 'Use MapProviderByName in mvMapProvider';  // deprecated in Sept 2025
       function LatLonToScreen(APt: TRealPoint): TPoint;
       function LonLatToScreen(APt: TRealPoint): TPoint; deprecated 'Use LatLonToScreen';
       function LatLonToWorldScreen(APt: TRealPoint): TPoint;
@@ -167,12 +169,15 @@ type
       procedure PrepareCache(AMapProvider: TMapProvider);
       function ReadProvidersFromXML(AFileName: String; out AMsg: String): Boolean;
       procedure Redraw;
-      Procedure RegisterProviders;
+//      Procedure RegisterProviders;    // SORRY: moved to TMapView
       function ScreenRectToRealArea(ARect: TRect): TRealArea;
       function ScreenToLatLon(aPt: TPoint): TRealPoint;
       function ScreenToLonLat(aPt: TPoint): TRealPoint; deprecated 'Use ScreenToLatLon';
       procedure SetSize(aWidth, aHeight: integer);
-      function ValidProvider(const AProvider: String): Boolean;
+      procedure UseAutoTiles;
+      procedure UseNormalTiles;
+      procedure UseRetinaTiles(OnlyIfAvailable: Boolean);
+      function ValidProvider(const AProvider: String): Boolean; deprecated 'Use MapProviderRegistered in mvMapProvider';  // deprecated in Sept 2025
       function WorldScreenToLatLon(aPt: TPoint): TRealPoint;
       function WorldScreenToLonLat(aPt: TPoint): TRealPoint; deprecated 'Use WorldScreenToLatLon';
       procedure WriteProvidersToXML(AFileName: String);
@@ -194,14 +199,16 @@ type
       property MapProjectionType: TProjectionType read GetMapProjectionType;
 
       property BkColor: TFPColor read FBkColor write SetBkColor;
+      property CacheMaxAge: Integer read GetCacheMaxAge write SetCacheMaxAge;
+      property CacheMemMaxItemCountDefault: Integer read GetCacheMemMaxItemCountDefault;
       property Center: TRealPoint read GetCenter write SetCenter;
       property DrawPreviewTiles : Boolean read FDrawPreviewTiles write FDrawPreviewTiles;
       property InDrag: Boolean read FInDrag;
       property DragObj: TDragObj read FDragObj;
-      property CacheMaxAge: Integer read GetCacheMaxAge write SetCacheMaxAge;
+      property PixelsPerInch: Integer read FPixelsPerInch write FPixelsPerInch;
+      property TileSize: TMapTileSize read FTileSize write SetTileSize;
       property ZoomMin: Integer read FZoomMax write FZoomMin;
       property ZoomMax: Integer read FZoomMax write FZoomMax;
-      property CacheMemMaxItemCountDefault : Integer read GetCacheMemMaxItemCountDefault;
     published
       property Active: Boolean read FActive write SetActive default false;
       property CacheOnDisk: Boolean read GetCacheOnDisk write SetCacheOnDisk;
@@ -220,8 +227,7 @@ type
       property Zoom: integer read GetZoom write SetZoom;
       property ZoomToCursor: Boolean read FZoomToCursor write FZoomToCursor default True;
       property CacheItemClass: TPictureCacheItemClass read GetCacheItemClass write SetCacheItemClass;
-      { CreateTempTileCopy creates a local copy of the tile prior further processing }
-      property CreateTempTileCopy : Boolean read FCreateTempTileCopy write FCreateTempTileCopy;
+
       property OnCenterMove: TNotifyEvent read FOnCenterMove write FOnCenterMove;
       property OnCenterMoving: TCenterMovingEvent read FOnCenterMoving write FOnCenterMoving;
       property OnChange: TNotifyEvent Read FOnChange write FOnchange; //called when visiable area change
@@ -229,9 +235,9 @@ type
       property OnDrawTile: TDrawTileEvent read FOnDrawTile write FOnDrawTile;
       property OnEraseBackground: TEraseBackgroundEvent read FOnEraseBackground write FOnEraseBackground;
       property OnTileDownloaded: TTileDownloadedEvent read FOnTileDownloaded write FOnTileDownloaded;
+      property OnTileSizeChange: TTileSizeChangeEvent read FOnTileSizeChange write FOnTileSizeChange;
       property OnZoomChange: TNotifyEvent read FOnZoomChange write FOnZoomChange;
       property OnZoomChanging: TZoomChangingEvent read FOnZoomChanging write FOnZoomChanging;
-      property OnTileAfterGetFromCache: TTileAfterGetFromCacheEvent read FTileAfterGetFromCacheEvent write FTileAfterGetFromCacheEvent;
   end;
 
 // The following functions have been moved to mvGeoMath and will be removed here sooner or later...
@@ -248,18 +254,12 @@ function TryStrDMSToDeg(const AValue: String; out ADeg: Double): Boolean; deprec
 
 function ZoomFactor(AZoomLevel: Integer): Int64; deprecated 'Use function in unit mvGeoMath';
 
-var
-  HERE_AppID: String = '';
-  HERE_AppCode: String = '';
-  OpenWeatherMap_ApiKey: String = '';
-  ThunderForest_ApiKey: String = '';
-
 
 implementation
 
 uses
   Forms, TypInfo, laz2_xmlread, laz2_xmlwrite, laz2_dom,
-  mvJobs, mvGpsObj;
+  mvStrConsts, mvJobs, mvGpsObj;
 
 type
 
@@ -309,13 +309,13 @@ begin
   FDragObj.OnDrag := @DoDrag;
   FDragObj.OnEndDrag := @DoEndDrag;
   Cache := TPictureCache.Create(self);
-  lstProvider := TStringList.Create;
   FBkColor := colWhite;
-  RegisterProviders;
+//  RegisterProviders;
   Queue := TJobQueue.Create(8);
 
   inherited Create(aOwner);
 
+  FPixelsPerInch := 96;
   FZoomMin := 1;
   FZoomMax := 19;
   FZoomToCursor := true;
@@ -328,28 +328,19 @@ begin
   Queue.CancelAllJob(Nil);
   Queue.RemoveAsyncCalls(Self);
   FreeAndNil(Queue);
-  ClearMapProviders;
+//  ClearMapProviders;
   FreeAndNil(FDragObj);
-  FreeAndNil(lstProvider);
   FreeAndNil(Cache);
   inherited Destroy;
 end;
 
 function TMapViewerEngine.AddMapProvider(OpeName: String; ProjectionType: TProjectionType;
   Url: String; MinZoom, MaxZoom, NbSvr: integer; GetSvrStr: TGetSvrStr;
-  GetXStr: TGetValStr; GetYStr: TGetValStr; GetZStr: TGetValStr): TMapProvider;
-var
-  idx :integer;
-Begin
-  idx := lstProvider.IndexOf(OpeName);
-  if idx = -1 then
-  begin
-    Result := TMapProvider.Create(OpeName);
-    lstProvider.AddObject(OpeName, Result);
-  end
-  else
-    Result := TMapProvider(lstProvider.Objects[idx]);
-  Result.AddUrl(Url, ProjectionType, NbSvr, MinZoom, MaxZoom, GetSvrStr, GetXStr, GetYStr, GetZStr);
+  GetXStr: TGetValStr; GetYStr: TGetValStr; GetZStr: TGetValStr;
+  GetRetinaStr: TGetRetinaStr): TMapProvider;
+begin
+  Result := RegisterMapProvider(OpeName, ProjectionType, URL, MinZoom, MaxZoom,
+    NbSvr, GetSvrStr, GetXStr, GetYStr, GetZStr, GetRetinaStr);
 end;
 
 procedure TMapViewerEngine.AdjustZoomCenter(var AWin: TMapWindow);
@@ -357,42 +348,64 @@ var
   ptMouseCursor: TPoint;
   rPtAdjustedCenter: TRealPoint;
 begin
-  ptMouseCursor := LatLonToScreen(AWin.ZoomCenter);
-  rPtAdjustedCenter := ScreenToLatLon(ptMouseCursor.Add(AWin.ZoomOffset));
+  ptMouseCursor := DegreesToMapPixels(AWin, AWin.ZoomCenter);
+  rPtAdjustedCenter := MapPixelsToDegrees(AWin, ptMouseCursor.Add(AWin.ZoomOffset));
   AWin.Center := rPtAdjustedCenter;
   CalculateWin(AWin);
 end;
 
-// Returns whether the view area is not covered fully with a tiles
-function TMapViewerEngine.CalculateVisibleTiles(const aWin: TMapWindow; out
-  Area: TArea): Boolean;
+{ Calculates the range of tile ids needed to cover the window with a map.
+  Returns AFullyCovered=false when not the entire windows is covered by the
+  map tiles. }
+function TMapViewerEngine.CalculateVisibleTiles(const AWin: TMapWindow;
+  out AFullyCovered: Boolean): TArea;
 var
-  MaxX, MaxY, startX, startY: int64;
-  WorldMax: Int64;
+  maxX, maxY, startX, startY: Int64;
+  worldMax: Int64;
 begin
-  Area := Default(TArea);
-  Result := (aWin.X <= 0) and (aWin.Y <= 0);
-  WorldMax := Int64(1) shl AWin.Zoom - 1;
-  MaxX := Int64(aWin.Width) div TileSize.CX + 1;
-  MaxY := Int64(aWin.Height) div TileSize.CY + 1;
-  if (MaxX > WorldMax) or (MaxY > WorldMax) then
+  Result := Default(TArea);
+
+  AFullyCovered := true;
+  if (AWin.X > 0) or (AWin.Y > 0) then
+    AFullyCovered := false;
+
+  worldMax := Int64(1) shl AWin.Zoom - 1;
+  maxX := Int64(AWin.Width) div mvTypes.TileSize.CX + 1;
+  maxY := Int64(AWin.Height) div mvTypes.TileSize.CY + 1;
+  if maxY > worldMax then
   begin
-    Result := False;
-    MaxX := Min(WorldMax, MaxX);
-    MaxY := Min(WorldMax, MaxY);
+    maxY := worldMax;
+    AFullyCovered := false;
   end;
-  startX := -aWin.X div TileSize.CX;
-  startY := -aWin.Y div TileSize.CY;
-  if (startX < 0) or (startY < 0) then
+  if (not Cyclic) and (maxX > worldMax) then
   begin
-    startX := Max(0, startX);
-    startY := Max(0, startY);
-    Result := False;
+    maxX := worldMax;
+    AFullyCovered := false;
   end;
-  Area.Left := startX;
-  Area.Right := startX + MaxX;
-  Area.Top := startY;
-  Area.Bottom := startY + MaxY;
+
+  startX := Max(0, -AWin.X div mvTypes.TileSize.CX);
+  startY := Max(0, -AWin.Y div mvTypes.TileSize.CY);
+
+  Result.Left := startX;
+  if Cyclic then
+    Result.Right := Result.Left + maxX
+  else
+  if startX + maxX < worldMax then
+    Result.Right := startX + maxX
+  else
+  begin
+    Result.Right := worldMax;
+    AFullyCovered := false;
+  end;
+
+  Result.Top := startY;
+  if startY + maxY < worldMax then
+    Result.Bottom := startY + maxY
+  else
+  begin
+    Result.Bottom := worldMax;
+    AFullyCovered := false;
+  end;
 end;
 
 procedure TMapViewerEngine.CalculateWin(var AWin: TMapWindow);
@@ -424,13 +437,10 @@ begin
   Cache.ClearCache;
 end;
 
+// Deprecated in Sept 2025
 procedure TMapViewerEngine.ClearMapProviders;
-var
-  i: Integer;
 begin
-  for i:=0 to lstProvider.Count-1 do
-    TObject(lstProvider.Objects[i]).Free;
-  lstProvider.Clear;
+  mvMapProvider.ClearMapProviders;
 end;
 
 procedure TMapViewerEngine.ConstraintZoom(var aWin: TMapWindow);
@@ -459,7 +469,7 @@ begin
     exit(false);
 
   // Catch the case, that the screen is wider than the whole world
-  mapWidth := mvGeoMath.ZoomFactor(MapWin.Zoom) * TileSize.CX;
+  mapWidth := mvGeoMath.ZoomFactor(MapWin.Zoom) * mvTypes.TileSize.CX;
   Result := (MapWin.Width > mapWidth);
   if not Result then
   begin
@@ -469,6 +479,11 @@ begin
     visArea.BottomRight := ScreenToLatLon(Point(Width, Height));
     Result := visArea.TopLeft.Lon > visArea.BottomRight.Lon;
   end;
+end;
+
+procedure TMapViewerEngine.DeleteCacheFiles(AMapProvider: TMapProvider);
+begin
+  Cache.DeleteCacheFiles(AMapProvider);
 end;
 
 procedure TMapViewerEngine.DblClick(Sender: TObject);
@@ -631,21 +646,22 @@ begin
     Result := '';
 end;
 
+{
 procedure TMapViewerEngine.GetMapProviders(AList: TStrings);
 begin
-  AList.Assign(lstProvider);
+  AList.Assign(FProviderList);
 end;
 
 function TMapViewerEngine.MapProviderByName(AName: String): TMapProvider;
 var
   I: Integer;
 begin
-  I := lstProvider.IndexOf(AName);
+  I := FProviderList.IndexOf(AName);
   if I <> -1
-    then Result := TMapProvider(lstProvider.Objects[I])
+    then Result := TMapProvider(FProviderList.Objects[I])
     else Result := Nil;
 end;
-
+ }
 function TMapViewerEngine.GetTileName(const Id: TTileId): String;
 begin
   Result := IntToStr(Id.X) + '.' + IntToStr(Id.Y) + '.' + IntToStr(Id.Z);
@@ -701,7 +717,7 @@ begin
   Result.X := pixelLocation.x + AWin.X;
   if FCyclic and CrossesDateline then
   begin
-    mapWidth := mvGeoMath.ZoomFactor(AWin.Zoom) * TileSize.CX;
+    mapWidth := mvGeoMath.ZoomFactor(AWin.Zoom) * mvTypes.TileSize.CX;
     while (Result.X < 0) do
       Result.X := Result.X + mapWidth;
     while (Result.X > AWin.Width) do
@@ -729,8 +745,8 @@ begin
   pt.Lat := Math.EnsureRange(APt.Lat, MIN_LATITUDE, MAX_LATITUDE);
   pt.Lon := Math.EnsureRange(APt.Lon, MIN_LONGITUDE, MAX_LONGITUDE);
 
-  factorX := TileSize.CX / TWO_PI * mvGeoMath.ZoomFactor(AWin.Zoom);
-  factorY := TileSize.CY / TWO_PI * mvGeoMath.ZoomFactor(AWin.Zoom);
+  factorX := mvTypes.TileSize.CX / TWO_PI * mvGeoMath.ZoomFactor(AWin.Zoom);
+  factorY := mvTypes.TileSize.CY / TWO_PI * mvGeoMath.ZoomFactor(AWin.Zoom);
   px := factorX * (pt.LonRad + pi);
   py := factorY * (pi - ln( tan(pi/4 + pt.LatRad/2) ));
 
@@ -807,7 +823,7 @@ var
   mPointX, mPointY : Double;
   PType: TProjectionType;
 begin
-  mapWidth := mvGeoMath.ZoomFactor(AWin.Zoom) * TileSize.CX;
+  mapWidth := mvGeoMath.ZoomFactor(AWin.Zoom) * mvTypes.TileSize.CX;
 
   if FCyclic then
   begin
@@ -846,8 +862,8 @@ begin
   // Result.LonRad := ( APoints.X / (( TILE_SIZE / (2*pi)) * 2**Zoom) ) - pi;
   // Result.LatRad := arctan( sinh(pi - (APoints.Y/TILE_SIZE) / 2**Zoom * pi*2) );
   zoomFac := mvGeoMath.ZoomFactor(Zoom);
-  Result.LonRad := ( AX / (( TileSize.CX / (2*pi)) * zoomFac) ) - pi;
-  Result.LatRad := arctan( sinh(pi - (AY / TileSize.CY) / zoomFac * pi*2) );
+  Result.LonRad := ( AX / (( mvTypes.TileSize.CX / (2*pi)) * zoomFac) ) - pi;
+  Result.LatRad := arctan( sinh(pi - (AY / mvTypes.TileSize.CY) / zoomFac * pi*2) );
 
   Result.Lat := Math.EnsureRange(Result.Lat, MIN_LATITUDE, MAX_LATITUDE);
   Result.Lon := Math.EnsureRange(Result.Lon, MIN_LONGITUDE, MAX_LONGITUDE);
@@ -1044,7 +1060,7 @@ begin
     ReadXMLFile(doc, stream, [xrfAllowSpecialCharsInAttributeValue, xrfAllowLowerThanInAttributeValue]);
     node := doc.FindNode('map_providers');
     if node = nil then begin
-      AMsg := 'No map providers in file.';
+      AMsg := Format(mvRS_NoMapProvidersInFile, [AFileName]);
       exit;
     end;
 
@@ -1078,7 +1094,7 @@ begin
         ClearMapProviders;
         first := false;
       end;
-      AddMapProvider(providerName, projectionType,
+      RegisterMapProvider(providerName, projectionType,
         url, minZoom, maxZoom, svrCount,
         GetSvrStr(svrProc), GetValStr(xProc), GetValStr(yProc), GetValStr(zProc)
       );
@@ -1097,25 +1113,22 @@ begin
 end;
 
 procedure TMapViewerEngine.Redraw(const aWin: TMapWindow;
-  const paintOnly: Boolean);
+  const PaintOnly: Boolean);
 var
   TilesVis: TArea;
-  x, y, px, py: Integer;
+  x, y: Integer;
   iTile, numTiles, XShift: Integer;
   Tiles: TTileIdArray = nil;
-  tile: TTileID;
-  previewDrawn: Boolean;
-  previewImg: TPictureCacheItem;
-  tmpImg : TPictureCacheItem;
-  R: TRect;
+  foundInCache: Boolean;
+  fullyCovered: Boolean;
 
   procedure AddJob;
   var
     lTile: TEnvTile;
     lJob: TEventJob;
   begin
-    lTile:=TEnvTile.Create(Tiles[iTile], aWin);
-    lJob := TEventJob.Create(@evDownload, lTile, False,                                    // owns data
+    lTile := TEnvTile.Create(Tiles[iTile], aWin);
+    lJob := TEventJob.Create(@evDownload, lTile, False,            // owns data
       GetTileName(Tiles[iTile]));
     if not Queue.AddUniqueJob(lJob, Self) then
     begin
@@ -1126,35 +1139,30 @@ var
 
   procedure EraseAround;
   var
-    T, L, B, R: Integer;
+    x, y: Integer;
   begin
-    T := -AWin.Y div TileSize.CY - Max(0, Sign(AWin.Y));
-    B := T + AWin.Height div TileSize.CY + 1;
-    L := -AWin.X div TileSize.CX - Max(0, Sign(AWin.X));
-    R := L + AWin.Width div TileSize.CX + 1;
-    if T < TilesVis.top then  // Erase above top
-      EraseBackground(Rect(0, 0, AWin.Width, AWin.Y + TilesVis.top * TileSize.CY));
-    if L < TilesVis.left then // Erase on the left
-      EraseBackground(Rect(
-        0,
-        AWin.Y + TilesVis.top * TileSize.CY,
-        AWin.X + TilesVis.left * TileSize.CX,
-        AWin.Y + (TilesVis.bottom + 1) * TileSize.CY)
-      );
-    if R > TilesVis.right then // Erase on the right
-      EraseBackground(Rect(
-        AWin.X + (TilesVis.right + 1) * TileSize.CX,
-        AWin.Y + TilesVis.top * TileSize.CY,
-        AWin.Width,
-        AWin.Y + (TilesVis.bottom + 1) * TileSize.CY)
-      );
-    if B > TilesVis.Bottom then // Erase below
-      EraseBackground(Rect(
-        0,
-        AWin.Y + (TilesVis.bottom + 1) * TileSize.CY,
-        AWin.Width,
-        AWin.Height)
-      );
+    // Erase part above the map
+    y := AWin.Y;
+    if y > 0 then
+      EraseBackground(Rect(0, 0, AWin.Width, y));
+
+    // Erase part below the map
+    y := AWin.Y + (numTiles - 1 - TilesVis.Top) * mvTypes.TileSize.CX;
+    if y < AWin.Height then
+      EraseBackground(Rect(0, y, AWin.Width, AWin.Height));
+
+    if not Cyclic then
+    begin
+      // Erase part at the left of the map
+      x := AWin.X;
+      if x > 0 then
+        EraseBackground(Rect(0, 0, x, AWin.Height));
+
+      // Erase part at the right of the map
+      x := AWin.X + (numTiles - 1 - TilesVis.Left) * mvTypes.TileSize.CX;
+      if x < AWin.Width then
+        EraseBackground(Rect(x, 0, AWin.Width, AWin.Height));
+    end;
   end;
 
 begin
@@ -1166,13 +1174,15 @@ begin
     Exit;
   end;
 
-  if not CalculateVisibleTiles(AWin, TilesVis) then
+  numTiles := 1 shl AWin.Zoom;
+  TilesVis := CalculateVisibleTiles(AWin, fullyCovered);
+  if not fullyCovered then
     EraseAround;
+
   SetLength(Tiles, (TilesVis.Bottom - TilesVis.Top + 1) * (TilesVis.Right - TilesVis.Left + 1));
   iTile := Low(Tiles);
-  numTiles := 1 shl AWin.Zoom;
-  XShift := IfThen(aWin.X > 0, numTiles - aWin.X div TileSize.CX - 1, 0);
-  for y := TilesVis.Top to TilesVis.Bottom do
+  XShift := IfThen(aWin.X > 0, numTiles - aWin.X div mvTypes.TileSize.CX - 1, 0);
+  for Y := TilesVis.Top to TilesVis.Bottom do
     for X := TilesVis.Left to TilesVis.Right do
     begin
       if FCyclic then
@@ -1186,60 +1196,18 @@ begin
       Tiles[iTile].Y := Y;
       Tiles[iTile].Z := AWin.Zoom;
 
-      if Cache.InCache(AWin.MapProvider, Tiles[iTile]) then
+      DrawTileFromCache(Tiles[iTile], AWin, foundInCache);
+      if (not foundInCache) and (not PaintOnly) and IsValidTile(AWin, Tiles[iTile]) then
       begin
-        DrawTileFromCache(Tiles[iTile], AWin);
-      end
-      else
-      // Avoid tiling artefacts when a tile does not exist (lowest zoom) or
-      // is not valid
-      begin
-        previewdrawn := False;
-        py := AWin.Y {%H-}+ Y * TileSize.CY;
-        px := AWin.X {%H-}+ X * TileSize.CX;
-        if FDrawPreviewTiles then
-        begin
-          if IsValidTile(AWin, Tiles[iTile]) then  // Invalid tiles probably will not be found in the cache
-          begin
-            tile := Tiles[iTile];
-            if Cache.GetPreviewFromCache(AWin.MapProvider, tile, R) then
-            begin
-              Cache.GetFromCache(AWin.MapProvider, tile, previewImg);
-              tmpImg := nil;
-              try
-                if FCreateTempTileCopy then
-                begin
-                  // If a local copy is needed, create one
-                  tmpImg := Cache.CacheItemClass.Create(previewImg);
-                  // replace the pointer to the original image by the copy
-                  previewImg := tmpImg;
-                end;
-                if Assigned(FTileAfterGetFromCacheEvent) then
-                  FTileAfterGetFromCacheEvent(AWin.MapProvider,tile,previewImg);
-                DrawStretchedTile(Tiles[iTile], px, py, previewImg, R);
-              finally
-                // free the copy if
-                if Assigned(tmpImg) then
-                  tmpImg.Free;
-              end;
-
-              previewDrawn := true;
-            end;
-          end;
-        end;
-        if not previewDrawn then
-          DrawTile(Tiles[iTile], px, py, nil);  // Draw blank tile if preview cannot be generated
-
-        if not paintOnly and IsValidTile(AWin, Tiles[iTile]) then
-        begin
-          AddJob;
-          inc(iTile);
-        end;
+        AddJob;
+        inc(iTile);
       end;
     end;
   SetLength(Tiles, iTile);
 end;
 
+// moved to TMapView
+{
 procedure TMapViewerEngine.RegisterProviders;
 var
   HERE1, HERE2: String;
@@ -1247,6 +1215,7 @@ begin
   {$I mvengine_mapreg.inc}
   MapWin.MapProvider := Nil; // Undo the OSM Mapnik default selection
 end;
+}
 
 function TMapViewerEngine.ScreenRectToRealArea(ARect: TRect): TRealArea;
 begin
@@ -1327,7 +1296,7 @@ begin
     exit;
   if not DoCenterMoving(ACenter) then
     exit;
-  Mapwin.Center := aCenter;
+  Mapwin.Center := ACenter;
   CalculateWin(MapWin);
   if Assigned(OnCenterMove) then
     OnCenterMove(Self);
@@ -1365,16 +1334,38 @@ var
 begin
   Provider := MapProviderByName(AValue);
   if not ((aValue = '') or Assigned(Provider)) then
-    raise Exception.Create('Unknow Provider: ' + aValue);
+    raise Exception.CreateFmt(mvRS_UnknownProvider, [aValue]);
   if Assigned(MapWin.MapProvider) and (MapWin.MapProvider.Name = AValue) then Exit;
   MapWin.MapProvider := Provider;
   if Assigned(Provider) then
   begin
+    case FTileSize of
+      mtsAuto:
+        UseAutoTiles;
+      mts256:
+        UseNormalTiles;
+      mts512:
+        UseRetinaTiles(false);
+      mts512IfAvail:
+        UseRetinaTiles(true);
+    end;
     PrepareCache(Provider);
     ConstraintZoom(MapWin);
     CalculateWin(MapWin);
     Redraw(MapWin);
   end;
+end;
+
+// Deprecated in Sep 2025
+procedure TMapViewerEngine.GetMapProviders(AList: TStrings);
+begin
+  MapProvidersToSortedStrings(AList);
+end;
+
+// Deprecated in Sept 2025
+function TMapViewerEngine.MapProviderByName(AName: String): TMapProvider;
+begin
+  Result := mvMapProvider.MapProviderByName(AName);
 end;
 
 procedure TMapViewerEngine.SetSize(aWidth, aHeight: integer);
@@ -1387,6 +1378,21 @@ begin
   Redraw(MapWin);
   if Assigned(OnChange) then
     OnChange(Self);
+end;
+
+procedure TMapViewerEngine.SetTileSize(AValue: TMapTileSize);
+begin
+  FTileSize := AValue;
+  case FTileSize of
+    mtsAuto:
+      UseAutoTiles;
+    mts256:
+      UseNormalTiles;
+    mts512:
+      UseRetinaTiles(false);
+    mts512IfAvail:
+      UseRetinaTiles(true);
+  end;
 end;
 
 procedure TMapViewerEngine.SetUseThreads(AValue: Boolean);
@@ -1428,6 +1434,21 @@ begin
     OnChange(Self);
 end;
 
+function TMapViewerEngine.CalcVisibleArea(AZoom: Integer;
+  AZoomToCursor: Boolean): TRealArea;
+var
+  tmpWin: TMapWindow;
+begin
+  tmpWin := MapWin;
+  tmpWin.Zoom := AZoom;
+  ConstraintZoom(tmpWin);
+  CalculateWin(tmpWin);
+  if AZoomToCursor then
+    AdjustZoomCenter(tmpWin);
+  Result.TopLeft := MapPixelsToDegrees(tmpWin, Point(0, 0));
+  Result.BottomRight := MapPixelsToDegrees(tmpWin, Point(Width, Height));
+end;
+
 procedure TMapViewerEngine.TileDownloaded(Data: PtrInt);
 var
   EnvTile: TEnvTile;
@@ -1441,69 +1462,162 @@ begin
   end;
 end;
 
-procedure TMapViewerEngine.EraseBackground(const R: TRect);
+procedure TMapViewerEngine.UseAutoTiles;
 begin
-  if Assigned(FOnEraseBackground) then
-      FOnEraseBackground(R);
+  if (MapWin.MapProvider <> nil) and (MapWin.MapProvider.HasRetinaTiles) and
+     (FPixelsPerInch >= PPI_FOR_RETINA_TILES)
+  then
+    UseRetinaTiles(true)
+  else
+    UseNormalTiles;
 end;
 
-procedure TMapViewerEngine.DrawTileFromCache(constref ATile: TTileId; constref
-  AWin: TMapWindow);
+procedure TMapViewerEngine.UseNormalTiles;
 var
-  img, tmpImg: TPictureCacheItem;
-  X, Y: integer;
-  worldWidth : Integer;
-  numTiles : Integer;
-  baseX : Integer;
+  i: Integer;
+  prov: TMapProvider;
+  oldTileSize: TSize;
 begin
-  if IsCurrentWin(AWin)then
+  oldTileSize := mvTypes.TileSize;
+  for i := 0 to MapProviderCount-1 do
   begin
-     Cache.GetFromCache(AWin.MapProvider, ATile, img);
-     tmpImg := Nil;
-     try
-       // if a local copy is needed, create one
-       if FCreateTempTileCopy then
-       begin
-         tmpImg := Cache.CacheItemClass.Create(img);
-         img := tmpImg; // Replace the pointer to the cached image by the copy
-       end;
-       if Assigned(FTileAfterGetFromCacheEvent) then
-         FTileAfterGetFromCacheEvent(AWin.MapProvider,ATile,img);
-       Y := AWin.Y + ATile.Y * TileSize.CY; // begin of Y
-       if Cyclic then
-       begin
-         baseX := AWin.X + ATile.X * TileSize.CX; // begin of X
-         numTiles := 1 shl AWin.Zoom;
-         worldWidth := numTiles * TileSize.CX;
-         // From the center to the left (western) hemisphere
-         X := baseX;
-         while (X + TileSize.CX >= 0) do
-         begin
-           DrawTile(ATile, X, Y, img);
-           X := X - worldWidth;
-         end;
-         // From the center to the right (eastern) hemisphere
-         X := baseX + worldWidth;
-         while ((X - TileSize.CX) <= AWin.Width) do
-         begin
-           DrawTile(ATile, X, Y, img);
-           X := X + worldWidth;
-         end;
-       end else
-       begin
-         X := AWin.X + ATile.X * TileSize.CX; // begin of X
-         DrawTile(ATile, X, Y, img);
-       end;
-     finally
-       if Assigned(tmpImg) then
-         tmpImg.Free;
-     end;
+    prov := MapProviderByIndex(i);
+    prov.RequestRetinaTiles := false;
+  end;
+
+  mvTypes.TileSize := NORMAL_TILE_SIZE;
+
+  if (oldTileSize.CX <> mvTypes.TileSize.CX) or (oldTileSize.CY <> mvTypes.TileSize.CY) then
+  begin
+    CalculateWin(MapWin);
+    ClearCache;
+    if Assigned(FOnTileSizeChange) then
+      FOnTileSizeChange(Self, mvTypes.TileSize);
   end;
 end;
 
+procedure TMapViewerEngine.UseRetinaTiles(OnlyIfAvailable: Boolean);
+var
+  i: Integer;
+  prov: TMapProvider;
+  oldTileSize: TSize;
+begin
+  oldTileSize := mvTypes.TileSize;
+  for i := 0 to MapProviderCount-1 do
+  begin
+    prov := MapProviderByIndex(i);
+    prov.RequestRetinaTiles := true;
+  end;
+
+  if OnlyIfAvailable then
+  begin
+    if (MapWin.MapProvider <> nil) and MapWin.MapProvider.HasRetinaTiles then
+      mvTypes.TileSize := RETINA_TILE_SIZE
+    else
+      mvTypes.TileSize := NORMAL_TILE_SIZE;
+  end else
+    mvTypes.TileSize := RETINA_TILE_SIZE;
+
+  if (oldTileSize.CX <> mvTypes.TileSize.CX) or (oldTileSize.CY <> mvTypes.TileSize.CY) then
+  begin
+    CalculateWin(MapWin);
+    ClearCache;
+    if Assigned(FOnTileSizeChange) then
+      FOnTileSizeChange(Self, mvTypes.TileSize);
+  end;
+end;
+
+procedure TMapViewerEngine.EraseBackground(const R: TRect);
+begin
+  if Assigned(FOnEraseBackground) then
+    FOnEraseBackground(R);
+end;
+
+procedure TMapViewerEngine.DrawTileFromCache(constref ATile: TTileID;
+  constref AWin: TMapWindow; out FoundInCache: Boolean);
+var
+  img: TPictureCacheItem;
+  X, Y: Integer;
+  worldWidth: Integer;
+  numTiles: Integer;
+  baseX: Integer;
+  tile: TTileID;
+  R: TRect;
+  stretchedDraw: Boolean = false;  // normal or stretched image
+
+  // Draws the given tile, either directly from the image (Stretched=false) or
+  // stretched (Stretched=true). Img=nil indicates a "missing" tile which
+  // is painted as a uniformly colored rectangle.
+  procedure DrawTheTile(ATileID: TTileID; X, Y: Integer; AImg: TPictureCacheItem;
+    Stretched: Boolean);
+  begin
+    if Stretched then
+      DrawStretchedTile(ATileID, X, Y, AImg, R)
+    else
+      DrawTile(ATileID, X, Y, AImg);
+  end;
+
+begin
+  if not IsCurrentWin(AWin) then
+    exit;
+
+  // When no cache image can be found (img = nil) we will have to draw a "missing tile"
+  img := nil;
+  FoundInCache := false;
+
+  if Cache.InCache(AWin.MapProvider, ATile) then
+  begin
+    // Image is found in cache: Load it into "img". It can be drawn directly.
+    Cache.GetFromCache(AWin.MapProvider, ATile, img);
+    FoundInCache := true;
+    stretchedDraw := false;
+  end else
+  if FDrawPreviewTiles then
+  begin
+    // Image is not found in cache, but there is another one which can be
+    // scaled to fit. Find the cache parameters for this image.
+    tile := ATile;
+    if Cache.GetPreviewFromCache(AWin.MapProvider, tile, R) then
+    begin
+      // Load cache image into "img". It must be stretch-drawn.
+      Cache.GetFromCache(AWin.MapProvider, tile, img);
+      stretchedDraw := true;
+    end;
+  end;
+
+  X := AWin.X + ATile.X * mvTypes.TileSize.CX; // begin of X
+  Y := AWin.Y + ATile.Y * mvTypes.TileSize.CY; // begin of Y
+
+  if Cyclic then
+  begin
+    baseX := X;
+    numTiles := 1 shl AWin.Zoom;
+    worldWidth := numTiles * mvTypes.TileSize.CX;
+
+    // Center, plus western hemisphere (left)
+    X := baseX;
+    while (X + mvTypes.TileSize.CX >= 0) do
+    begin
+      DrawTheTile(ATile, X, Y, img, stretchedDraw);
+      X := X - worldWidth;
+    end;
+
+    // From the center to the right (eastern) hemisphere
+    X := baseX + worldWidth;
+    while (X <= AWin.Width) do
+    begin
+      DrawTheTile(ATile, X, Y, img, stretchedDraw);
+      X := X + worldWidth;
+    end;
+  end
+  else
+    DrawTheTile(ATile, X, Y, img, stretchedDraw);
+end;
+
+// deprecated in Sept 2025
 function TMapViewerEngine.ValidProvider(const AProvider: String): Boolean;
 begin
-  Result := lstProvider.IndexOf(AProvider) > -1;
+  Result := MapProviderRegistered(AProvider);
 end;
 
 function TMapViewerEngine.WorldScreenToLatLon(aPt: TPoint): TRealPoint;
@@ -1529,8 +1643,8 @@ begin
   try
     root := doc.CreateElement('map_providers');
     doc.AppendChild(root);
-    for i := 0 to lstProvider.Count - 1 do begin
-      prov := TMapProvider(lstProvider.Objects[i]);
+    for i := 0 to MapProviderCount - 1 do begin
+      prov := MapProviderByIndex(i);
       prov.ToXML(doc, root);
     end;
     WriteXMLFile(doc, AFileName);
@@ -1563,6 +1677,11 @@ begin
   until (tmpWin.Zoom = 2);
   MapWin := tmpWin;
   Redraw(MapWin);
+
+  if Assigned(OnZoomChange) then
+    OnZoomChange(Self);
+  if Assigned(OnChange) then
+    OnChange(Self);
 end;
 
 procedure TMapViewerEngine.CopyMapWindowFrom(AEngine: TMapViewerEngine);

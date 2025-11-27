@@ -49,7 +49,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, Graphics, Math, Contnrs, ClipBrd,
-  mvPluginCommon, mvPlugins, mvMapViewer, mvTypes, mvGeoMath, mvDrawingEngine;
+  mvPluginCommon, mvPlugins, mvMapViewer, mvStrConsts, mvTypes, mvGeoMath, mvDrawingEngine;
 
 const
   DefaultSegmentLength = 10;  // 10 pixels for one line segment on screen
@@ -1049,7 +1049,7 @@ begin
 end;
 
 initialization
-  RegisterPluginClass(TGreatCirclePainterPlugin, 'Great Circle Painter');
+  RegisterPluginClass(TGreatCirclePainterPlugin, @mvRS_GreatCirclePlugin);
 
 end.
 

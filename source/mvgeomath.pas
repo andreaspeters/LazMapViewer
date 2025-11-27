@@ -5,7 +5,7 @@ unit mvGeoMath;
 interface
 
 uses
-  Classes, SysUtils, Math;
+  Classes, SysUtils, Math, LazUTF8, mvStrConsts;
 
 const
   EARTH_EQUATORIAL_RADIUS = 6378137;
@@ -44,12 +44,17 @@ function DMSToDeg(Deg, Min: Integer; Sec: Double): Double;
 function GPSToDMS(Angle: Double): string;
 function GPSToDMS(Angle: Double; AFormatSettings: TFormatSettings): string;
 
+function IsHemisphereAbbrev(Str: String; N:String = ''; E:String = ''; S:String = ''; W:String = ''): Boolean;
+function IsNegHemisphereAbbrev(Str: String; S:String = ''; W:String = ''): Boolean;
+
 function LatToStr(ALatitude: Double; DMS: Boolean): String;
 function LatToStr(ALatitude: Double; DMS: Boolean; AFormatSettings: TFormatSettings): String;
 function LonToStr(ALongitude: Double; DMS: Boolean): String;
 function LonToStr(ALongitude: Double; DMS: Boolean; AFormatSettings: TFormatSettings): String;
-function TryStrToGps(const AValue: String; out ADeg: Double): Boolean;
-function TryStrDMSToDeg(const AValue: String; out ADeg: Double): Boolean;
+function TryStrToGps(const AValue: String; out ADeg: Double;
+    N:String = ''; E:String = ''; S:String = ''; W:String = ''): Boolean;
+function TryStrDMSToDeg(const AValue: String; out ADeg: Double;
+    N:String = ''; E:String = ''; S:String = ''; W:String = ''): Boolean;
 
 procedure SplitGps(AValue: Double; out ADegs, AMins, ASecs: Double);
 
@@ -384,7 +389,6 @@ end;
 function DMSToDeg(Deg, Min: Integer; Sec: Double): Double;
 var
   isNeg: Boolean;
-  sgn: Integer;
 begin
   isNeg := Deg < 0;
   Result := abs(Deg) + Min/60.0 + Sec/3600.0;
@@ -437,6 +441,29 @@ begin
   Result := Format('%.0f° %.0f'' %.*f"', [deg, min, DMS_Decimals, sec], AFormatSettings);
 end;
 
+function IsHemisphereAbbrev(Str: String; N:String=''; E:String=''; S:String=''; W:String=''): Boolean;
+begin
+  Str := UTF8Lowercase(Str);
+  if N = '' then N := mvRS_NorthAbbrev;
+  if E = '' then E := mvRS_EastAbbrev;
+  if S = '' then S := mvRS_SouthAbbrev;
+  if W = '' then W := mvRS_WestAbbrev;
+  Result := (Str = UTF8Uppercase(N)) or (Str = UTF8Uppercase(E)) or
+            (Str = UTF8Uppercase(E)) or (Str = UTF8Uppercase(W));
+  if not Result then
+    Result := (Str = 'N') or (Str = 'S') or (Str = 'E') or (Str = 'W');
+end;
+
+function IsNegHemisphereAbbrev(Str: String; S: String = ''; W: String = ''): Boolean;
+begin
+  Str := UTF8UpperCase(Str);
+  if S = '' then S := mvRS_SouthAbbrev;
+  if W = '' then W := mvRS_WestAbbrev;
+  Result := (Str = UTF8UpperCase(S)) or (Str = UTF8UpperCase(W));
+  if not Result then
+    Result := (Str = 'S') or (Str = 'W');
+end;
+
 function LatToStr(ALatitude: Double; DMS: Boolean): String;
 begin
   Result := LatToStr(ALatitude, DMS, DefaultFormatSettings);
@@ -449,10 +476,10 @@ begin
   else
     Result := Format('%.6f°',[abs(ALatitude)], AFormatSettings);
   if ALatitude > 0 then
-    Result := Result + ' N'
+    Result := Result + ' ' + mvRS_NorthAbbrev
   else
   if ALatitude < 0 then
-    Result := Result + ' S';
+    Result := Result + ' ' + mvRS_SouthAbbrev;
 end;
 
 function LonToStr(ALongitude: Double; DMS: Boolean): String;
@@ -467,9 +494,9 @@ begin
   else
     Result := Format('%.6f°', [abs(ALongitude)], AFormatSettings);
   if ALongitude > 0 then
-    Result := Result + ' E'
+    Result := Result + ' ' + mvRS_EastAbbrev
   else if ALongitude < 0 then
-    Result := Result + ' W';
+    Result := Result + ' ' + mvRS_WestAbbrev;
 end;
 
 { Combines up to three parts of a GPS coordinate string (degrees, minutes, seconds)
@@ -484,18 +511,22 @@ end;
   ignored. This means that an input string 50°30" results in the output value 50.5
   although the second part is marked as seconds, not minutes!
 
-  Hemisphere suffixes ('N', 'S', 'E', 'W') are supported at the end of the input string.
+  Hemisphere suffixes (localized versions of 'N', 'S', 'E', 'W', or other strings)
+  are supported at the end of the input string. (Resource strings are not used
+  directly because it makes testing more difficult.)
 }
-function TryStrToGps(const AValue: String; out ADeg: Double): Boolean;
+function TryStrToGps(const AValue: String; out ADeg: Double;
+  N:String = ''; E:String = ''; S:String = ''; W:String = ''): Boolean;
 const
   NUMERIC_CHARS = ['0'..'9', '.', ',', '-', '+'];
 var
   mins, secs: Double;
   i, j, len: Integer;
-  n: Integer;
-  s: String = '';
+  m: Integer;
+  str: String = '';
   res: Integer;
   sgn: Double;
+  sgnStr: String;
 begin
   Result := false;
 
@@ -506,11 +537,24 @@ begin
   if AValue = '' then
     exit;
 
+  // Get the hemisphere indicator. A bit more complex because it can be a UTF8 codepoint...
+  sgnStr := '';
   len := Length(AValue);
   i := len;
-  while (i >= 1) and (AValue[i] = ' ') do dec(i);
+  while (i >= 1) do begin
+    if AValue[i] in ['0'..'9', '"', ''''] then break;
+    if (AValue[i-1] = #$c2) and (AValue[i] = #$b0) then break; // '°'
+    if AValue[i] <> ' ' then
+      sgnStr := AValue[i] + sgnStr;
+    dec(i);
+  end;
+  if N = '' then N := mvRS_NorthAbbrev;
+  if E = '' then E := mvRS_EastAbbrev;
+  if S = '' then S := mvRS_SouthAbbrev;
+  if W = '' then W := mvRS_WestAbbrev;
   sgn := 1.0;
-  if (AValue[i] in ['S', 's', 'W', 'w']) then sgn := -1;
+  if (sgnStr <> '') and IsNegHemisphereAbbrev(sgnStr, S,W) then
+    sgn := -1;
 
   // skip leading non-numeric characters
   i := 1;
@@ -518,18 +562,18 @@ begin
     inc(i);
 
   // extract first value: degrees
-  SetLength(s, len);
+  SetLength(str, len);
   j := 1;
-  n := 0;
+  m := 0;
   while (i <= len) and (AValue[i] in NUMERIC_CHARS) do begin
-    if AValue[i] = ',' then s[j] := '.' else s[j] := AValue[i];
+    if AValue[i] = ',' then str[j] := '.' else str[j] := AValue[i];
     inc(i);
     inc(j);
-    inc(n);
+    inc(m);
   end;
-  if n > 0 then begin
-    SetLength(s, n);
-    val(s, ADeg, res);
+  if m > 0 then begin
+    SetLength(str, m);
+    val(str, ADeg, res);
     if res <> 0 then
       exit;
   end;
@@ -539,18 +583,18 @@ begin
     inc(i);
 
   // extract second value: minutes
-  SetLength(s, len);
+  SetLength(str, len);
   j := 1;
-  n := 0;
+  m := 0;
   while (i <= len) and (AValue[i] in NUMERIC_CHARS) do begin
-    if AValue[i] = ',' then s[j] := '.' else s[j] := AValue[i];
+    if AValue[i] = ',' then str[j] := '.' else str[j] := AValue[i];
     inc(i);
     inc(j);
-    inc(n);
+    inc(m);
   end;
-  if n > 0 then begin
-    SetLength(s, n);
-    val(s, mins, res);
+  if m > 0 then begin
+    SetLength(str, m);
+    val(str, mins, res);
     if (res <> 0) or (mins < 0) then
       exit;
   end;
@@ -560,18 +604,18 @@ begin
     inc(i);
 
   // extract third value: seconds
-  SetLength(s, len);
+  SetLength(str, len);
   j := 1;
-  n := 0;
+  m := 0;
   while (i <= len) and (AValue[i] in NUMERIC_CHARS) do begin
-    if AValue[i] = ',' then s[j] := '.' else s[j] := AValue[i];
+    if AValue[i] = ',' then str[j] := '.' else str[j] := AValue[i];
     inc(i);
     inc(j);
-    inc(n);
+    inc(m);
   end;
-  if n > 0 then begin
-    SetLength(s, n);
-    val(s, secs, res);
+  if m > 0 then begin
+    SetLength(str, m);
+    val(str, secs, res);
     if (res <> 0) or (secs < 0) then
       exit;
   end;
@@ -609,13 +653,15 @@ end;
       32.30642°N 122.61458°W
       +32.30642 -122.61458
 }
-function TryStrDMSToDeg(const AValue: String; out ADeg: Double): Boolean;
+function TryStrDMSToDeg(const AValue: String; out ADeg: Double;
+  N:String = ''; E:String = ''; S:String = ''; W:String = ''): Boolean;
 const
   NUMERIC_CHARS = ['0'..'9', '.', ',', '-', '+'];
   WS_CHARS = [' '];
 var
-  I, Len, N: Integer;
-  S: String;
+  I, Len, m: Integer;
+  Str: String;
+  part: String;
   D, Minutes, Seconds: Double;
   R: Word;
   Last, Neg: Boolean;
@@ -651,10 +697,10 @@ begin
   I := 1;
 
   // Degrees
-  S := NextNum;
-  if S = '' then
+  Str := NextNum;
+  if Str = '' then
     Exit;
-  Val(S, ADeg, R);
+  Val(Str, ADeg, R);
   if R > 0 then
     Exit;
 
@@ -671,15 +717,15 @@ begin
   Minutes := 0.0;
   Seconds := 0.0;
 
-  N := 1;
-  while not (EOL or Last) and (N < 3) do
+  m := 1;
+  while not (EOL or Last) and (m < 3) do
   begin
-    S := NextNum;
-    if S = '' then
+    Str := NextNum;
+    if Str = '' then
       Break
     else
     begin
-      Val(S, D, R);
+      Val(Str, D, R);
       // Invalid part or negative one
       if (R > 0) or (D < 0.0) then
         Exit;
@@ -699,12 +745,12 @@ begin
               Inc(I); // Eat the "
             end;
           otherwise
-            if N = 1
+            if m = 1
               then Minutes := D
               else Seconds := D;
         end;
     end;
-    Inc(N);
+    Inc(m);
   end;
 
   // Merge parts
@@ -712,18 +758,30 @@ begin
 
   // Check for N-S and E-W designators
   SkipWS;
-  if not (EOL or Neg) and (AValue[I] in ['S', 's', 'W', 'w', 'N', 'n', 'E', 'e']) then
-  begin
-    if AValue[I] in ['S', 's', 'W', 'w']
-      then ADeg := -1 * ADeg;
+  part := '';
+  repeat
+    part := part + AValue[I];
     Inc(I);
+  until EOL or (AValue[I] = ' ');
+  if N = '' then N := mvRS_NorthAbbrev;
+  if E = '' then E := mvRS_EastAbbrev;
+  if S = '' then S := mvRS_SouthAbbrev;
+  if W = '' then W := mvRS_WestAbbrev;
+  if IsNegHemisphereAbbrev(part, S, W) then
+    ADeg := -ADeg;
+  {
+  if not (EOL or Neg) and IsHemisphereAbbrev(part) then
+  begin
+    if IsNegHemisphereAbbrev(part) then
+      ADeg := -ADeg;
+//    Inc(I);
   end;
+  }
   SkipWS;
 
   // It must be entirely consumed
   Result := EOL;
 end;
-
 
 end.
 

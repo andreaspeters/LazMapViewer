@@ -6,9 +6,9 @@ object MainForm: TMainForm
   Caption = 'Great Circle Plugin Demo'
   ClientHeight = 493
   ClientWidth = 872
+  LCLVersion = '4.99.0.0'
   OnActivate = FormActivate
   OnCreate = FormCreate
-  LCLVersion = '3.6.0.0'
   object ParamsPanel: TPanel
     Left = 8
     Height = 454
@@ -82,8 +82,8 @@ object MainForm: TMainForm
       Height = 25
       Top = 58
       Width = 108
-      OnChange = tbSegmentLengthChange
       Position = 0
+      OnChange = tbSegmentLengthChange
       Anchors = [akTop, akLeft, akRight]
       BorderSpacing.Left = 8
       BorderSpacing.Top = 8
@@ -195,8 +195,8 @@ object MainForm: TMainForm
         'Mark Center'
         'Mark Destination'
       )
-      OnItemClick = cgOptionsItemClick
       TabOrder = 3
+      OnItemClick = cgOptionsItemClick
       Data = {
         03000000020202
       }
@@ -244,9 +244,9 @@ object MainForm: TMainForm
         BorderSpacing.Bottom = 6
         MaxValue = 10
         MinValue = 1
-        OnChange = seOrthodromePenWidthChange
         TabOrder = 0
         Value = 3
+        OnChange = seOrthodromePenWidthChange
       end
       object clbOrthodromePenColor: TColorButton
         AnchorSideLeft.Control = seOrthodromePenWidth
@@ -309,9 +309,9 @@ object MainForm: TMainForm
         BorderSpacing.Bottom = 6
         MaxValue = 10
         MinValue = 1
-        OnChange = seGreatCirclePenWidthChange
         TabOrder = 0
         Value = 1
+        OnChange = seGreatCirclePenWidthChange
       end
       object clbGreatCirclePenColor: TColorButton
         AnchorSideLeft.Control = seGreatCirclePenWidth
@@ -411,8 +411,10 @@ object MainForm: TMainForm
       Layers = <>
       Font.Color = clBlack
       MapProvider = 'OpenStreetMap Standard'
+      ParentFont = False
       PluginManager = MvPluginManager
       POIImages = ImageList
+      TabOrder = 0
     end
     object lblInfo: TLabel
       Left = 6

@@ -21,10 +21,22 @@ const
   PALETTE_PAGE = 'MapViewer';
   DEFAULT_POI_TEXT_WIDTH = 300;
 
+  NORMAL_TILE_SIZE: TSize = (CX:256; CY:256);
+  RETINA_TILE_SIZE: TSize = (CX:512; CY:512);
+
+  PPI_FOR_RETINA_TILES = 144; // 150% of normal resolution (96 ppi)
+
 var
   TileSize: TSize = (CX:256; CY:256);
 
-Type
+type
+  TMapTileSize = (
+    mtsAuto,       // Tiles normally are 256x256, but 512x512 on high-dpi screens (ppi >= 144)
+    mts256,        // Tiles are always 256x256 (downscaled from 512x512 if 256x256 is not available)
+    mts512,        // Tiles are always 512x512 (upscaled from 256x256 if 512x512 is not available)
+    mts512IfAvail  // Tiles are 512x512 if available, otherwise 256x256
+  );
+
   EMapViewerException = class(Exception);
   EMapViewerLatLonException = class(EMapViewerException);
 
@@ -48,6 +60,7 @@ Type
       procedure InitXY(ALon, ALat: Double);
       procedure InitLatLon(ALat, ALon: Double);
       function InRange: Boolean;
+      function Equal(P: TRealPoint): Boolean;
       property LonRad: Extended read GetLonRad write SetLonRad;
       property LatRad: Extended read GetLatRad write SetLatRad;
   end;
@@ -78,8 +91,23 @@ Type
     Z: integer;
   end;
 
+  TMvExtendedClick = (ecCaption, ecImage);
+  TMvExtendedClicks = set of TMvExtendedClick;
+
   TTextPositionHor = (tphLeft, tphCenter, tphRight);
   TTextPositionVert = (tpvAbove, tpvCenter, tpvBelow);
+
+  TMvPointType = (
+    ptGPSPointOfInterest, ptGPSTrackPoint, ptGPSAreaPoint,
+    ptMapPointOfInterest, ptMapTrackPoint, ptMapAreaPoint
+  );
+  TMvPointTypes = set of TMvPointType;
+
+const
+  ptAll = [
+    ptGPSPointOfInterest, ptGPSTrackPoint, ptGPSAreaPoint,
+    ptMapPointOfInterest, ptMapTrackPoint, ptMapAreaPoint
+  ];
 
 function RealPoint(Lat, Lon: Double): TRealPoint;
 
@@ -307,6 +335,11 @@ begin
   Result := Math.InRange(Lat, -90.0, +90.0) and Math.InRange(Lon, -180.0, +180.0);
 end;
 
+function TRealPoint.Equal(P: TRealPoint): Boolean;
+begin
+  Result := (Lon = P.Lon) and (Lat = P.Lat);
+end;
+
 function TRealPoint.GetLonRad: Extended;
 begin
   Result := DegToRad(Self.Lon);
@@ -329,8 +362,8 @@ end;
 
 function RealPoint(Lat, Lon: Double): TRealPoint;
 begin
-  Result.Lon := Lon;
   Result.Lat := Lat;
+  Result.Lon := Lon;
 end;
 
 

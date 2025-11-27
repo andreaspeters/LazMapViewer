@@ -1,3 +1,42 @@
+{-------------------------------------------------------------------------------
+                             mvPluginCommon.pas
+
+License: modified LGPL with linking exception (like RTL, FCL and LCL)
+
+See the file COPYING.modifiedLGPL.txt, included in the Lazarus distribution,
+for details about the license.
+
+See also: https://wiki.lazarus.freepascal.org/FPC_modified_LGPL
+--------------------------------------------------------------------------------
+
+This unit provides a common infra-structure for all plugins:
+
+- TMvCustomPlugin
+    the ancestor of all plugins. Provides virtual methods which hook into the
+    MapView's main events and can be overridden by descendant plugins
+
+- TMvPlugin
+    A descendant of TMvCustomPlugin publishing some properties
+
+- TMvDrawPlugin
+    A TMvPlugin-descendant dedicated to drawing purposes. It provides Pen,
+    Font, BackgroundColor and BackgroundOpacity properties to be used.
+
+- TMvMarkerPlugin
+    Another TMvPlugin-descandent, now dedicated to cooperation with
+    TGPSPoints and TMapPoints ("markers") added to a MapView.
+
+- TMvMultiMapsPlugin
+    Descending from TMvCustomPlugin, specialized to handle multiple mapviews.
+
+- TMvMultiMapsDrawPlugin
+    Combines properties of TMvMultiMapsPlugin and TMvDrawPlugin
+
+- TMvPluginManager
+    A descendant of TMvCustomPluginManager to cooperate between plugins an
+    mapview.
+-------------------------------------------------------------------------------}
+
 unit mvPluginCommon;
 
 {$mode objfpc}{$H+}
@@ -7,8 +46,8 @@ interface
 uses
   Classes, SysUtils, StrUtils, Contnrs, Math, LazLoggerBase,
   Graphics, Controls, Dialogs,
-  mvMapViewer, mvTypes, mvGpsObj, mvClassRegistration, mvDrawingEngine,
-  mvMapProvider, mvCache;
+  mvStrConsts, mvMapViewer, mvTypes, mvGpsObj, mvClassRegistration,
+  mvDrawingEngine;
 
 type
   TMvCustomPlugin = class;
@@ -67,9 +106,6 @@ type
       APoint: TGPSPoint; var Handled: Boolean); virtual;
     procedure DrawMissingTile(AMapView: TMapView; ADrawingEngine: TMvCustomDrawingEngine;
       ATileID: TTileID; ARect: TRect; var Handled: Boolean); virtual;
-    procedure TileAfterGetFromCache(AMapView: TMapView; ATileLayer: TGPSTileLayerBase;
-      AMapProvider: TMapProvider; ATileID: TTileID; ATileImg: TPictureCacheItem;
-      var Handled: Boolean); virtual;
     procedure GPSItemsModified(AMapView: TMapView; ModifiedList: TGPSObjectList;
       ActualObjs: TGPSObjList; Adding: Boolean; var Handled: Boolean); virtual;
     procedure MouseDown(AMapView: TMapView; Button: TMouseButton; Shift: TShiftState;
@@ -107,6 +143,7 @@ type
     property MapView;
   end;
 
+
   { TMvDrawPlugin - common ancestor of all plugins drawing something in the map }
 
   TMvDrawPlugin = class(TMvPlugin)
@@ -135,7 +172,30 @@ type
     destructor Destroy; override;
     procedure Assign(ASource: TPersistent); override;
   end;
-  
+
+
+  { TMvMarkerPlugin - common ancestor of all plugins interacting with markers }
+
+  TMvMarkerPlugin = class(TMvPlugin)
+  private
+    const
+      DEFAULT_TOLERANCE = 5;
+      DEFAULT_MARKER_POINT_TYPES = ptAll;
+      DEFAULT_MARKER_EXTENDED_CLICKS = [];
+  private
+    FExtendedClicks: TMvExtendedClicks;
+    FPointTypes: TMvPointTypes;
+    FTolerance: Integer;
+  protected
+    function FindNearestMarker(AMapView: TMapView; X, Y: Integer): TGpsPoint; virtual;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property ExtendedClicks: TMvExtendedClicks read FExtendedClicks write FExtendedClicks default DEFAULT_MARKER_EXTENDED_CLICKS;
+    property PointTypes: TMvPointTypes read FPointTypes write FPointTypes default DEFAULT_MARKER_POINT_TYPES;
+    property Tolerance: Integer read FTolerance write FTolerance default DEFAULT_TOLERANCE;
+  end;
+
 
   { TMvMultiMapsPluginData }
 const
@@ -188,6 +248,7 @@ type
   published
     property Enabled;
   end;
+
 
   { TMvMultiMapsDrawPlugin }
 
@@ -282,8 +343,6 @@ type
       APoint: TGPSPoint): Boolean; override;
     function DrawMissingTile(AMapView: TMapView; ADrawingEngine: TMvCustomDrawingEngine;
       ATileID: TTileID; ARect: TRect): Boolean; override;
-    function TileAfterGetFromCache(AMapView: TMapView; ATileLayer: TGPSTileLayerBase;
-      AMapProvider: TMapProvider; ATileID: TTileID; ATileImg: TPictureCacheItem): Boolean; override;
     function GPSItemsModified(AMapView: TMapView; ModifiedList: TGPSObjectList;
       ActualObjs: TGPSObjList; Adding: Boolean): Boolean; override;
     function MouseDown(AMapView: TMapView; AButton: TMouseButton; AShift: TShiftState;
@@ -315,6 +374,7 @@ type
   end;
 
 procedure RegisterPluginClass(APluginClass: TMvCustomPluginClass; const ACaption: String);
+procedure RegisterPluginClass(APluginClass: TMvCustomPluginClass; ACaptionPtr: PStr);   // for resource strings
 
 var
   PluginClassRegistry: TMvClassRegistry = nil;
@@ -347,7 +407,7 @@ begin
   for i := 0 to Count - 1 do
     TMvIndexedComponent(Items[i]).ChangeNamePrefix(AOld, ANew, failed);
   if (failed <> '') then
-    ShowMessage(Format('Failed to rename components: %s', [failed]));
+    ShowMessage(Format(mvRS_FailedToRenameComponents, [failed]));
 end;
 
 
@@ -422,15 +482,6 @@ procedure TMvCustomPlugin.DrawMissingTile(AMapView: TMapView;
 begin
   Unused(AMapView, Handled);
   Unused(ADrawingEngine, ATileID, ARect);
-end;
-
-procedure TMvCustomPlugin.TileAfterGetFromCache(AMapView: TMapView;
-  ATileLayer: TGPSTileLayerBase; AMapProvider: TMapProvider; ATileID: TTileID;
-  ATileImg: TPictureCacheItem; var Handled: Boolean);
-begin
-  Unused(AMapView, Handled);
-  Unused(ATileLayer, AMapProvider);
-  Unused(ATileID, ATileImg);
 end;
 
 function TMvCustomPlugin.GetIndex: Integer;
@@ -620,7 +671,7 @@ end;
 
 function TMvDrawPlugin.IsOpacityStored: Boolean;
 begin
-  Result := FBackgroundOpacity <> DEFAULT_OPACITY;
+  Result := not SameValue(FBackgroundOpacity, DEFAULT_OPACITY, 1E-6);
 end;
 
 procedure TMvDrawPlugin.SetBackgroundColor(AValue: TColor);
@@ -666,6 +717,62 @@ begin
   Changed(Self);
 end;
 
+
+{ TMvMarkerPlugin }
+
+constructor TMvMarkerPlugin.Create(AOwner: TComponent);
+begin
+  inherited;
+  FExtendedClicks := DEFAULT_MARKER_EXTENDED_CLICKS;
+  FPointTypes := DEFAULT_MARKER_POINT_TYPES;
+  FTolerance := DEFAULT_TOLERANCE;
+end;
+
+function TMvMarkerPlugin.FindNearestMarker(AMapView: TMapView;
+  X, Y: Integer): TGpsPoint;
+var
+  gpsArray: TGPSObjArray;
+  P, rPt: TRealPoint;
+  i, iMin: Integer;
+  d, dMin: Double;
+begin
+  Result := nil;
+
+  if AMapView = nil then
+    exit;
+  if FPointTypes = [] then
+    exit;
+
+  // ExtendedClicks allow to click on the caption or image of the point.
+  // Only implemented for points-of-interest.
+  if (FExtendedClicks <> []) and (FPointTypes * [ptGpsPointOfInterest, ptMapPointOfInterest] <> []) then
+  begin
+    Result := AMapView.PointOfInterestClicked(X, Y, FPointTypes, FExtendedClicks, FTolerance);
+    if Result <> nil then
+      exit;
+  end;
+
+  gpsArray := AMapView.VisiblePointsAtScreenPt(X, Y, FTolerance, FPointTypes);
+  if Length(gpsArray) = 0 then
+    exit;
+
+  iMin := -1;
+  dMin := 1E308;
+  rPt := AMapView.ScreenToLatLon(Point(X, Y));
+  for i := 0 to High(gpsArray) do
+  begin
+    P := TGPSPoint(gpsArray[i]).RealPoint;
+    // Calculating distance as Euklidian distance, for simplicity. No need to calc sqrt.
+    d := sqr(P.Lon - rPt.Lon) + sqr(P.Lat - rPt.Lat);
+    if d <= dMin then
+    begin
+      dMin := d;
+      iMin := i;
+    end;
+  end;
+
+  Result := TGPSPoint(gpsArray[iMin]);
+end;
 
 { TMvMultiMapsPluginData }
 
@@ -948,7 +1055,7 @@ end;
 procedure TMvPluginList.CheckPlugin(AItem: Pointer);
 begin
   if not IsPlugin(AItem) then
-    raise EMvPluginException.Create('The PluginList can only store descendants of TMvCustomPlugin.');
+    raise EMvPluginException.Create(mvRS_PluginListCanOnlyStoreDescendantsOf);
 end;
 
 procedure TMvPluginList.Clear;
@@ -982,7 +1089,7 @@ end;
 
 procedure TMvPluginList.Insert(AIndex: Integer; AItem: Pointer);
 begin
-  raise EMvPluginException.Create('TMvPluginList.Insert not supported.');
+  raise EMvPluginException.Create(mvRS_PluginListInsertNotSupported);
 end;
 
 { Checks whether the stored item descends from TMvCustomPlugin. If the user
@@ -1035,7 +1142,7 @@ end;
 
 procedure TMvPluginManager.AddPlugin(APlugin: TMvCustomPlugin);
 begin
-  Assert(APlugin <> nil, 'Plugin argument must not be nil');
+  Assert(APlugin <> nil, mvRS_PluginArgumentNil);
   APlugin.PluginManager := self;
 end;
 
@@ -1158,23 +1265,6 @@ begin
     plugin := Items[i];
     if HandlePlugin(plugin, AMapView) then
       plugin.DrawMissingTile(AMapView, ADrawingEngine, ATileID, ARect, Result);
-  end;
-end;
-
-function TMvPluginManager.TileAfterGetFromCache(AMapView: TMapView;
-  ATileLayer: TGPSTileLayerBase; AMapProvider: TMapProvider; ATileID: TTileID;
-  ATileImg: TPictureCacheItem): Boolean;
-var
-  i: Integer;
-  plugin: TMvCustomPlugin;
-begin
-  Result := false;
-  for i := 0 to FPluginList.Count-1 do
-  begin
-    plugin := Items[i];
-    if HandlePlugin(plugin, AMapView) then
-      plugin.TileAfterGetFromCache(AMapView, ATileLayer,
-                                   AMapProvider, ATileID, ATileImg, Result);
   end;
 end;
 
@@ -1477,6 +1567,16 @@ begin
   if PluginClassRegistry.IndexOfClass(APluginClass) < 0 then
     PluginClassRegistry.Add(TMvClassRegistryItem.Create(APluginClass, ACaption));
 end;
+
+// This procedure is meant for captions in a resourcestring to provide the
+// translated caption after translation.
+procedure RegisterPluginClass(APluginClass: TMvCustomPluginClass; ACaptionPtr: PStr);
+begin
+  RegisterClass(APluginClass);
+  if PluginClassRegistry.IndexOfClass(APluginClass) < 0 then
+    PluginClassRegistry.Add(TMvClassRegistryItem.CreateRS(APluginClass, ACaptionPtr));
+end;
+
 
 initialization
   if PluginClassRegistry = nil then

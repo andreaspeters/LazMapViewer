@@ -207,7 +207,7 @@ begin
   try
     Sprite := TBitmap.Create;
     FSprites.GetBitmap(FBearingIndex, Sprite);
-    for P in APoint.View.CyclicPointsOf(APoint.ToScreen) do
+    for P in APoint.MapView.CyclicPointsOf(APoint.ToScreen) do
       ADrawer.DrawBitmap(P.X - FSprites.Width div 2, P.Y - FSprites.Height div 2,
         Sprite, True);
   finally

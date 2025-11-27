@@ -40,6 +40,7 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  MapView1.Active := true;
   rgCenterClick(nil);
   MapView1Change(nil);
 end;

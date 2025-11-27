@@ -1,4 +1,60 @@
-{ TMapGridPlugin - draws a grid of constant longitudes and constant latitudes}
+{-------------------------------------------------------------------------------
+                            mvGridPlugins.pas
+
+License: modified LGPL with linking exception (like RTL, FCL and LCL)
+
+See the file COPYING.modifiedLGPL.txt, included in the Lazarus distribution,
+for details about the license.
+
+See also: https://wiki.lazarus.freepascal.org/FPC_modified_LGPL
+--------------------------------------------------------------------------------
+
+TMapGridPlugin
+--------------
+
+The TMapGridPlugin draws a grid of lines at constant and equidistant latitudes
+and longitudes. The lines can be labeled at both sides by the longitude/latitude
+values.
+
+Properties
+----------
+
+BackgroundColor: TColor
+  Color of the (semi-transparent) label background
+
+BackgroundOpacity: Single
+  Determines the transparency of the label background
+  (0 = transparent, 1 = opaque)
+
+Font: TFont
+  Font to be used to draw the labels at the grid lines
+
+LabelDistacne: Integer
+  Distance of the labels from the map edges
+
+LabelPositions: TMvGridLabelPositions
+  a set of [glpLeft, glpTop, glpRight, glpBottom] indicating the map sides
+  at which the labels are drawn
+
+Increment: Double
+  Distance between the grid lines, in (fractional) degress
+  The same value Will be applied to both equal-longitude and equal-latitude lines
+  Note that the distance between equal-latitude lines will grow towards the
+  poles, due to the projection of the map.
+  The default value, 0, instructs the plugin to calculate the increment
+  automatically (determined by MaxDistance and MinDistance parameters).
+
+MaxDistance: Integer
+  The maximum distance between vertical grid lines in pixels limiting the
+  automatic calculation of the Increment parameter.
+
+MinDistance: Integer
+  The minimum distance between vertical grid lines in pixels limiting the
+  automatic calculation of the Increment parameter.
+
+Pen: TPen
+  Determines the color, width and style of the grid lines
+-------------------------------------------------------------------------------}
 
 unit mvMapGridPlugin;
 
@@ -9,7 +65,7 @@ interface
 uses
   Classes, SysUtils, Math,
   Graphics, Controls, LCLIntf, // LazLoggerBase,
-  mvMapViewer, mvDrawingEngine, mvPluginCommon,  mvGeoMath, mvTypes;
+  mvMapViewer, mvDrawingEngine, mvPluginCommon, mvStrConsts, mvGeoMath, mvTypes;
 
 type
   TMapGridPlugin = class;
@@ -431,16 +487,16 @@ begin
   case ACoordType of
     gctLatitude:
       if AValue > 0 then
-        Result := Result + ' N'
+        Result := Result + ' ' + mvRS_NorthAbbrev
       else if AValue < 0 then
-        Result := Result + ' S';
+        Result := Result + ' ' + mvRS_SouthAbbrev;
     gctLongitude:
       if (abs(AValue) <> 180) and (AValue <> 0) then
       begin
         if (AValue > 0) then
-          Result := Result + ' E'
+          Result := Result + ' ' + mvRS_EastAbbrev
         else
-          Result := Result + ' W';
+          Result := Result + ' ' + mvRS_WestAbbrev;
       end;
   end;
 end;
@@ -492,7 +548,7 @@ end;
 
 
 initialization
-  RegisterPluginClass(TMapGridPlugin, 'Map grid');
+  RegisterPluginClass(TMapGridPlugin, @mvRS_MapGridPlugin);
 
 end.
 

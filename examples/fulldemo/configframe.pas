@@ -7,8 +7,8 @@ interface
 uses
   Classes, SysUtils, IniFiles,
   Graphics, Forms, Controls, StdCtrls, Buttons, Dialogs, ExtCtrls,
-  ColorBox, ExtDlgs, Spin,
-  mvMapViewer, mvEngine, mvPluginCommon, mvMapGridPlugin, mvMapScalePlugin,
+  ColorBox, ExtDlgs, Spin, Types,
+  mvTypes, mvMapViewer, mvEngine, mvPluginCommon, mvMapGridPlugin, mvMapScalePlugin,
   globals;
 
 type
@@ -34,11 +34,15 @@ type
     cbUseThreads: TCheckBox;
     cbZoomToCursor: TCheckBox;
     clbBackColor: TColorButton;
+    cmbTileSize: TComboBox;
     edProxyHost: TEdit;
     edProxyPassword: TEdit;
     edProxyUserName: TEdit;
     FontDialog: TFontDialog;
     gbProxy: TGroupBox;
+    ImageList: TImageList;
+    infoTileSize: TLabel;
+    lblTileSize: TLabel;
     LblPOITextBgColor: TLabel;
     LblProviders: TLabel;
     lblProxyHost: TLabel;
@@ -69,6 +73,7 @@ type
     procedure cbZoomToCursorChange(Sender: TObject);
     procedure clbBackColorColorChanged(Sender: TObject);
     procedure cmbProvidersChange(Sender: TObject);
+    procedure cmbTileSizeChange(Sender: TObject);
     procedure rbNoProxyChange(Sender: TObject);
     procedure rgPOIModeClick(Sender: TObject);
     procedure rbProxyDataChange(Sender: TObject);
@@ -88,6 +93,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure UpdateTileSizeInfo(ATileSize: TSize);
 
     procedure ReadFromIni(ini: TCustomIniFile); virtual;
     procedure WriteToIni(ini: TCustomIniFile); virtual;
@@ -217,6 +223,11 @@ begin
   MapView.MapProvider := cmbProviders.Text;
 end;
 
+procedure TCfgFrame.cmbTileSizeChange(Sender: TObject);
+begin
+  MapView.TileSize := TMapTileSize(cmbTileSize.ItemIndex);
+end;
+
 procedure TCfgFrame.DoUpdateLayers;
 begin
   if Assigned(FUpdateLayersEvent) then
@@ -259,6 +270,7 @@ begin
   // we still must update the frame controls.
   MapView.GetMapProviders(cmbProviders.Items);
   cmbProviders.ItemIndex := cmbProviders.Items.IndexOf(MapView.MapProvider);
+  cmbTileSize.ItemIndex := ord(MapView.TileSize);
   clbBackColor.ButtonColor := MapView.InactiveColor;
 end;
 
@@ -344,6 +356,11 @@ begin
     lblProxyPassword.Enabled := rbProxyData.Checked;
     edProxyPassword.Enabled := rbProxyData.Checked;
   end;
+end;
+
+procedure TCfgFrame.UpdateTileSizeInfo(ATileSize: TSize);
+begin
+  infoTileSize.Caption := Format('%d x %d', [ATileSize.CX, ATileSize.CY]);
 end;
 
 procedure TCfgFrame.WriteToIni(ini: TCustomIniFile);

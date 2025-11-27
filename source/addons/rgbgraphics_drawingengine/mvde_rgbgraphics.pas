@@ -17,8 +17,8 @@ unit mvDE_RGBGraphics;
 interface
 
 uses
-  Classes, SysUtils, Types, Graphics,
-  mvTypes, mvDrawingEngine, mvCache,
+  Classes, SysUtils, Types, Graphics, LCLIntf,
+  mvStrConsts, mvTypes, mvDrawingEngine, mvCache,
   rgbGraphics, rgbTypes, rgbRoutines;
 
 type
@@ -33,7 +33,6 @@ type
     function GetImageObject: TObject; override;
     procedure StretchImageIfNeeded(var AImage: TRGB32Bitmap; ANewWidth, ANewHeight: Integer);
   public
-    constructor Create(ASource : TPictureCacheItem); override;
     constructor Create(AStream: TStream); override;
     destructor Destroy; override;
     property Image: TRGB32Bitmap read GetImage;
@@ -44,10 +43,10 @@ type
 
   TMvRGBGraphicsDrawingEngine = class(TMvCustomDrawingEngine)
   private
-    FBuffer: TRGB32Bitmap;
     FBrushStyle: TBrushStyle;
     FFontName: String;
     FFontColor: TColor;
+    FFontOrientation: Integer;
     FFontSize: Integer;
     FFontStyle: TFontStyles;
     FPenStyle: TPenStyle;
@@ -57,8 +56,8 @@ type
     FPenColor: TRGB32Pixel;
     FBrushColor: TRGB32Pixel;
     FLineProc: TLineDrawProc;
-    procedure SettleLineProc; inline;
   protected
+    FBuffer: TRGB32Bitmap;
     procedure LineDrawOpacity(X1, Y1, X2, Y2: Integer);
     procedure PixelDrawOpacity(X, Y: Integer);
     procedure DrawBitmapOT(X, Y: Integer; ABitmap: TCustomBitmap; AOpaqueColor, ATransparentColor: TColor);
@@ -66,19 +65,22 @@ type
     function GetBrushStyle: TBrushStyle; override;
     function GetFontColor: TColor; override;
     function GetFontName: String; override;
+    function GetFontOrientation: Single; override;
     function GetFontSize: Integer; override;
     function GetFontStyle: TFontStyles; override;
+    function GetOpacity: Single; override;
     function GetPenColor: TColor; override;
     function GetPenStyle: TPenStyle; override;
     function GetPenWidth: Integer; override;
-    function GetOpacity: Single; override;
-    procedure SetOpacity(AValue: Single); override;
+    procedure PrepareLineProc; inline;
     procedure SetBrushColor(AValue: TColor); override;
     procedure SetBrushStyle(AValue: TBrushStyle); override;
     procedure SetFontColor(AValue: TColor); override;
     procedure SetFontName(AValue: String); override;
+    procedure SetFontOrientation(AValue: Single); override;
     procedure SetFontSize(AValue: Integer); override;
     procedure SetFontStyle(AValue: TFontStyles); override;
+    procedure SetOpacity(AValue: Single); override;
     procedure SetPenColor(AValue: TColor); override;
     procedure SetPenStyle(AValue: TPenStyle); override;
     procedure SetPenWidth(AValue: Integer); override;
@@ -103,7 +105,7 @@ type
     procedure PaintToCanvas(ACanvas: TCanvas; Origin: TPoint); override;
     procedure Rectangle(X1, Y1, X2, Y2: Integer); override;
     function SaveToImage(AClass: TRasterImageClass): TRasterImage; override;
-    function TextExtent(const AText: String): TSize; override;
+    function TextExtent(const AText: String; ARotated: Boolean = false): TSize; override;
     procedure TextOut(X, Y: Integer; const AText: String); override;
     function GetCacheItemClass: TPictureCacheItemClass; override;
   end;
@@ -258,16 +260,6 @@ end;
 
 { TRGB32BitmapCacheItem }
 
-function TRGB32BitmapCacheItem.GetImage: TRGB32Bitmap;
-begin
-  Result := FImage;
-end;
-
-function TRGB32BitmapCacheItem.GetImageObject: TObject;
-begin
-  Result := FImage;
-end;
-
 constructor TRGB32BitmapCacheItem.Create(AStream: TStream);
 var
   Reader: TFPCustomImageReader;
@@ -275,7 +267,7 @@ begin
   FImage := Nil;
   Reader := GetImageReader(AStream);
   if not Assigned(Reader) then
-    raise EInvalidGraphic.Create('PNG/JPG expected.');
+    raise EInvalidGraphic.Create(mvRS_PngJpegExpected);
   try
     try
       FImage := TRGB32Bitmap.CreateFromStream(AStream, Reader);
@@ -296,6 +288,16 @@ begin
   inherited Destroy;
 end;
 
+function TRGB32BitmapCacheItem.GetImage: TRGB32Bitmap;
+begin
+  Result := FImage;
+end;
+
+function TRGB32BitmapCacheItem.GetImageObject: TObject;
+begin
+  Result := FImage;
+end;
+
 { Scales the image to the new size if the original size is different.
   This is needed to have all tiles at the same size. }
 procedure TRGB32BitmapCacheItem.StretchImageIfNeeded(var AImage: TRGB32Bitmap;
@@ -306,15 +308,13 @@ begin
       AImage.StretchTrunc(ANewWidth, ANewHeight);
 end;
 
-constructor TRGB32BitmapCacheItem.Create(ASource: TPictureCacheItem);
-var
-  src : TRGB32BitmapCacheItem absolute ASource;
+
+{ TMvRGBGraphicsDrawingEngine }
+
+constructor TMvRGBGraphicsDrawingEngine.Create(AOwner: TComponent);
 begin
-  inherited;
-  if not (ASource is TRGB32BitmapCacheItem) then
-    raise EMvCacheException.Create('Passed APictureCacheItem is not of type TRGB32BitmapCacheItem!');
-  FImage := TRGB32Bitmap.Create(src.FImage.Width, src.FImage.Height);
-  FImage.Assign(src.FImage);
+  inherited Create(AOwner);
+  Opacity := 1.0;
 end;
 
 destructor TMvRGBGraphicsDrawingEngine.Destroy;
@@ -345,9 +345,9 @@ begin
   end;
 end;
 
-procedure TMvRGBGraphicsDrawingEngine.SettleLineProc;
+procedure TMvRGBGraphicsDrawingEngine.PrepareLineProc;
 begin
-  if 255 = FOpacityByte
+  if FOpacityByte = 255
     then FLineProc := @FBuffer.Canvas.Line
     else FLineProc := @LineDrawOpacity;
 end;
@@ -515,6 +515,11 @@ begin
   Result := FFontName;
 end;
 
+function TMvRGBGraphicsDrawingEngine.GetFontOrientation: Single;
+begin
+  Result := FFontOrientation * 0.1;
+end;
+
 function TMvRGBGraphicsDrawingEngine.GetFontSize: Integer;
 begin
   Result := FFontSize;
@@ -559,7 +564,7 @@ var
   MY, MX: Double;
   PWX, PWY: Integer;
 begin
-  SettleLineProc;
+  PrepareLineProc;
   if FPenWidth = 1 then
     FLineProc(X1, Y1, X2, Y2)
   else
@@ -591,7 +596,7 @@ var
 begin
   if BrushStyle <> bsClear then
   begin
-    SettleLineProc;
+    PrepareLineProc;
     OldColor := PenColor;
     OldWidth := PenWidth;
     OldStyle := PenStyle;
@@ -647,8 +652,13 @@ end;
 
 procedure TMvRGBGraphicsDrawingEngine.SetBrushColor(AValue: TColor);
 begin
-  FBuffer.Canvas.FillColor := AValue;
-  FBrushColor := ColorToRGB32PixelInline(AValue);
+  FBuffer.Canvas.FillColor := ColorToRGB(AValue);
+  FBrushColor := ColorToRGB32PixelInline(ColorToRGB(AValue));
+  if AValue = clNone then
+    FBrushStyle := bsClear
+  else
+    FBrushStyle := bsSolid;
+  SetDrawMode;
 end;
 
 procedure TMvRGBGraphicsDrawingEngine.SetBrushStyle(AValue: TBrushStyle);
@@ -660,12 +670,17 @@ end;
 
 procedure TMvRGBGraphicsDrawingEngine.SetFontColor(AValue: TColor);
 begin
-  FFontColor := AValue;
+  FFontColor := ColorToRGB(AValue);
 end;
 
 procedure TMvRGBGraphicsDrawingEngine.SetFontName(AValue: String);
 begin
   FFontName := AValue;
+end;
+
+procedure TMvRGBGraphicsDrawingEngine.SetFontOrientation(AValue: Single);
+begin
+  FFontOrientation := round(AValue * 10.0);
 end;
 
 procedure TMvRGBGraphicsDrawingEngine.SetFontSize(AValue: Integer);
@@ -680,8 +695,8 @@ end;
 
 procedure TMvRGBGraphicsDrawingEngine.SetPenColor(AValue: TColor);
 begin
-  FBuffer.Canvas.OutlineColor := AValue;
-  FPenColor := ColorToRGB32PixelInline(AValue);
+  FBuffer.Canvas.OutlineColor := ColorToRGB(AValue);
+  FPenColor := ColorToRGB32PixelInline(ColorToRGB(AValue));
 end;
 
 procedure TMvRGBGraphicsDrawingEngine.SetPenWidth(AValue: Integer);
@@ -703,23 +718,22 @@ begin
     FBuffer.Canvas.DrawMode := dmOutline;
 end;
 
-constructor TMvRGBGraphicsDrawingEngine.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  Opacity := 1.0;
-end;
-
-function TMvRGBGraphicsDrawingEngine.TextExtent(const AText: String): TSize;
+function TMvRGBGraphicsDrawingEngine.TextExtent(const AText: String;
+  ARotated: Boolean = false): TSize;
 var
   bmp: TBitmap;
+  pts: TPointArray;
 begin
   bmp := TBitmap.Create;
   try
-    bmp.SetSize(1, 1);
     bmp.Canvas.Font.Name := FFontName;
     bmp.Canvas.Font.Size := FFontSize;
     bmp.Canvas.Font.Style := FFontStyle;
-    Result := bmp.Canvas.TextExtent(AText);
+    bmp.Canvas.Font.Orientation := FFontOrientation;
+    if (FFontOrientation = 0) or not ARotated then
+      Result := bmp.Canvas.TextExtent(AText)
+    else
+      Result := MeasureTextSize(bmp.Canvas, AText, pts);
   finally
     bmp.Free;
   end;
@@ -727,35 +741,79 @@ end;
 
 procedure TMvRGBGraphicsDrawingEngine.TextOut(X, Y: Integer; const AText: String);
 var
+  i: Integer;
   bmp: TBitmap;
-  ex: TSize;
+  rotated: Boolean;
+  sz: TSize;
+  R: TRect;
+  maskClr: TColor;
+  corners: TPointArray = nil;
+  anchor: TPoint;
+  txtFlags: Integer = DT_CENTER + DT_WORDBREAK;
+  savedBrush: TMvBrush;
+  savedPen: TMvPen;
 begin
   if (AText = '') then
     exit;
+
   bmp := TBitmap.Create;
   try
-    bmp.PixelFormat := pf24Bit;    // Does not work with 32 bpp...
     bmp.Canvas.Font.Name := FFontName;
     bmp.Canvas.Font.Size := FFontSize;
     bmp.Canvas.Font.Style := FFontStyle;
     bmp.Canvas.Font.Color := FFontColor;
-    ex := bmp.Canvas.TextExtent(AText);
-    bmp.SetSize(ex.CX, ex.CY);
-    if GetBrushStyle <> bsClear then begin
-      bmp.Canvas.Brush.Color := GetBrushColor;
-      bmp.Canvas.FillRect(0, 0, bmp.Width, bmp.Height);
-      bmp.Canvas.TextOut(0, 0, AText);
-      DrawBitmap(X, Y, bmp, false);
+    bmp.Canvas.Font.Orientation := round(FontOrientation * 10.0);
+    rotated := FontOrientation <> 0;
+
+    // Measure the size of the (rotated) text rectangle
+    if rotated then begin
+      sz := MeasureTextSize(bmp.Canvas, AText, corners);
+      anchor := corners[0];
+      for i := Low(corners) to High(corners) do
+        corners[i] := corners[i] + Point(X, Y);
     end else
     begin
-      if FFontColor = clWhite then
-        bmp.Canvas.Brush.Color := clBlack
-      else
-        bmp.Canvas.Brush.Color := clWhite;
-      bmp.Canvas.FillRect(0, 0, bmp.Width, bmp.Height);
-      bmp.Canvas.TextOut(0, 0, AText);
-      DrawBitmapOT(X, Y, bmp, FFontColor, bmp.Canvas.Brush.Color);
+      R := Rect(0, 0, 10000, 10000);
+      DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, DT_CALCRECT + DT_WORDBREAK);
+      sz := TSize(R.BottomRight);
+      anchor := Point(0, 0);
     end;
+
+    // Set size of bitmap
+    bmp.SetSize(sz.CX, sz.CY);
+
+    // Mask transparent regions
+    if FFontColor = clWhite then
+      maskClr := clBlack
+    else
+      maskClr := clWhite;
+    bmp.Canvas.Brush.Color := maskClr;
+    bmp.Canvas.FillRect(0, 0, bmp.Width, bmp.Height);
+
+    // Draw background of opaque text
+    if GetBrushStyle <> bsClear then
+    begin
+      savedBrush := GetBrush;
+      savedPen := GetPen;
+      BrushStyle := bsSolid;
+      PenStyle := psClear;
+      if not rotated then
+        FillRect(X, Y, X + sz.CX, Y + sz.CY)
+      else
+        Polygon(corners);
+      SetBrush(savedBrush);
+      SetPen(savedPen);
+    end;
+
+    // Draw text
+    bmp.Canvas.Brush.Style := bsClear;
+    if rotated then
+      bmp.Canvas.TextOut(anchor.X, anchor.Y, AText)
+    else
+      DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, txtFlags);
+
+    // Draw the bitmap in the buffer making pixels with maskClr transparent.
+    DrawBitmapOT(X, Y, bmp, FFontColor, maskClr);
   finally
     bmp.Free;
   end;

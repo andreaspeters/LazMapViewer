@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, Buttons,
   ComCtrls, ActnList, Menus,
   PropEdits, IDEImagesIntf, ComponentEditors, CollectionPropEditForm,
-  mvMapViewer, mvGpsObj, mvGPX, mvTypes;
+  mvStrConsts, mvMapViewer, mvGpsObj, mvGPX, mvTypes;
 
 type
 
@@ -36,6 +36,7 @@ type
     procedure Modified;
     procedure LoadFromFile(AFileName: String; ALayer: TMapLayer; ZoomToBounds: Boolean);
     procedure SaveToFile(AFileName: String; ALayer: TMapLayer);
+    procedure SetStrings;
     procedure UpdateVisuals;
   public
     procedure UpdateButtons;
@@ -65,6 +66,7 @@ end;
 procedure TLayersPropertyEditForm.FormCreate(Sender: TObject);
 begin
   inherited;
+  SetStrings;
   LoadButton.ImageIndex := IDEImages.LoadImage('items_load');
   actSaveGPX.ImageIndex := IDEImages.LoadImage('items_save');
   UpdateVisuals;
@@ -129,7 +131,7 @@ begin
   with TOpenDialog.Create(Nil) do
     try
       DefaultExt := '.gpx';
-      Filter := 'GPX file|*.gpx|All files|*.*';
+      Filter := mvRS_GPXFileFilter;
       if Execute then
         LoadFromFile(FileName, L, Sender=actLoadAndZoom);
     finally
@@ -149,7 +151,7 @@ begin
   with TSaveDialog.Create(Nil) do
     try
       DefaultExt := '.gpx';
-      Filter := 'GPX file|*.gpx|All files|*.*';
+      Filter := mvRS_GPXFileFilter;
       Options := Options + [ofOverwritePrompt, ofEnableSizing];
       FileName := L.Caption;
       if Execute then
@@ -176,6 +178,14 @@ end;
 procedure TLayersPropertyEditForm.SaveToFile(AFileName: String; ALayer: TMapLayer);
 begin
   TGpxWriter.SaveToFile(AFileName, ALayer.ComboLayer);
+end;
+
+procedure TLayersPropertyEditForm.SetStrings;
+begin
+  LoadButton.Caption := mvRS_LoadGPX;
+  actLoadGPX.Caption := mvRS_Load;
+  actLoadAndZoom.Caption := mvRS_LoadAndZoom;
+  actSaveGPX.Caption := mvRS_SaveGPX;
 end;
 
 procedure TLayersPropertyEditForm.LoadFromFile(AFileName: String;

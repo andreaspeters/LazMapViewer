@@ -38,13 +38,16 @@ Type
     FEndX,FEndY : integer;
     FOnDrag: TDragEvent;
     FOnEndDrag: TDragEvent;
+    function GetEndPt: TPoint;
+    function GetOfsPt: TPoint;
+    function GetStartPt: TPoint;
 
     procedure SetDest(X,Y : Integer);
     procedure SetLnkObj(AValue: TObject);
     procedure SetOnDrag(AValue: TDragEvent);
     procedure SetOnEndDrag(AValue: TDragEvent);
 
-    Procedure DostartDrag(X,Y: Integer);
+    Procedure DoStartDrag(X,Y: Integer);
     Procedure DoDrag(X,Y: integer);
     Procedure DoEndDrag(X,Y: integer);
     Function HasMoved(X,Y: integer) : Boolean;
@@ -58,12 +61,15 @@ Type
       property OnDrag: TDragEvent read FOnDrag write SetOnDrag;
       property OnEndDrag: TDragEvent read FOnEndDrag write SetOnEndDrag;
 
+      property OfsPt: TPoint read GetOfsPt;
       property OfsX: integer read FOfsX;
       property OfsY: integer read FOfsY;
+      property StartPt: TPoint read GetStartPt;
       property StartX: integer read FStartX;
       property StartY: integer read FStartY;
       property MouseX: Integer read FMouseX;
       property MouseY: integer read FMouseY;
+      property EndPt: TPoint read GetEndPt;
       property EndX: integer read FEndX;
       property EndY: integer read FEndY;
       Property LnkObj: TObject Read FLnkObj write SetLnkObj;
@@ -130,6 +136,21 @@ begin
   FInDrag := False;
 end;
 
+function TDragObj.GetEndPt: TPoint;
+begin
+  Result := Point(FEndX, FEndY);
+end;
+
+function TDragObj.GetOfsPt: TPoint;
+begin
+  Result := Point(FOfsX, FOfsY);
+end;
+
+function TDragObj.GetStartPt: TPoint;
+begin
+  Result := Point(FStartX, FStartY);
+end;
+
 function TDragObj.HasMoved(X, Y: integer): Boolean;
 begin
   Result := (X <> FStartX) or (Y <> FStartY);
@@ -139,10 +160,10 @@ procedure TDragObj.AbortDrag;
 begin
   if FInDrag then
   Begin
-    DoDrag(FstartX,FStartY);
+    DoDrag(FStartX, FStartY);
     FInDrag := False;
     FMouseDown := False;
-    FDragSrc :=nil;
+    FDragSrc := nil;
     FStartSrc := nil;
     FreeAndNil(FLnkObj);
   end;

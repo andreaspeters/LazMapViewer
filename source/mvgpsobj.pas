@@ -13,6 +13,7 @@ unit mvGpsObj;
 
 {$mode objfpc}{$H+}
 {$WARN 6058 off : Call to subroutine "$1" marked as inline is not inlined}
+
 interface
 
 uses
@@ -95,6 +96,7 @@ type
     FRealPt: TRealPoint;
     FElevation: Double;
     FDateTime: TDateTime;
+    FTextDistance: Integer;
     function GetLat: Double;
     function GetLon: Double;
     procedure SetLat(AValue: Double);
@@ -102,14 +104,15 @@ type
   public
     constructor Create(ALon,ALat: double; AElevation: double = NO_ELEVATION;
       ADateTime: TDateTime = NO_DATE);
-    class function CreateFrom(aPt: TRealPoint; AElevation: Double = NO_ELEVATION;
-      ADateTime: TDateTime = NO_DATE): TGPSPoint;
+    constructor CreateFrom(aPt: TRealPoint; AElevation: Double = NO_ELEVATION;
+      ADateTime: TDateTime = NO_DATE);
 
     procedure Assign(AObj: TGPSObj); override;
     procedure GetArea(out Area: TRealArea);override;
     procedure Draw({%H-}AView: TObject; {%H-}Area: TRealArea); override;
     function HasElevation: boolean;
     function HasDateTime: Boolean;
+    procedure Init; virtual;
     function DistanceInKmFrom(OtherPt: TGPSPoint; UseElevation: boolean=true): double;
     procedure MoveTo(ALon, ALat: Double; AElevation: double = NO_ELE;
       ADateTime: TDateTime = NO_DATE);
@@ -119,6 +122,7 @@ type
     property Elevation: double read FElevation write FElevation;
     property DateTime: TDateTime read FDateTime write FDateTime;
     property RealPoint: TRealPoint read FRealPt;
+    property TextDistance: Integer read FTextDistance write FTextDistance default 5;
   end;
 
   TGPSPointList = specialize TFPGObjectList<TGPSPoint>;
@@ -132,10 +136,13 @@ type
     FImageIndex: Integer;
     FTextPositionHor: TTextPositionHor;
     FTextPositionVert: TTextPositionVert;
+    FCaptionRect: TRect;
+    FImageRect: TRect;
   public
-    constructor Create(ALon, ALat: Double; AElevation: Double = NO_ELEVATION;
-      ADateTime: TDateTime = NO_DATE);
     procedure Draw({%H-}AView: TObject; {%H-}Area: TRealArea); override;
+    procedure Init; override;
+    property CaptionRect: TRect read FCaptionRect write FCaptionRect;
+    property ImageRect: TRect read FImageRect write FImageRect;
     property ImageAnchorX: Integer read FImageAnchorX write FImageAnchorX default 50;  // Percentage!
     property ImageAnchorY: Integer read FImageAnchorY write FImageAnchorY default 100; // Percentage!
     property ImageIndex: Integer read FImageIndex write FImageIndex default -1;
@@ -230,6 +237,7 @@ type
     procedure GetArea(out Area: TRealArea); override;
     procedure Draw(AView: TObject; Area: TRealArea); override;
     function GetObjectsInArea(const Area: TRealArea; AClass: TGPSObjClass = nil): TGPSObjList;
+    function GetPointsInArea(const Area: TRealArea; APointTypes: TMvPointTypes): TGPSObjList;
     function GetIDsArea(const IDs: TIdArray; AIdOwner: integer): TRealArea; deprecated 'Use GetAreaOfIDs';
     function GetAreaOfIDs(const IDs: TIdArray; AIdOwner: Integer): TRealArea;
 
@@ -651,6 +659,54 @@ begin
   end;
 end;
 
+function TGPSObjectlist.GetPointsInArea(const Area: TRealArea;
+  APointTypes: TMvPointTypes): TGPSObjList;
+var
+  i, j: Integer;
+  itemArea: TRealArea;
+  gpsArea: TGPSArea;
+  gpsTrack: TGPSTrack;
+  obj: TGPSObj;
+begin
+  Result := TGPSObjList.Create(false);
+  Lock;
+  try
+    inc(FRefCount);
+    for i := 0 to Pred(Count) do
+    begin
+      obj := Items[i];
+      itemArea := obj.BoundingBox;
+      if Area.Intersects(itemArea) then
+      begin
+        if (ptGpsPointOfInterest in APointTypes) and (obj is TGPSPointOfInterest) then
+          Result.Add(obj);
+
+        if (ptGpsTrackPoint in APointTypes) and (obj is TGPSTrack) then
+        begin
+          gpsTrack := TGPSTrack(obj);
+          for j := 0 to Pred(gpsTrack.Points.Count) do
+            if Area.ContainsPoint(gpsTrack.Points[j].RealPoint) then
+              Result.Add(gpsTrack.Points[j]);
+        end;
+
+        if (ptGpsAreaPoint in APointTypes) and (obj is TGPSArea) then
+        begin
+          gpsArea := TGPSArea(obj);
+          for j := 0 to Pred(gpsArea.Points.Count) do
+            if Area.ContainsPoint(gpsArea.Points[j].RealPoint) then
+              Result.Add(gpsArea.Points[j]);
+        end;
+      end;
+    end;
+    if Result.Count > 0 then
+      Result.FRef := Self
+    else
+      Dec(FRefCount);
+  finally
+    Unlock;
+  end;
+end;
+
 constructor TGPSObjectList.Create;
 begin
   inherited;
@@ -1011,12 +1067,13 @@ constructor TGPSPoint.Create(ALon, ALat: double; AElevation: double;
 begin
   inherited Create;
   MoveTo(ALon, ALat, AElevation, ADateTime);
+  Init;
 end;
 
-class function TGPSPoint.CreateFrom(aPt: TRealPoint;
-  AElevation: Double = NO_ELEVATION; ADateTime: TDateTime = NO_DATE): TGPSPoint;
+constructor TGPSPoint.CreateFrom(aPt: TRealPoint;
+  AElevation: Double = NO_ELEVATION; ADateTime: TDateTime = NO_DATE);
 begin
-  Result := Create(aPt.Lon, aPt.Lat, AElevation, ADateTime);
+  Create(aPt.Lon, aPt.Lat, AElevation, ADateTime);
 end;
 
 procedure TGPSPoint.Assign(AObj: TGPSObj);
@@ -1028,6 +1085,11 @@ begin
     FElevation := TGPSPoint(AObj).Elevation;
     FDateTime := TGPSPoint(AObj).DateTime;
   end;
+end;
+
+procedure TGPSPoint.Init;
+begin
+  FTextDistance := 5;
 end;
 
 function TGPSPoint.GetLat: Double;
@@ -1133,8 +1195,14 @@ end;
 
 { TGPSPointOfInterest }
 
-constructor TGPSPointOfInterest.Create(ALon, ALat: Double;
-  AElevation: Double = NO_ELEVATION; ADateTime: TDateTime = NO_DATE);
+procedure TGPSPointOfInterest.Draw(AView: TObject; Area: TRealArea);
+begin
+  if Assigned(FOnDrawObj)
+    then FOnDrawObj(AView, Self, Area)
+    else TMapView(AView).DrawPointOfInterest(Area, Self);
+end;
+
+procedure TGPSPointOfInterest.Init; // called by the constructor
 begin
   inherited;
   FImageAnchorX := 50;    // These are percentages!
@@ -1143,14 +1211,6 @@ begin
   FTextPositionHor := tphCenter;
   FTextPositionVert := tpvBelow;
 end;
-
-procedure TGPSPointOfInterest.Draw(AView: TObject; Area: TRealArea);
-begin
-  if Assigned(FOnDrawObj)
-    then FOnDrawObj(AView, Self, Area)
-    else TMapView(AView).DrawPointOfInterest(Area, Self);
-end;
-
 
 end.
 

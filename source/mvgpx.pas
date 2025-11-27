@@ -17,7 +17,7 @@ interface
 
 uses
   Classes, SysUtils, laz2_DOM, laz2_XMLRead, laz2_XMLWrite, DateUtils,
-  mvTypes, mvGpsObj;
+  mvStrConsts, mvTypes, mvGpsObj;
 
 type
 
@@ -76,7 +76,7 @@ var
 
   procedure RaiseErr;
   begin
-    raise EConvertError.Create('Bad ISO8601 format.');
+    raise EConvertError.Create(mvRS_InvalidISO8601Format);
   end;
 
 begin
@@ -123,7 +123,7 @@ begin
       Tzd := 0.0 // TZD is zero
 
     // Check TZD
-    else if ((L - I) in [2,4,5]) and (S[I] in ['+', '-']) then
+    else if (ShortInt(L - I) in [2,4,5]) and (S[I] in ['+', '-']) then
     begin
       if S[I] = '-' then Sg := -1 else Sg := 1;
       case (L - I) of

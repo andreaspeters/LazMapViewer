@@ -1,0 +1,400 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: mvstrconsts.mvrs_addplugin
+msgid "Add"
+msgstr ""
+
+#: mvstrconsts.mvrs_area
+msgid "area"
+msgstr ""
+
+#: mvstrconsts.mvrs_areamode
+msgid "Area mode|Click to add point, CTRL-click to add last point."
+msgstr ""
+
+#: mvstrconsts.mvrs_areaselectionneedsatleast3points
+msgid "For an area, the selection must contain at least 3 points."
+msgstr ""
+
+#: mvstrconsts.mvrs_areaselectionplugin
+msgid "Area selection"
+msgstr ""
+
+#: mvstrconsts.mvrs_areyousureyouwanttodelete
+#, object-pascal-format
+msgid "Are you sure you want to delete \"%s\"?"
+msgstr ""
+
+#: mvstrconsts.mvrs_cancel
+msgid "&Cancel"
+msgstr ""
+
+#: mvstrconsts.mvrs_caption
+msgid "Caption:"
+msgstr ""
+
+#: mvstrconsts.mvrs_centermarkerplugin
+msgid "Center marker"
+msgstr ""
+
+#: mvstrconsts.mvrs_clicktoaddnew
+#, object-pascal-format
+msgid "Click on \"OK\" to add the new %s."
+msgstr ""
+
+#: mvstrconsts.mvrs_clicktodiscardit
+msgid "Click on \"Cancel\" to discard it."
+msgstr ""
+
+#: mvstrconsts.mvrs_confirmdeletion
+msgid "Confirm deletion"
+msgstr ""
+
+#: mvstrconsts.mvrs_datetime
+msgid "Date/time:"
+msgstr ""
+
+#: mvstrconsts.mvrs_deletecurrentpoint
+msgid "Delete current point"
+msgstr ""
+
+#: mvstrconsts.mvrs_deleteplugin
+msgid "Delete"
+msgstr ""
+
+#: mvstrconsts.mvrs_deletepoint
+msgid "Delete point"
+msgstr ""
+
+#: mvstrconsts.mvrs_deletepoint_hint
+msgid "Delete currently selected point"
+msgstr ""
+
+#: mvstrconsts.mvrs_differentprojectiontypefrombasemap
+#, object-pascal-format
+msgid "%s has different projection type (%s) from the base map (%s)."
+msgstr ""
+
+#: mvstrconsts.mvrs_doesnthaveeditorenabledinoptions
+#, object-pascal-format
+msgid "%s doesn't have mvoEditorEnabled set in Options."
+msgstr ""
+
+#: mvstrconsts.mvrs_doyoureallywanttounselectthepoints
+msgid "Do you really want to unselect the point(s)?"
+msgstr ""
+
+#: mvstrconsts.mvrs_doyouwanttoenabletheeditor
+msgid "Do you want to enable the editor?"
+msgstr ""
+
+#: mvstrconsts.mvrs_draggablemarkerplugin
+msgid "Draggable marker"
+msgstr ""
+
+#: mvstrconsts.mvrs_eastabbrev
+msgid "E"
+msgstr ""
+
+#: mvstrconsts.mvrs_editmapviewpoints
+msgid "Edit MapView Points..."
+msgstr ""
+
+#: mvstrconsts.mvrs_editplugin
+msgid "Edit plugin"
+msgstr ""
+
+#: mvstrconsts.mvrs_elevation
+msgid "Elevation:"
+msgstr ""
+
+#: mvstrconsts.mvrs_enableandcontinue
+msgid "&Enable and Continue"
+msgstr ""
+
+#: mvstrconsts.mvrs_failedtorenamecomponents
+#, object-pascal-format
+msgid "Failed to rename components: %s"
+msgstr ""
+
+#: mvstrconsts.mvrs_gpxfilefilter
+msgid "GPX file|*.gpx|All files|*.*"
+msgstr ""
+
+#: mvstrconsts.mvrs_greatcircleplugin
+msgid "Great circle painter"
+msgstr ""
+
+#: mvstrconsts.mvrs_image
+msgid "Image:"
+msgstr ""
+
+#: mvstrconsts.mvrs_insertnewpoint
+msgctxt "mvstrconsts.mvrs_insertnewpoint"
+msgid "Insert new point"
+msgstr ""
+
+#: mvstrconsts.mvrs_insertnewpoint_hint
+msgctxt "mvstrconsts.mvrs_insertnewpoint_hint"
+msgid "Insert new point"
+msgstr ""
+
+#: mvstrconsts.mvrs_invalidiso8601format
+msgid "Invalid ISO8601 format."
+msgstr ""
+
+#: mvstrconsts.mvrs_invalidvalue
+msgid "Invalid value."
+msgstr ""
+
+#: mvstrconsts.mvrs_invisible
+msgid "invisible"
+msgstr ""
+
+#: mvstrconsts.mvrs_items
+#, object-pascal-format
+msgid "%d items"
+msgstr ""
+
+#: mvstrconsts.mvrs_latitude
+msgid "Latitude:"
+msgstr ""
+
+#: mvstrconsts.mvrs_latitudesonlyallowedbetweenplusminus90deg
+msgid "Latitudes allowed only between +/-90°."
+msgstr ""
+
+#: mvstrconsts.mvrs_layer
+msgid "Layer:"
+msgstr ""
+
+#: mvstrconsts.mvrs_layereditor
+msgid "Layer Editor..."
+msgstr ""
+
+#: mvstrconsts.mvrs_legalnoticeplugin
+msgid "Legal notice"
+msgstr ""
+
+#: mvstrconsts.mvrs_linkedmapsplugin
+msgid "Linked maps"
+msgstr ""
+
+#: mvstrconsts.mvrs_load
+msgid "Load..."
+msgstr ""
+
+#: mvstrconsts.mvrs_loadandzoom
+msgid "Load and zoom"
+msgstr ""
+
+#: mvstrconsts.mvrs_loadgpx
+msgid "Load GPX"
+msgstr ""
+
+#: mvstrconsts.mvrs_longitude
+msgid "Longitude:"
+msgstr ""
+
+#: mvstrconsts.mvrs_longitudesonlyallowedbetweenplusminus180deg
+msgid "Longitudes allowed only between +/-180°."
+msgstr ""
+
+#: mvstrconsts.mvrs_mapgridplugin
+msgid "Map grid"
+msgstr ""
+
+#: mvstrconsts.mvrs_mapprovidernotregistered
+#, object-pascal-format
+msgid "Map provider \"%s\" is not registered."
+msgstr ""
+
+#: mvstrconsts.mvrs_mapprovidernotselected
+msgid "Map provider is not selected."
+msgstr ""
+
+#: mvstrconsts.mvrs_mapscaleplugin
+msgid "Map scale"
+msgstr ""
+
+#: mvstrconsts.mvrs_mapviewnotfound
+msgid "MapView not found"
+msgstr ""
+
+#: mvstrconsts.mvrs_markerclickplugin
+msgid "Marker click"
+msgstr ""
+
+#: mvstrconsts.mvrs_markereditorplugin
+msgid "Marker editor"
+msgstr ""
+
+#: mvstrconsts.mvrs_markerhintplugin
+msgid "Marker hint"
+msgstr ""
+
+#: mvstrconsts.mvrs_more
+#, object-pascal-format
+msgid "%d more"
+msgstr ""
+
+#: mvstrconsts.mvrs_newarea
+msgid "New area"
+msgstr ""
+
+#: mvstrconsts.mvrs_newarea_hint
+msgid "New area (closed polygon)"
+msgstr ""
+
+#: mvstrconsts.mvrs_newpoi
+msgid "New POI"
+msgstr ""
+
+#: mvstrconsts.mvrs_newpoi_hint
+msgid "New point of interest"
+msgstr ""
+
+#: mvstrconsts.mvrs_newtrack
+msgid "New track"
+msgstr ""
+
+#: mvstrconsts.mvrs_newtrack_hint
+msgid "New track (non-closed polygon)"
+msgstr ""
+
+#: mvstrconsts.mvrs_nomapprovidersinfile
+#, object-pascal-format
+msgid "No map providers in file \"%s\"."
+msgstr ""
+
+#: mvstrconsts.mvrs_none
+msgid "(none)"
+msgstr ""
+
+#: mvstrconsts.mvrs_northabbrev
+msgid "N"
+msgstr ""
+
+#: mvstrconsts.mvrs_notselected
+msgid "(not selected)"
+msgstr ""
+
+#: mvstrconsts.mvrs_oneitem
+msgid "1 item"
+msgstr ""
+
+#: mvstrconsts.mvrs_pluginargumentnil
+msgctxt "mvstrconsts.mvrs_pluginargumentnil"
+msgid "Plugin argument must not be nil"
+msgstr ""
+
+#: mvstrconsts.mvrs_plugindown
+msgid "Down"
+msgstr ""
+
+#: mvstrconsts.mvrs_pluginlistcanonlystoredescendantsof
+msgid "The PluginList can only store descendants of TMvCustomPlugin."
+msgstr ""
+
+#: mvstrconsts.mvrs_pluginlistinsertnotsupported
+msgid "TMvPluginList.Insert not supported."
+msgstr ""
+
+#: mvstrconsts.mvrs_pluginup
+msgid "Up"
+msgstr ""
+
+#: mvstrconsts.mvrs_pngjpegexpected
+msgid "PNG/JPG expected."
+msgstr ""
+
+#: mvstrconsts.mvrs_poimode
+msgid "POI mode|Click to add point."
+msgstr ""
+
+#: mvstrconsts.mvrs_savegpx
+msgid "Save GPX..."
+msgstr ""
+
+#: mvstrconsts.mvrs_select
+msgid "Select"
+msgstr ""
+
+#: mvstrconsts.mvrs_selectdragmode
+msgid "Select/drag mode|Click point to select. CTRL-click to add to selection."
+msgstr ""
+
+#: mvstrconsts.mvrs_selection
+msgid "Selection"
+msgstr ""
+
+#: mvstrconsts.mvrs_selecttool_hint
+msgid "Select tool"
+msgstr ""
+
+#: mvstrconsts.mvrs_southabbrev
+msgid "S"
+msgstr ""
+
+#: mvstrconsts.mvrs_spreadmarkerplugin
+msgid "Spread marker"
+msgstr ""
+
+#: mvstrconsts.mvrs_tileinfoplugin
+msgid "Tile info"
+msgstr ""
+
+#: mvstrconsts.mvrs_timeout
+msgid "Time-out"
+msgstr ""
+
+#: mvstrconsts.mvrs_track
+msgid "track"
+msgstr ""
+
+#: mvstrconsts.mvrs_trackmode
+msgid "Track mode|Click to add point, CTRL-click to add last point."
+msgstr ""
+
+#: mvstrconsts.mvrs_trackselectionneedsatleast2points
+msgid "For a track, the selection must contain at least 2 points."
+msgstr ""
+
+#: mvstrconsts.mvrs_unknownprovider
+#, object-pascal-format
+msgid "Unknown Provider: %s"
+msgstr ""
+
+#: mvstrconsts.mvrs_useopenstreetmapstandardinstead
+msgid "Use \"OpenStreetMap Standard\" instead."
+msgstr ""
+
+#: mvstrconsts.mvrs_userdefinedplugin
+msgid "User-defined"
+msgstr ""
+
+#: mvstrconsts.mvrs_varying
+msgid "(varying)"
+msgstr ""
+
+#: mvstrconsts.mvrs_westabbrev
+msgid "W"
+msgstr ""
+
+#: mvstrconsts.mvrs_zoomin
+msgid "Zoom In"
+msgstr ""
+
+#: mvstrconsts.mvrs_zoomin_hint
+msgid "Zoom in"
+msgstr ""
+
+#: mvstrconsts.mvrs_zoomout
+msgid "Zoom Out"
+msgstr ""
+
+#: mvstrconsts.mvrs_zoomout_hint
+msgid "Zoom out"
+msgstr ""
+

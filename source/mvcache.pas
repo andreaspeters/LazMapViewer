@@ -17,7 +17,7 @@ unit mvCache;
 interface
 
 uses
-  Classes, SysUtils, Contnrs, IntfGraphics, syncObjs,
+  Classes, SysUtils, Contnrs, IntfGraphics, syncObjs, FileUtil, LazFileUtils,
   mvMapProvider, mvTypes, FPImage;
 
 Type
@@ -30,10 +30,6 @@ Type
      function GetImageObject: TObject; virtual;
      class function GetImageReader({%H-}AStream: TStream): TFPCustomImageReader;
    public
-     {Create(ASource ...) must be only used by the descendants of this
-       class to create a copy of an existing item. The passed source must be
-       of the same type as the creation class!}
-     constructor Create(ASource : TPictureCacheItem); virtual;
      constructor Create({%H-}AStream: TStream); virtual;
      destructor Destroy; override;
    end;
@@ -63,6 +59,7 @@ Type
      procedure AddItem(const Item: TPictureCacheItem; const AIDString: String);
      procedure DeleteItem(const AItemIndex : Integer);
      function DiskCached(const aFileName: String): Boolean;
+     function GetFileName(MapProvider: TMapProvider; const TileId: TTileId): String;
      procedure LoadFromDisk(const aFileName: String; out Item: TPictureCacheItem);
      function MapProvider2FileName(MapProvider: TMapProvider): String;
    public
@@ -72,7 +69,7 @@ Type
      procedure CheckCacheSize;
      procedure CheckCacheSize(Sender: TObject); deprecated 'Use CheckCacheSize without parameters!';
      procedure ClearCache;
-     function GetFileName(MapProvider: TMapProvider; const TileId: TTileId): String;
+     procedure DeleteCacheFiles(const MapProvider: TMapProvider);
      procedure GetFromCache(const MapProvider: TMapProvider; const TileId: TTileId; out Item: TPictureCacheItem);
      function GetPreviewFromCache(const MapProvider: TMapProvider; var TileId: TTileId; out ARect: TRect): boolean;
      function InCache(const MapProvider: TMapProvider; const TileId: TTileId): Boolean;
@@ -139,11 +136,6 @@ begin
 end;
 
 { TPictureCacheItem }
-
-constructor TPictureCacheItem.Create(ASource: TPictureCacheItem);
-begin
-  inherited Create;
-end;
 
 constructor TPictureCacheItem.Create(AStream: TStream);
 begin
@@ -275,6 +267,25 @@ begin
   end;
 end;
 
+procedure TPictureCache.DeleteCacheFiles(const MapProvider: TMapProvider);
+var
+  prov: string;
+
+  procedure DoDeleteFiles(ACacheDir: String);
+  begin
+    if DeleteDirectory(ACacheDir, false) then
+      RemoveDirUTF8(ACacheDir);
+  end;
+
+begin
+  if MapProvider = nil then
+    exit;
+  prov := MapProvider2FileName(MapProvider);
+  DoDeleteFiles(FBasePath + prov);
+  if MapProvider.HasRetinaTiles then
+    DoDeleteFiles(FBasePath + prov + '-512');
+end;
+
 function TPictureCache.MapProvider2FileName(MapProvider: TMapProvider): String;
 var
   i: integer;
@@ -313,7 +324,7 @@ begin
   if DiskCached(aFileName) then
   begin
     FullFileName := BasePath + aFileName;
-    lStream := TFileStream.Create(FullFileName, fmOpenRead);
+    lStream := TFileStream.Create(FullFileName, fmOpenRead or fmShareDenyWrite);
     try
       try
         Item := FCacheItemClass.Create(lStream);
@@ -332,12 +343,17 @@ function TPictureCache.GetFileName(MapProvider: TMapProvider;
   const  TileId: TTileId): String;
 var
   prov: String;
+  retina: String = '';
 begin
   prov := MapProvider2FileName(MapProvider);
+  if MapProvider.RequestRetinaTiles and MapProvider.HasRetinaTiles then
+    retina := '-512';
+
   if FLAT_CACHE then
-    {%H-}Result := Format('%s_%d_%d_%d', [prov, TileId.X, TileId.Y, TileId.Z])
+    {%H-}Result := Format('%s%s_%d_%d_%d', [prov, retina, TileId.X, TileId.Y, TileId.Z])
   else
-    Result := SetDirSeparators(Format('%s/%d/%d_%d', [prov, TileID.Z, TileID.X, TileID.Y]));
+    // "provider/zoom/x/y" or "provider_512/zoom/x/y"
+    Result := SetDirSeparators(Format('%s%s/%d/%d/%d', [prov, retina, TileID.Z, TileID.X, TileID.Y]));
 end;
 
 { AddItem allows the insertion of an existing TPictureCacheItem.
@@ -350,7 +366,7 @@ var
 begin
   EnterLock;
   try
-    // First check is a Item with this ID is in the list
+    // First check if an item with this ID is in the list
     ndx := FCacheIDs.IndexOf(AIDString);
     if ndx >= 0 then
     begin  // Delete the Item
@@ -507,7 +523,7 @@ end;
   the rectangle coordinates to get an upscaled preview of the originally
   requested tile. The function returns true in this case.
   If the requested tile already is in the cache, or no containing tile is found
-  the function returns false indicating that not preview image must be
+  the function returns false indicating that no preview image must be
   generated. }
 function TPictureCache.GetPreviewFromCache(const MapProvider: TMapProvider;
   var TileId: TTileId; out ARect: TRect): boolean;

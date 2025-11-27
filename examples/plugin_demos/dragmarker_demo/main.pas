@@ -5,9 +5,9 @@ unit Main;
 interface
 
 uses
-  SysUtils, Classes, Math,
+  SysUtils, Classes,
   Graphics, Forms, Controls, StdCtrls, ExtCtrls,
-  mvDLEFpc, mvMapViewer, mvPluginCommon, mvPlugins, mvGPSObj;
+  mvMapViewer, mvPluginCommon, mvMarkerPlugins, mvGPSObj;
 
 type
 

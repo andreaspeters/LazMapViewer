@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils,
   Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  mvMapViewer, mvPluginCommon, mvPlugins, mvGPSObj, mvspreadmarker_plugin;
+  mvMapViewer, mvGPSObj, mvPluginCommon, mvPlugins,
+  mvMarkerPlugins, mvspreadmarker_plugin;
 
 type
 
@@ -73,7 +74,7 @@ begin
   AddTraditionalMarker(-58.3722400,-34.6084700,'Pirámide de Mayo, Buenos Aires');
   AddTraditionalMarker(151.2082800,-33.8707000,'Sydney Tower Skywalk, Sydney');
   AddTraditionalMarker(139.7021800,35.6787500,'Meiji Jingu Shrine, Tokyo');
-  for i := 0 to 99 do
+  for i := 0 to 4 do
   begin
     AddTraditionalMarker(0.0,0.0,'Test '+IntToStr(i));
   end;

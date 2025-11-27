@@ -22,6 +22,8 @@ type
 
   TGetSvrStr = function (id: integer): string;
   TGetValStr = function (const Tile: TTileId): String;
+  TGetRetinaStr = function: String;
+
   TProjectionType = (ptEPSG3857, ptEPSG3395);
 
   TMapProvider = class;
@@ -50,10 +52,13 @@ type
       FGetXStr: Array of TGetValStr;
       FGetYStr: Array of TGetValStr;
       FGetZStr: Array of TGetValStr;
+      FGetRetinaStr: Array of TGetRetinaStr;
       FMinZoom: Array of integer;
       FMaxZoom: Array of integer;
+      FRequestRetinaTiles: Boolean;
       FTiles:array of TBaseTile;
       FTileHandling: TRTLCriticalSection;
+      function GetHasRetinaTiles: Boolean;
       function GetLayerCount: integer;
       function GetProjectionType: TProjectionType;
       procedure SetLayer(AValue: integer);
@@ -64,22 +69,40 @@ type
       procedure RemoveTile(aTile: TBaseTile);
       procedure AddURL(Url: String; ProjectionType: TProjectionType; NbSvr, aMinZoom, aMaxZoom: integer;
         GetSvrStr: TGetSvrStr; GetXStr: TGetValStr; GetYStr: TGetValStr;
-        GetZStr: TGetValStr);
+        GetZStr: TGetValStr; GetRetinaStr: TGetRetinaStr);
       procedure GetZoomInfos(out AZoomMin, AZoomMax: integer);
       function GetUrlForTile(id: TTileId): String;
       procedure ToXML(ADoc: TXMLDocument; AParentNode: TDOMNode);
+      property HasRetinaTiles: Boolean read GetHasRetinaTiles;
       property Name: String read FName;
       property LayerCount: integer read GetLayerCount;
       property Layer: integer read FLayer write SetLayer;
       property ProjectionType: TProjectionType read GetProjectionType;
+      // RequestRetinaTiles tells the map provider to return either 512x512 or 256x256 tiles.
+      property RequestRetinaTiles: Boolean read FRequestRetinaTiles write FRequestRetinaTiles;
   end;
 
+// Map provider registration
+function RegisterMapProvider(
+  AProviderName: String; ProjectionType: TProjectionType; Url: String;
+  MinZoom, MaxZoom, NbSvr: integer;
+  GetSvrStr: TGetSvrStr = nil; GetXStr: TGetValStr = nil; GetYStr: TGetValStr = nil;
+  GetZStr: TGetValStr = nil; GetRetinaStr: TGetRetinaStr = nil): TMapProvider;
+procedure ClearMapProviders;
+function MapProviderByName(AName: String): TMapProvider;
+function MapProviderByIndex(AIndex: Integer): TMapProvider;
+function MapProviderCount: Integer;
+function MapProviderRegistered(const AName: String): Boolean;
+procedure MapProvidersToSortedStrings(AList: TStrings);
 
+// Map provider utility functions
+function GetSvrIndex(id: Integer): String;
 function GetSvrLetter(id: integer): String;
 function GetSvrBase1(id: integer): String;
 function GetStrYahooY(const Tile: TTileId): string;
 function GetStrYahooZ(const Tile: TTileId): string;
 function GetStrQuadKey(const Tile: TTileId): string;
+function GetAt2xRetinaStr: String;
 
 const
   SVR_LETTER = 'Letter';
@@ -87,12 +110,113 @@ const
   STR_YAHOOY = 'YahooY'; // Idea: Deprecate, as Yahoo Maps are dead
   STR_YAHOOZ = 'YahooZ'; // Idea: Deprecate, as Yahoo Maps are dead
   STR_QUADKEY = 'QuadKey';
+  STR_AT2X    = '@2x';
+
+var
+  // global API keys, moved to here from units mvEngine.
+  HERE_AppID: String = '';
+  HERE_AppCode: String = '';
+  OpenWeatherMap_ApiKey: String = '';
+  ThunderForest_ApiKey: String = '';
+  StadiaMaps_ApiKey: String = '';
 
 
 implementation
 
 uses
   TypInfo;
+
+{ Map provider list and registration }
+
+var
+  FProviderList: TStrings = nil;
+
+procedure CreateMapProviders;
+begin
+  FProviderList := TStringList.Create;
+end;
+
+procedure DestroyMapProviders;
+begin
+  ClearMapProviders;
+  FProviderList.Free;
+end;
+
+procedure ClearMapProviders;
+var
+  i: Integer;
+begin
+  for i:=0 to FProviderList.Count-1 do
+    TObject(FProviderList.Objects[i]).Free;
+  FProviderList.Clear;
+end;
+
+function MapProviderByName(AName: String): TMapProvider;
+var
+  idx: Integer;
+begin
+  idx := FProviderList.IndexOf(AName);
+  if idx <> -1 then
+    Result := TMapProvider(FProviderList.Objects[idx])
+  else
+    Result := Nil;
+end;
+
+function MapProviderByIndex(AIndex: Integer): TMapProvider;
+begin
+  Result := TMapProvider(FProviderList.Objects[AIndex]);
+end;
+
+function MapProviderCount: Integer;
+begin
+  Result := FProviderList.Count;
+end;
+
+function MapProviderRegistered(const AName: String): Boolean;
+begin
+  Result := FProviderList.IndexOf(AName) > -1;
+end;
+
+procedure MapProvidersToSortedStrings(AList: TStrings);
+var
+  L: TStringList;
+begin
+  L := TStringList.Create;
+  try
+    L.Assign(FProviderList);
+    L.Sort;
+    AList.Assign(L);
+  finally
+    L.Free;
+  end;
+end;
+
+function RegisterMapProvider(AProviderName: String; ProjectionType: TProjectionType;
+  Url: String; MinZoom, MaxZoom, NbSvr: integer; GetSvrStr: TGetSvrStr;
+  GetXStr: TGetValStr; GetYStr: TGetValStr; GetZStr: TGetValStr;
+  GetRetinaStr: TGetRetinaStr): TMapProvider;
+var
+  idx :integer;
+begin
+  idx := FProviderList.IndexOf(AProviderName);
+  if idx = -1 then
+  begin
+    Result := TMapProvider.Create(AProviderName);
+    FProviderList.AddObject(AProviderName, Result);
+  end
+  else
+    Result := TMapProvider(FProviderList.Objects[idx]);
+  Result.AddUrl(Url, ProjectionType, NbSvr, MinZoom, MaxZoom,
+    GetSvrStr, GetXStr, GetYStr, GetZStr, GetRetinaStr);
+end;
+
+
+{ Map provider helper functions }
+
+function GetSvrIndex(id: Integer): String;
+begin
+  Result := IntToStr(id);
+end;
 
 function GetSvrLetter(id: integer): String;
 begin
@@ -133,6 +257,13 @@ Begin
   result := IntToStr(Tile.Z + 1);
 end;
 
+// Instruction used to request retina tiles (512x512)
+function GetAt2xRetinaStr: String;
+begin
+  Result := '@2x';
+end;
+
+
 { TBaseTile }
 
 constructor TBaseTile.Create(aProvider: TMapProvider);
@@ -152,6 +283,11 @@ end;
 
 
 { TMapProvider }
+
+function TMapProvider.GetHasRetinaTiles: Boolean;
+begin
+  Result := (FGetRetinaStr[Layer] <> nil) and (FGetRetinaStr[Layer]() <> '');
+end;
 
 function TMapProvider.GetLayerCount: integer;
 begin
@@ -192,6 +328,7 @@ begin
   Finalize(FGetXStr);
   Finalize(FGetYStr);
   Finalize(FGetZStr);
+  Finalize(FGetRetinaStr);
   Finalize(FMinZoom);
   Finalize(FMaxZoom);
   EnterCriticalSection(FTileHandling);
@@ -279,7 +416,8 @@ end;
 
 procedure TMapProvider.AddURL(Url: String; ProjectionType: TProjectionType;
   NbSvr, aMinZoom, aMaxZoom: integer; GetSvrStr: TGetSvrStr;
-  GetXStr: TGetValStr; GetYStr: TGetValStr; GetZStr: TGetValStr);
+  GetXStr: TGetValStr; GetYStr: TGetValStr; GetZStr: TGetValStr;
+  GetRetinaStr: TGetRetinaStr);
 var
   nb: integer;
 begin
@@ -292,6 +430,7 @@ begin
   SetLength(FGetXStr, nb);
   SetLength(FGetYStr, nb);
   SetLength(FGetZStr, nb);
+  SetLength(FGetRetinaStr, nb);
   SetLength(FMinZoom, nb);
   SetLength(FMaxZoom, nb);
   nb := High(FUrl);
@@ -304,6 +443,7 @@ begin
   FGetXStr[nb] := GetXStr;
   FGetYStr[nb] := GetYStr;
   FGetZStr[nb] := GetZStr;
+  FGetRetinaStr[nb] := GetRetinaStr;
   FLayer := Low(FUrl);
 end;
 
@@ -316,7 +456,7 @@ end;
 function TMapProvider.GetUrlForTile(id: TTileId): String;
 var
   i: integer;
-  XVal, yVal, zVal, SvrVal: String;
+  XVal, yVal, zVal, SvrVal, RetinaVal: String;
   idsvr: integer;
 begin
   Result := '';
@@ -331,6 +471,7 @@ begin
   XVal := IntToStr(id.X);
   YVal := IntToStr(id.Y);
   ZVal := IntToStr(id.Z);
+  RetinaVal := '';
   if Assigned(FGetSvrStr[i]) then
     SvrVal := FGetSvrStr[i](idsvr);
   if Assigned(FGetXStr[i]) then
@@ -339,10 +480,14 @@ begin
     YVal := FGetYStr[i](id);
   if Assigned(FGetZStr[i]) then
     ZVal := FGetZStr[i](id);
-  Result := StringReplace(FUrl[i], '%serv%', SvrVal, [rfreplaceall]);
-  Result := StringReplace(Result, '%x%', XVal, [rfreplaceall]);
-  Result := StringReplace(Result, '%y%', YVal, [rfreplaceall]);
-  Result := StringReplace(Result, '%z%', ZVal, [rfreplaceall]);
+  if HasRetinaTiles and FRequestRetinaTiles then
+    RetinaVal := FGetRetinaStr[i]();
+
+  Result := StringReplace(FUrl[i], '%serv%', SvrVal, [rfReplaceAll]);
+  Result := StringReplace(Result, '%x%', XVal, [rfReplaceAll]);
+  Result := StringReplace(Result, '%y%', YVal, [rfReplaceAll]);
+  Result := StringReplace(Result, '%z%', ZVal, [rfReplaceAll]);
+  Result := StringReplace(Result, '%retina%', RetinaVal, [rfReplaceall]);
 end;
 
 procedure TMapProvider.ToXML(ADoc: TXMLDocument; AParentNode: TDOMNode);
@@ -401,8 +546,21 @@ begin
       s := '';
     if s <> '' then
       layerNode.SetAttribute('zProc', s);
+
+    if FGetRetinaStr[i] = @GetAt2xRetinaStr then
+      s := STR_AT2X
+    else
+      s := '';
+    if s <> '' then
+      layerNode.SetAttribute('retinaProc', s);
   end;
 end;
+
+initialization
+  CreateMapProviders;
+
+finalization
+  DestroyMapProviders;
 
 end.
 

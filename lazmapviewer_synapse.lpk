@@ -9,13 +9,13 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <OtherUnitFiles Value="source\addons\synapse_downloadengine;C:\ComponentsLazarus\synapse-master\"/>
-        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="source\addons\synapse_downloadengine"/>
+        <UnitOutputDirectory Value="lib\synapse\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Description Value="Add-on to LazMapViewer: Contains the download engine based on the Synapse library."/>
-    <License Value="modified LGPL with linking exception, like FreePascal RTL/FCL and Lazarus LCL"/>
-    <Version Minor="2" Release="7"/>
+    <Description Value="Add-on to LazMapViewer: Contains a download engine based on the Synapse library."/>
+    <License Value="Modified LGPL with linking exception, like FreePascal RTL/FCL and Lazarus LCL"/>
+    <Version Major="1" Release="3"/>
     <Files Count="1">
       <Item1>
         <Filename Value="source\addons\synapse_downloadengine\mvdlesynapse.pas"/>

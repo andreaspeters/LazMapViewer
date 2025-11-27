@@ -42,7 +42,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     function EncodeURLElement(const s: String): String; override;
-    procedure SetProxy(AUseSystemProxy, AUseProxy: Boolean; AProxyHost: String;
+    procedure SetProxy({%H-}AUseSystemProxy, AUseProxy: Boolean; AProxyHost: String;
       AProxyPort: Word; AProxyUserName, AProxyPassword: String); override;
   {$IF FPC_FullVersion >= 30101}
   published

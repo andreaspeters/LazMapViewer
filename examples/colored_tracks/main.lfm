@@ -18,7 +18,7 @@ object MainForm: TMainForm
     DrawingEngine = MapView.BuiltInDE
     Layers = <>
     Font.Color = clBlack
-    MapProvider = 'OpenRailwayMap Standard'
+    MapProvider = 'OpenStreetMap Standard'
     OnZoomChange = MapViewZoomChange
   end
   object ParamsPanel: TPanel

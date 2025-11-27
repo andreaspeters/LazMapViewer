@@ -9,8 +9,7 @@
 
   See also: https://wiki.lazarus.freepascal.org/FPC_modified_LGPL
 }
-unit
-  mvMapViewerPropEdits;
+unit mvMapViewerPropEdits;
 
 {$mode ObjFPC}{$H+}
 
@@ -19,7 +18,7 @@ interface
 uses
   Classes, Forms, SysUtils, LCLIntf, LCLType, ImgList, LazLoggerBase,
   PropEdits, GraphPropEdits, ComponentEditors,
-  mvMapProvider;
+  mvStrConsts, mvMapProvider;
 
 type
 
@@ -127,11 +126,6 @@ uses
   mvMapViewer, mvGpsObj, mvLayersPropEditForm, mvEngine, mvGeoMath,
   mvMapViewerPathEditDsgForm, mvPluginCommon;
 
-const
-  sNONE = '(none)';
-  sEDITMapView = 'Edit MapView Points';
-  sLayerEditor = 'Layer Editor...';
-
 { TMapTrackPointsPropertyEditor }
 
 class function TMapTrackPointsPropertyEditor.ShowCollectionEditor(
@@ -141,6 +135,7 @@ begin
   Result := inherited ShowCollectionEditor(ACollection, OwnerPersistent, PropName
     );
 end;
+
 
 { TMapViewComponentEditor }
 
@@ -162,8 +157,8 @@ function TMapViewComponentEditor.GetVerb(Index: Integer): String;
 begin
   Result := '';
   case Index of
-    0: Result := sLayerEditor;
-    1: Result := sEDITMapView;
+    0: Result := mvRS_LayerEditor;
+    1: Result := mvRS_EditMapViewPoints;
   end;
 end;
 
@@ -226,22 +221,27 @@ procedure TMapViewComponentEditor.DoShowPointsEditor;
 var
   V: TMapView;
   P: TPoint;
+  msg: String;
 begin
   if not Assigned(MapViewerPathEditDsgForm) then
      MapViewerPathEditDsgForm := TMapViewerPathEditDsgForm.Create(LazarusIDE.OwningComponent);
   V := GetComponent as TMapView;
   if not (mvoEditorEnabled in V.Options) then
-     case QuestionDlg(V.ClassName,
-       V.Name + ' doesn''t have mvoEditorEnabled set in Options.' + LineEnding +
-       LineEnding +
-       'Do you want to enable the editor?',
-       mtWarning,
-       [mrYes, '&Enable and continue', mrCancel, '&Cancel', 'IsDefault', 'IsCancel'], 0 )
-     of
+  begin
+    msg := Format(mvRS_DoesntHaveEditorEnabledInOptions, [V.Name]) +
+      LineEnding +
+      LineEnding +
+      mvRS_DoYouWantToEnableTheEditor;
+    case QuestionDlg(
+      V.ClassName, msg, mtWarning,
+      [mrYes, mvRS_EnableAndContinue, mrCancel, mvRS_Cancel, 'IsDefault', 'IsCancel'],
+      0
+    ) of
        mrYes: V.Options := V.Options + [mvoEditorEnabled];
      otherwise
        Exit;
      end;
+  end;
   P := FindPopupPoint(V);
   MapViewerPathEditDsgForm.MapView := V;
   MapViewerPathEditDsgForm.Left := P.X;
@@ -291,21 +291,23 @@ begin
   Result := LayersPropertyEditForm;
 end;
 
+
 { TPointElevationPropertyEditor }
 
 function TPointElevationPropertyEditor.GetValue: string;
 begin
   Result := inherited GetValue;
   if GetFloatValue = NO_ELE then
-    Result := sNONE;
+    Result := mvRS_None;
 end;
 
 procedure TPointElevationPropertyEditor.SetValue(const NewValue: AnsiString);
 begin
-  if (NewValue = sNONE) or (NewValue = '')
+  if (NewValue = mvRS_None) or (NewValue = '')
     then inherited SetFloatValue(NO_ELE)
     else inherited SetValue(NewValue);
 end;
+
 
 { TLatLonDMSPropertyEditor }
 
@@ -363,6 +365,7 @@ begin
     Result := LatToStr(GetFloatValue, True);
 end;
 
+
 { TLonDMSPropertyEditor }
 
 procedure TLonDMSPropertyEditor.GetRange(out AMin, AMax: Double);
@@ -379,21 +382,23 @@ begin
     Result := LonToStr(GetFloatValue, True);
 end;
 
+
 { TPointDateTimePropertyEditor }
 
 function TPointDateTimePropertyEditor.GetValue: string;
 begin
   Result := inherited GetValue;
   if GetFloatValue = NO_DATE then
-    Result := sNONE;
+    Result := mvRS_None;
 end;
 
 procedure TPointDateTimePropertyEditor.SetValue(const NewValue: AnsiString);
 begin
-  if (NewValue = sNONE) or (NewValue = '')
+  if (NewValue = mvRS_None) or (NewValue = '')
     then inherited SetFloatValue(NO_DATE)
     else inherited SetValue(NewValue);
 end;
+
 
 { TPointOfInterestImageIndexPropertyEditor }
 
@@ -405,9 +410,10 @@ begin
   P := GetComponent(0);
   if (P is TMapPointOfInterest) then
   begin
-    Result := TMapPointOfInterest(P).View.POIImages;
+    Result := TMapPointOfInterest(P).MapView.POIImages;
   end;
 end;
+
 
 { TMapProviderPropertyEditor }
 
@@ -432,15 +438,15 @@ begin
       MV := TMapView(Inst)
     else if Inst is TMapLayer then
     begin
-      MV := TMapLayer(Inst).View;
+      MV := TMapLayer(Inst).MapView;
       Filter := True;
       PT := MV.Engine.MapProjectionType;
     end
     else
       Exit;
-    MV.Engine.GetMapProviders(Providers);
+    MapProvidersToSortedStrings(Providers);
     //if not (Inst is TMapView) then
-      Proc(sNONE);
+      Proc(mvRS_None);
     Providers.Sort;
     for S in Providers do
       // TODO: When filtered it is not clear what is the full list.
@@ -455,12 +461,12 @@ function TMapProviderPropertyEditor.GetValue: AnsiString;
 begin
   Result := inherited GetValue;
   if Result = '' then
-    Result := sNONE;
+    Result := mvRS_None;
 end;
 
 procedure TMapProviderPropertyEditor.SetValue(const NewValue: AnsiString);
 begin
-  if NewValue = sNONE
+  if NewValue = mvRS_None
     then inherited SetValue('')
     else inherited SetValue(NewValue);
 end;

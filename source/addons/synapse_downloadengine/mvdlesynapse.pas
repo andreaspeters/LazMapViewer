@@ -16,7 +16,9 @@ unit mvDLESynapse;
 interface
 
 uses
-  mvDownloadEngine, SysUtils, Classes, ssl_openssl, synacode, httpsend;
+  SysUtils, Classes,
+  mvDownloadEngine,
+  ssl_openssl, synacode, httpsend;
 
 type
 

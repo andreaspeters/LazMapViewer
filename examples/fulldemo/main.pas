@@ -12,10 +12,10 @@ unit Main;
 interface
 
 uses
-  Classes, SysUtils, Types, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  StdCtrls, ComCtrls, Buttons, IntfGraphics, PrintersDlgs,
-  Grids, ExtDlgs,
-  mvMapViewer, mvTypes, mvGpsObj, mvGeoNames, mvDrawingEngine,
+  Classes, SysUtils, Types,
+  InterfaceBase, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ComCtrls,
+  Buttons, IntfGraphics, PrintersDlgs, Grids, ExtDlgs,
+  mvMapViewer, mvTypes, mvGpsObj, mvGeoNames, mvDrawingEngine, mvMapProvider,
   {$IFDEF WITH_ADDONS}ConfigFrame_with_Addons{$ELSE}ConfigFrame{$ENDIF};
 
 type
@@ -103,6 +103,7 @@ type
   private
     CfgFrame: {$IFDEF WITH_ADDONS}TCfgFrame_with_Addons{$ELSE}TCfgFrame{$ENDIF};
     procedure ClearFoundLocations;
+    procedure TileSizeChangeHandler(Sender: TObject; const ATileSize: TSize);
     procedure UpdateCoords(X, Y: Integer);
     procedure UpdateDropdownWidth(ACombobox: TCombobox);
     procedure UpdateLocationHistory(ALocation: String);
@@ -123,7 +124,7 @@ implementation
 {$R *.lfm}
 
 uses
-  LCLType, IniFiles, Math, FPCanvas, FPImage, GraphType,
+  LCLType, IniFiles, TypInfo, Math, FPCanvas, FPImage, GraphType,
   Printers, OSPrinters,
   mvEngine, mvGPX, mvGeoMath,
   globals, gpsPtForm, gpslistform;
@@ -361,6 +362,10 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
+  Caption := Format('%s (%s)', [Caption, GetLCLWidgetTypeName]);
+
+  MapView.OnTileSizeChange := @TileSizeChangeHandler;
+
   CfgFrame := {$IFDEF WITH_ADDONS}TCfgFrame_with_Addons{$ELSE}TCfgFrame{$ENDIF}.Create(self);
   CfgFrame.Parent := pgConfig;
   CfgFrame.Align := alClient;
@@ -391,8 +396,8 @@ begin
         0: MapProvider := 'Google Satellite Only';
         1: MapProvider := 'Google Terrain';
         2: MapProvider := 'Maps For Free';
-      otherwise
-        MapProvider := '';
+        otherwise
+           MapProvider := '';
       end;
     end;
     sgLayers.Cells[1, I + 1] := TileLayer[I].Visible.ToString;
@@ -401,6 +406,7 @@ begin
   end;
 
   ReadFromIni;
+  TilesizeChangeHandler(Self, mvTypes.TileSize);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -647,10 +653,10 @@ begin
   ini := TMemIniFile.Create(CalcIniName);
   try
     R := Screen.DesktopRect;
-    L := ini.ReadInteger('MainForm', 'Left', Left);
-    T := ini.ReadInteger('MainForm', 'Top', Top);
-    W := ini.ReadInteger('MainForm', 'Width', Width);
-    H := ini.ReadInteger('MainForm', 'Height', Height);
+    L := Scale96ToForm(ini.ReadInteger('MainForm', 'Left', Left));
+    T := Scale96ToForm(ini.ReadInteger('MainForm', 'Top', Top));
+    W := Scale96ToForm(ini.ReadInteger('MainForm', 'Width', Width));
+    H := Scale96ToForm(ini.ReadInteger('MainForm', 'Height', Height));
     if L + W > R.Right then L := R.Right - W;
     if L < R.Left then L := R.Left;
     if T + H > R.Bottom then T := R.Bottom - H;
@@ -661,16 +667,17 @@ begin
     HERE_AppCode := ini.ReadString('HERE', 'APP_CODE', '');
     OpenWeatherMap_ApiKey := ini.ReadString('OpenWeatherMap', 'API_Key', '');
     ThunderForest_ApiKey := ini.ReadString('ThunderForest', 'API_Key', '');
+    StadiaMaps_ApiKey := ini.ReadString('Stadia', 'API_Key', '');
 
     provider := ini.ReadString('MapView', 'Provider', '');
     if provider <> '' then
     begin
       list := TStringList.Create;
       try
-        MapView.Engine.ClearMapProviders;
-        MapView.Engine.RegisterProviders;
+        ClearMapProviders;
+        MapView.RegisterMapProviders;
         MapView.GetMapProviders(list);
-        sgLayers.Columns[1].PickList.Assign(list);
+        MapProvidersToSortedStrings(list);
         if MapView.Engine.MapProviderByName(provider) = nil then
         begin
           MessageDlg('Map provider "' + provider + '" not found.', mtError, [mbOK], 0);
@@ -687,6 +694,8 @@ begin
     pt.Lon := StrToFloatDef(ini.ReadString('MapView', 'Center.Longitude', ''), 0.0, PointFormatSettings);
     pt.Lat := StrToFloatDef(ini.ReadString('MapView', 'Center.Latitude', ''), 0.0, PointFormatSettings);
     MapView.Center := pt;
+    s := ini.ReadString('MapView', 'TileSize', 'mtsAuto');
+    MapView.TileSize := TMapTileSize(GetEnumValue(TypeInfo(TMapTileSize), s));
 
     s := ini.ReadString('MapView', 'DistanceUnits', '');
     if s <> '' then begin
@@ -748,6 +757,12 @@ procedure TMainForm.tbOpacityChange(Sender: TObject);
 begin
   TileLayer[Pred(sgLayers.Row)].Opacity := tbOpacity.Position / 100;
   MapView.Redraw;
+end;
+
+procedure TMainForm.TileSizeChangeHandler(Sender: TObject; const ATileSize: TSize);
+begin
+  if Assigned(CfgFrame) then
+    CfgFrame.UpdateTileSizeInfo(ATileSize);
 end;
 
 procedure TMainForm.UpdateLayers(Sender: TObject);
@@ -849,10 +864,10 @@ var
 begin
   ini := TMemIniFile.Create(CalcIniName);
   try
-    ini.WriteInteger('MainForm', 'Left', Left);
-    ini.WriteInteger('MainForm', 'Top', Top);
-    ini.WriteInteger('MainForm', 'Width', Width);
-    ini.WriteInteger('MainForm', 'Height', Height);
+    ini.WriteInteger('MainForm', 'Left', ScaleFormTo96(Left));
+    ini.WriteInteger('MainForm', 'Top', ScaleformTo96(Top));
+    ini.WriteInteger('MainForm', 'Width', ScaleFormTo96(Width));
+    ini.WriteInteger('MainForm', 'Height', ScaleFormTo96(Height));
 
     ini.WriteString('MapView', 'Provider', MapView.MapProvider);
     ini.WriteInteger('MapView', 'Zoom', MapView.Zoom);
@@ -860,6 +875,7 @@ begin
     ini.WriteString('MapView', 'Center.Latitude', FloatToStr(MapView.Center.Lat, PointFormatSettings));
     ini.WriteInteger('MapView', 'MapBkgrColor', MapView.InactiveColor);
     ini.WriteString('MapView', 'DistanceUnits', DistanceUnit_Names[DistanceUnit]);
+    ini.WriteString('MapView', 'TileSize', GetEnumName(TypeInfo(TMapTileSize), integer(MapView.TileSize)));
 
     if HERE_AppID <> '' then
       ini.WriteString('HERE', 'APP_ID', HERE_AppID);

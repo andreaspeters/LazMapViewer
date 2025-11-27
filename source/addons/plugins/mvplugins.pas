@@ -1,3 +1,39 @@
+{-------------------------------------------------------------------------------
+                               mvPlugins.pas
+
+License: modified LGPL with linking exception (like RTL, FCL and LCL)
+
+See the file COPYING.modifiedLGPL.txt, included in the Lazarus distribution,
+for details about the license.
+
+See also: https://wiki.lazarus.freepascal.org/FPC_modified_LGPL
+--------------------------------------------------------------------------------
+
+This unit contains several basic general-purpose plugins:
+
+- TCenterMarkerPlugin
+    Draws a cross in the center of the visible map window.
+
+- TTileInfoPlugin
+    Draws boundary lines around each tile image from which the overall map is
+    composed, and displays the x and y indices, as well as the zoom level, of
+    each tile in the map provider's repository.
+
+- TLinkedMapsPlugin
+    Links two (or more) mapviews such that each zooming or panning operation in
+    one mapview is transferred to the other maps so that always the same
+    view of the total map is visible in all maps.
+
+- TLegalNoticePlugin
+    Displays a clickable notice at the border of a mapview showing from which
+    provider this map was downloaded. A click is supposed to open the privider's
+    "Copyright and License" page in the internet.
+
+- TUserDefinedPlugin
+    A plugin without special purpose. It merely provides events in which the
+    user can execute specific handlers.
+-------------------------------------------------------------------------------}
+
 unit mvPlugins;
 
 {$mode objfpc}{$H+}
@@ -6,8 +42,8 @@ interface
 
 uses
   Classes, SysUtils, Contnrs,
-  Graphics, Controls, LCLIntf, //LazLoggerBase,
-  mvMapViewer, mvDrawingEngine, mvPluginCommon, mvGPSObj, mvTypes;
+  Graphics, Controls, Forms, LCLIntf, //LazLoggerBase,
+  mvStrConsts, mvMapViewer, mvDrawingEngine, mvPluginCommon, mvGPSObj,  mvTypes;
 
 type
   { TCenterMarkerPlugin - draws a cross in the map center }
@@ -51,7 +87,7 @@ type
     procedure SetPosition(AValue: TTileInfoPosition);
   protected
     procedure AfterDrawTile(AMapView: TMapView; ADrawingEngine: TMvCustomDrawingEngine;
-      ATileID: TTileID; ARect: TRect; var Handled: Boolean); override;
+      ATileID: TTileID; ARect: TRect; var {%H-}Handled: Boolean); override;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -135,51 +171,9 @@ type
     property Font;
   end;
 
-  { TDraggableMarkerPlugin }
 
-  TDraggableMarkerPlugin = class;
-  TDraggableMarkerCanMoveEvent = function (Sender : TDraggableMarkerPlugin; AMarker : TGPSPoint) : Boolean of object;
-  TDraggableMarkerMovedEvent = procedure (Sender : TDraggableMarkerPlugin; AMarker : TGPSPoint; AOrgPosition : TRealPoint) of object;
+  { TUserDefinedPlugin }
 
-  { TDraggableMarkerData }
-  PDraggableMarkerData = ^TDraggableMarkerData;
-  TDraggableMarkerData = record
-    FDraggedMarker : TGPSPoint;
-    FOrgPosition : TRealPoint;
-  end;
-
-  TDraggableMarkerPlugin = class(TMvMultiMapsPlugin)
-  private
-    const
-      DEFAULT_TOLERANCE = 5;
-  private
-    FDraggableMarkerCanMoveEvent : TDraggableMarkerCanMoveEvent;
-    FDraggableMarkerMovedEvent : TDraggableMarkerMovedEvent;
-    FDragMouseButton: TMouseButton;
-    FTolerance: Integer;
-    function GetFirstMarkerAtMousePos(const AMapView: TMapView; const AX, AY : Integer) : TGPSPoint;
-    function GetDraggedMarker(AMapView : TMapView) : TGPSPoint;
-    function GetOrgPosition(AMapView : TMapView): TRealPoint;
-  protected
-    procedure MouseDown(AMapView: TMapView; {%H-}Button: TMouseButton; {%H-}Shift: TShiftState;
-      X, Y: Integer; var Handled: Boolean); override;
-    procedure MouseMove(AMapView: TMapView; {%H-}AShift: TShiftState; X,Y: Integer;
-      var Handled: Boolean); override;
-    procedure MouseUp(AMapView: TMapView; {%H-}Button: TMouseButton; {%H-}Shift: TShiftState;
-      {%H-}X, {%H-}Y: Integer; var Handled: Boolean); override;
-  public
-    constructor Create(AOwner: TComponent); override;
-    procedure Assign(Source: TPersistent); override;
-    property DraggedMarker[AMapView : TMapView] : TGPSPoint read GetDraggedMarker;
-    property OrgPosition[AMapView : TMapView] : TRealPoint read GetOrgPosition;
-  published
-    property DraggableMarkerCanMoveEvent : TDraggableMarkerCanMoveEvent read FDraggableMarkerCanMoveEvent write FDraggableMarkerCanMoveEvent;
-    property DraggableMarkerMovedEvent : TDraggableMarkerMovedEvent read FDraggableMarkerMovedEvent write FDraggableMarkerMovedEvent;
-    property DragMouseButton : TMouseButton read FDragMouseButton write FDragMouseButton default mbLeft;
-    property Tolerance: Integer read FTolerance write FTolerance default DEFAULT_TOLERANCE;
-  end;
-
-type
   TMvPluginCenterMovingEvent = procedure (Sender: TObject; AMapView: TMapView;
     var ANewCenter: TRealPoint; var Allow, Handled: Boolean) of object;
 
@@ -210,8 +204,6 @@ type
 
   TMvPluginZoomChangingEvent = procedure (Sender: TObject; AMapView: TMapView;
     NewZoom: Integer; var Allow, Handled: Boolean) of object;
-
-  { TUserDefinedPlugin }
 
   TUserDefinedPlugin = class(TMvCustomPlugin)
   private
@@ -290,7 +282,7 @@ implementation
 uses
   Types;
 
-{ TCenterMargerPlugin }
+{ TCenterMarkerPlugin }
 
 constructor TCenterMarkerPlugin.Create(AOwner: TComponent);
 begin
@@ -825,7 +817,6 @@ begin
   Result := -1;
 end;
 
-
 procedure TLegalNoticePlugin.SetPosition(AValue: TLegalNoticePosition);
 begin
   if FPosition = AValue then Exit;
@@ -859,177 +850,6 @@ begin
   if FSpacing = AValue then Exit;
   FSpacing := AValue;
   Update;
-end;
-
-
-{ TDraggableMarkerPlugin }
-
-constructor TDraggableMarkerPlugin.Create(AOwner: TComponent);
-begin
-  inherited;
-  FTolerance := DEFAULT_TOLERANCE;
-end;
-
-procedure TDraggableMarkerPlugin.Assign(Source: TPersistent);
-begin
-  if Source is TDraggableMarkerPlugin then
-  begin
-    FDraggableMarkerCanMoveEvent := TDraggableMarkerPlugin(Source).DraggableMarkerCanMoveEvent;
-    FDraggableMarkerMovedEvent := TDraggableMarkerPlugin(Source).DraggableMarkerMovedEvent;
-    FDragMouseButton := TDraggableMarkerPlugin(Source).DragMouseButton;
-    FTolerance := TDraggableMarkerPlugin(Source).Tolerance;
-  end;
-  inherited;
-end;
-
-function TDraggableMarkerPlugin.GetFirstMarkerAtMousePos(const AMapView: TMapView;
-  const AX, AY: Integer): TGPSPoint;
-
-  function FindInList(AGpsList: TGpsObjList): TGpsPoint;
-  var
-    i: Integer;
-  begin
-    if Assigned(AGpsList) then
-      for i := AGpsList.Count-1 downto 0 do
-      begin
-        if (AGpsList[i] is TGpsPoint) then
-        begin
-          Result := TGpsPoint(AGpsList[i]);
-          if (not Assigned(FDraggableMarkerCanMoveEvent)) or
-             DraggableMarkerCanMoveEvent(Self, Result)
-          then
-            exit;
-        end;
-      end;
-    Result := nil;
-  end;
-
-var
-  aArea : TRealArea;
-  gpsList: TGpsObjList;
-  layer: TMapLayer;
-  i : Integer;
-begin
-  Result := Nil;
-  aArea.TopLeft := AMapView.ScreenToLatLon(Point(AX - FTolerance, AY - FTolerance));
-  aArea.BottomRight := AMapView.ScreenToLatLon(Point(AX + FTolerance, AY + FTolerance));
-
-  // Search in GPSItems for all gps-type-of-points
-  gpsList := AMapView.GPSItems.GetObjectsInArea(aArea);
-  try
-    Result := FindInList(gpsList);
-    if Result <> nil then
-      exit;
-  finally
-    gpsList.Free;
-  end;
-
-  // Search in all layers for all map-type points
-  for i := AMapView.Layers.Count-1 downto 0 do
-  begin
-    layer := AMapView.Layers[i];
-    gpsList := layer.GetObjectsInArea(aArea);
-    try
-      Result := FindInList(gpsList);
-      if Result <> nil then
-        exit;
-    finally
-      gpsList.Free;
-    end;
-  end;
-end;
-
-function TDraggableMarkerPlugin.GetDraggedMarker(AMapView: TMapView): TGPSPoint;
-var
-  lDraggableMarkerData : TDraggableMarkerData;
-  cnt : Integer;
-begin
-  Result := Nil;
-  cnt := GetMapViewData(AMapView,lDraggableMarkerData,SizeOf(lDraggableMarkerData));
-  if (cnt >= SizeOf(lDraggableMarkerData)) then
-    Result := lDraggableMarkerData.FDraggedMarker;
-end;
-
-function TDraggableMarkerPlugin.GetOrgPosition(AMapView : TMapView): TRealPoint;
-var
-  lDraggableMarkerData : TDraggableMarkerData;
-  cnt : Integer;
-begin
-  Result.InitXY(0.0,0.0);
-  cnt := GetMapViewData(AMapView,lDraggableMarkerData,SizeOf(lDraggableMarkerData));
-  if (cnt >= SizeOf(lDraggableMarkerData)) then
-    Result := lDraggableMarkerData.FOrgPosition;
-end;
-
-procedure TDraggableMarkerPlugin.MouseDown(AMapView: TMapView; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; var Handled: Boolean);
-var
-  lDraggableMarkerData : TDraggableMarkerData;
-begin
-  if Handled then Exit;
-  if not MapViewEnabled[AMapView] then Exit;
-  if FDragMouseButton <> Button then Exit;
-  lDraggableMarkerData.FDraggedMarker := GetFirstMarkerAtMousePos(AMapView,X,Y);
-  if Assigned(lDraggableMarkerData.FDraggedMarker) then
-  begin
-    lDraggableMarkerData.FOrgPosition.Lon:= lDraggableMarkerData.FDraggedMarker.Lon;
-    lDraggableMarkerData.FOrgPosition.Lat:= lDraggableMarkerData.FDraggedMarker.Lat;
-    SetMapViewData(AMapView,lDraggableMarkerData,SizeOf(lDraggableMarkerData));
-    Handled := True;
-  end;
-end;
-
-procedure TDraggableMarkerPlugin.MouseMove(AMapView: TMapView;
-  AShift: TShiftState; X, Y: Integer; var Handled: Boolean);
-var
-  pt : TPoint;
-  rpt : TRealPoint;
-  ele : Double;
-  dt : TDateTime;
-  lDraggableMarkerData : TDraggableMarkerData;
-  cnt : Integer;
-begin
-  cnt := GetMapViewData(AMapView,lDraggableMarkerData,SizeOf(lDraggableMarkerData));
-  if not MapViewEnabled[AMapView] then Exit;
-  if (cnt >= SizeOf(lDraggableMarkerData)) and
-     Assigned(lDraggableMarkerData.FDraggedMarker) then
-  begin
-    pt.X := X;
-    pt.Y := Y;
-    rpt := AMapView.ScreenToLatLon(pt);
-    ele := lDraggableMarkerData.FDraggedMarker.Elevation;
-    dt := lDraggableMarkerData.FDraggedMarker.DateTime;
-    lDraggableMarkerData.FDraggedMarker.MoveTo(rpt.Lon, rpt.Lat,ele,dt);
-    AMapView.Invalidate;
-    Handled := True; // Prevent the dragging of the map!!
-  end
-  else
-  begin
-    if Assigned(GetFirstMarkerAtMousePos(AMapView,X,Y)) then
-    begin
-      AMapView.Cursor := crHandPoint;
-      Handled := True;
-    end
-    else if not Handled then
-      AMapView.Cursor := crDefault;
-  end
-end;
-
-procedure TDraggableMarkerPlugin.MouseUp(AMapView: TMapView; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; var Handled: Boolean);
-var
-  lpDraggableMarkerData : PDraggableMarkerData;
-begin
-  if not MapViewEnabled[AMapView] then Exit;
-  if FDragMouseButton <> Button then Exit;
-  lpDraggableMarkerData := MapViewDataPtr[AMapView];
-  if Assigned(lpDraggableMarkerData) and Assigned(lpDraggableMarkerData^.FDraggedMarker) then
-  begin
-    if Assigned(FDraggableMarkerMovedEvent) then
-      FDraggableMarkerMovedEvent(Self,lpDraggableMarkerData^.FDraggedMarker,lpDraggableMarkerData^.FOrgPosition);
-    Handled := True;
-    lpDraggableMarkerData^.FDraggedMarker := Nil;
-  end;
 end;
 
 
@@ -1160,12 +980,11 @@ end;
 
 
 initialization
-  RegisterPluginClass(TCenterMarkerPlugin, 'Center marker');
-  RegisterPluginClass(TTileInfoPlugin, 'Tile info');
-  RegisterPluginClass(TLegalNoticePlugin, 'Legal notice');
-  RegisterPluginClass(TLinkedMapsPlugin, 'Linked maps');
-  RegisterPluginClass(TDraggableMarkerPlugin, 'Draggable marker');
-  RegisterPluginClass(TUserDefinedPlugin, 'User-defined');
+  RegisterPluginClass(TCenterMarkerPlugin, @mvRS_CenterMarkerPlugin);
+  RegisterPluginClass(TTileInfoPlugin, @mvRS_TileInfoPlugin);
+  RegisterPluginClass(TLegalNoticePlugin, @mvRS_LegalNoticePlugin);
+  RegisterPluginClass(TLinkedMapsPlugin, @mvRS_LinkedMapsPlugin);
+  RegisterPluginClass(TUserDefinedPlugin, @mvRS_UserDefinedPlugin);
 
 end.
 
